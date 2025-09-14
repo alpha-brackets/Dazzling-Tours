@@ -1,0 +1,187 @@
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import { Tour, Booking, Contact, Newsletter } from "@/models";
+
+// Utility function to validate email
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Utility function to validate phone number
+export function isValidPhone(phone: string): boolean {
+  const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+  return phoneRegex.test(phone.replace(/\s/g, ""));
+}
+
+// Utility function to format currency
+export function formatCurrency(
+  amount: number,
+  currency: string = "USD"
+): string {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency,
+  }).format(amount);
+}
+
+// Utility function to calculate booking total
+export function calculateBookingTotal(
+  price: number,
+  participants: number,
+  discount?: number
+): number {
+  let total = price * participants;
+  if (discount && discount > 0) {
+    total = total - (total * discount) / 100;
+  }
+  return total;
+}
+
+// Utility function to generate booking reference
+export function generateBookingReference(): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substr(2, 5);
+  return `DT-${timestamp}-${random}`.toUpperCase();
+}
+
+// Utility function to validate required fields
+export function validateRequiredFields(
+  data: any,
+  requiredFields: string[]
+): string[] {
+  const missingFields: string[] = [];
+
+  requiredFields.forEach((field) => {
+    if (
+      !data[field] ||
+      (typeof data[field] === "string" && data[field].trim() === "")
+    ) {
+      missingFields.push(field);
+    }
+  });
+
+  return missingFields;
+}
+
+// Utility function to sanitize input
+export function sanitizeInput(input: string): string {
+  return input.trim().replace(/[<>]/g, "");
+}
+
+// Utility function to paginate results
+export function paginateResults(page: number, limit: number, total: number) {
+  const skip = (page - 1) * limit;
+  const pages = Math.ceil(total / limit);
+
+  return {
+    page,
+    limit,
+    skip,
+    total,
+    pages,
+    hasNext: page < pages,
+    hasPrev: page > 1,
+  };
+}
+
+// Utility function to handle API errors
+export function handleApiError(
+  error: any,
+  message: string = "An error occurred"
+) {
+  console.error("API Error:", error);
+
+  if (error.name === "ValidationError") {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Validation Error",
+        details: Object.values(error.errors).map((err: any) => err.message),
+      },
+      { status: 400 }
+    );
+  }
+
+  if (error.code === 11000) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Duplicate entry",
+        message: "This record already exists",
+      },
+      { status: 409 }
+    );
+  }
+
+  return NextResponse.json({ success: false, error: message }, { status: 500 });
+}
+
+// Utility function to send email (placeholder - implement with your email service)
+export async function sendEmail(to: string, subject: string, body: string) {
+  // Implement email sending logic here
+  // You can use services like SendGrid, Nodemailer, etc.
+  console.log(`Email would be sent to: ${to}`);
+  console.log(`Subject: ${subject}`);
+  console.log(`Body: ${body}`);
+}
+
+// Database utility functions
+export async function getTourStats() {
+  try {
+    await connectDB();
+
+    const totalTours = await Tour.countDocuments();
+    const activeTours = await Tour.countDocuments({ status: "Active" });
+    const featuredTours = await Tour.countDocuments({ featured: true });
+
+    return {
+      totalTours,
+      activeTours,
+      featuredTours,
+    };
+  } catch (error) {
+    console.error("Error getting tour stats:", error);
+    return null;
+  }
+}
+
+export async function getBookingStats() {
+  try {
+    await connectDB();
+
+    const totalBookings = await Booking.countDocuments();
+    const pendingBookings = await Booking.countDocuments({ status: "Pending" });
+    const confirmedBookings = await Booking.countDocuments({
+      status: "Confirmed",
+    });
+
+    return {
+      totalBookings,
+      pendingBookings,
+      confirmedBookings,
+    };
+  } catch (error) {
+    console.error("Error getting booking stats:", error);
+    return null;
+  }
+}
+
+export async function getContactStats() {
+  try {
+    await connectDB();
+
+    const totalContacts = await Contact.countDocuments();
+    const newContacts = await Contact.countDocuments({ status: "New" });
+    const repliedContacts = await Contact.countDocuments({ status: "Replied" });
+
+    return {
+      totalContacts,
+      newContacts,
+      repliedContacts,
+    };
+  } catch (error) {
+    console.error("Error getting contact stats:", error);
+    return null;
+  }
+}
