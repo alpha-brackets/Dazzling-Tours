@@ -1,14 +1,17 @@
 import React from "react";
-import HeroBanner1 from "@/app/Components/HeroBanner/HeroBanner1";
-import Tour from "@/app/Components/Tour/Tour";
+import BreadCrumb from "../../Components/Common/BreadCrumb";
+import Tour from "../../Components/Tour/Tour";
 
-const ToursPage = () => {
+const page = () => {
   return (
-    <>
-      <HeroBanner1 />
-      <Tour />
-    </>
+    <div>
+      <BreadCrumb
+        bgImg="/assets/img/tours/tourspage.png"
+        Title="Tour"
+      ></BreadCrumb>
+      <Tour></Tour>
+    </div>
   );
 };
 
-export default ToursPage;
+export default page;

@@ -43,6 +43,23 @@ export async function PUT(
 
     const body = await request.json();
     const resolvedParams = await params;
+
+    // Validate price if provided
+    if (body.price && body.price <= 0) {
+      return NextResponse.json(
+        { success: false, error: "Price must be greater than 0" },
+        { status: 400 }
+      );
+    }
+
+    // Validate rating if provided
+    if (body.rating && (body.rating < 0 || body.rating > 5)) {
+      return NextResponse.json(
+        { success: false, error: "Rating must be between 0 and 5" },
+        { status: 400 }
+      );
+    }
+
     const tour = await Tour.findByIdAndUpdate(resolvedParams.id, body, {
       new: true,
       runValidators: true,

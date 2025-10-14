@@ -1,14 +1,17 @@
 import React from "react";
-import HeroBanner1 from "@/app/Components/HeroBanner/HeroBanner1";
-import Blog1 from "@/app/Components/Blog/Blog1";
+import BreadCrumb from "../../Components/Common/BreadCrumb";
+import Blog2 from "@/app/Components/Blogs/Blog2";
 
-const BlogsPage = () => {
+const page = () => {
   return (
-    <>
-      <HeroBanner1 />
-      <Blog1 />
-    </>
+    <div>
+      <BreadCrumb
+        bgImg="/assets/img/blogs/BlogsPage.webp"
+        Title="Blog"
+      ></BreadCrumb>
+      <Blog2></Blog2>
+    </div>
   );
 };
 
-export default BlogsPage;
+export default page;

@@ -1,62 +1,88 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-
-interface ContactQuery {
-  _id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  subject: string;
-  message: string;
-  status: string;
-  createdAt: string;
-}
+import {
+  useGetContactInquiries,
+  useUpdateContactInquiry,
+  useBulkUpdateContactInquiries,
+} from "@/lib/hooks";
 
 const ContactQueriesList = () => {
-  const [queries, setQueries] = useState<ContactQuery[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [selectedQueries, setSelectedQueries] = useState<string[]>([]);
 
-  useEffect(() => {
-    fetchQueries();
-  }, []);
+  const { data: queriesData, isLoading: loading } = useGetContactInquiries();
+  const updateContactMutation = useUpdateContactInquiry();
+  const bulkUpdateContactMutation = useBulkUpdateContactInquiries();
 
-  const fetchQueries = async () => {
-    try {
-      const response = await fetch("/api/contact");
-      const data = await response.json();
-      if (data.success) {
-        setQueries(data.data);
+  const queries = queriesData?.data || [];
+
+  const updateStatus = (id: string, newStatus: string) => {
+    updateContactMutation.mutate({
+      _id: id,
+      status: newStatus,
+    });
+  };
+
+  const bulkUpdateStatus = (status: string) => {
+    if (selectedQueries.length === 0) {
+      alert("Please select queries to update");
+      return;
+    }
+
+    bulkUpdateContactMutation.mutate(
+      {
+        ids: selectedQueries,
+        action: "updateStatus",
+        data: { status },
+      },
+      {
+        onSuccess: () => {
+          setSelectedQueries([]);
+        },
       }
-    } catch (error) {
-      console.error("Error fetching contact queries:", error);
-    } finally {
-      setLoading(false);
+    );
+  };
+
+  const bulkDelete = () => {
+    if (selectedQueries.length === 0) {
+      alert("Please select queries to delete");
+      return;
+    }
+
+    if (
+      confirm(
+        `Are you sure you want to delete ${selectedQueries.length} queries?`
+      )
+    ) {
+      bulkUpdateContactMutation.mutate(
+        {
+          ids: selectedQueries,
+          action: "delete",
+        },
+        {
+          onSuccess: () => {
+            setSelectedQueries([]);
+          },
+        }
+      );
     }
   };
 
-  const updateStatus = async (id: string, newStatus: string) => {
-    try {
-      const response = await fetch(`/api/contact/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ status: newStatus }),
-      });
+  const toggleQuerySelection = (id: string) => {
+    setSelectedQueries((prev) =>
+      prev.includes(id)
+        ? prev.filter((queryId) => queryId !== id)
+        : [...prev, id]
+    );
+  };
 
-      if (response.ok) {
-        setQueries(
-          queries.map((query) =>
-            query._id === id ? { ...query, status: newStatus } : query
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-    }
+  const selectAllQueries = () => {
+    const filteredQueryIds = filteredQueries.map((query) => query._id);
+    setSelectedQueries(
+      selectedQueries.length === filteredQueryIds.length ? [] : filteredQueryIds
+    );
   };
 
   const filteredQueries = queries.filter((query) => {
@@ -77,17 +103,35 @@ const ContactQueriesList = () => {
     <div className="contact-queries-list">
       <div className="page-header">
         <h1>Contact Queries</h1>
-        <div className="header-stats">
-          <div className="stat-item">
-            <span className="stat-number">{queries.length}</span>
-            <span className="stat-label">Total Queries</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-number">
-              {queries.filter((q) => q.status === "New").length}
-            </span>
-            <span className="stat-label">New</span>
-          </div>
+        <div className="header-actions">
+          <button
+            onClick={() => bulkUpdateStatus("Read")}
+            className="btn btn-info"
+            disabled={selectedQueries.length === 0}
+          >
+            <i className="bi bi-eye"></i> Mark as Read
+          </button>
+          <button
+            onClick={() => bulkUpdateStatus("Replied")}
+            className="btn btn-success"
+            disabled={selectedQueries.length === 0}
+          >
+            <i className="bi bi-reply"></i> Mark as Replied
+          </button>
+          <button
+            onClick={() => bulkUpdateStatus("Closed")}
+            className="btn btn-warning"
+            disabled={selectedQueries.length === 0}
+          >
+            <i className="bi bi-check-circle"></i> Mark as Closed
+          </button>
+          <button
+            onClick={bulkDelete}
+            className="btn btn-danger"
+            disabled={selectedQueries.length === 0}
+          >
+            <i className="bi bi-trash"></i> Delete Selected
+          </button>
         </div>
       </div>
 
@@ -119,6 +163,16 @@ const ContactQueriesList = () => {
         <table>
           <thead>
             <tr>
+              <th>
+                <input
+                  type="checkbox"
+                  checked={
+                    selectedQueries.length === filteredQueries.length &&
+                    filteredQueries.length > 0
+                  }
+                  onChange={selectAllQueries}
+                />
+              </th>
               <th>Name</th>
               <th>Email</th>
               <th>Subject</th>
@@ -131,9 +185,15 @@ const ContactQueriesList = () => {
             {filteredQueries.map((query) => (
               <tr key={query._id}>
                 <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedQueries.includes(query._id)}
+                    onChange={() => toggleQuerySelection(query._id)}
+                  />
+                </td>
+                <td>
                   <div className="contact-info">
                     <strong>{query.name}</strong>
-                    {query.phone && <small>{query.phone}</small>}
                   </div>
                 </td>
                 <td>{query.email}</td>
@@ -178,6 +238,32 @@ const ContactQueriesList = () => {
           <p>No contact queries found</p>
         </div>
       )}
+
+      {/* Statistics */}
+      <div className="contact-stats">
+        <div className="stats-grid">
+          <div className="stat-card">
+            <h4>Total Queries</h4>
+            <p>{queries.length}</p>
+          </div>
+          <div className="stat-card">
+            <h4>New</h4>
+            <p>{queries.filter((q) => q.status === "New").length}</p>
+          </div>
+          <div className="stat-card">
+            <h4>Read</h4>
+            <p>{queries.filter((q) => q.status === "Read").length}</p>
+          </div>
+          <div className="stat-card">
+            <h4>Replied</h4>
+            <p>{queries.filter((q) => q.status === "Replied").length}</p>
+          </div>
+          <div className="stat-card">
+            <h4>Closed</h4>
+            <p>{queries.filter((q) => q.status === "Closed").length}</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -4,53 +4,23 @@ import { useRouter } from "next/navigation";
 
 const AddBlog = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    excerpt: "",
+    slug: "",
     content: "",
+    excerpt: "",
     author: "",
     category: "",
     tags: [] as string[],
     featuredImage: "",
     status: "Draft",
-    publishedAt: "",
+    featured: false,
   });
-
-  const [newTag, setNewTag] = useState("");
-
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const addTag = () => {
-    if (newTag.trim()) {
-      setFormData((prev) => ({
-        ...prev,
-        tags: [...prev.tags, newTag.trim()],
-      }));
-      setNewTag("");
-    }
-  };
-
-  const removeTag = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.filter((_, i) => i !== index),
-    }));
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSaving(true);
 
     try {
       const response = await fetch("/api/blogs", {
@@ -64,13 +34,49 @@ const AddBlog = () => {
       if (response.ok) {
         router.push("/admin/blogs");
       } else {
-        console.error("Error creating blog");
+        const error = await response.json();
+        alert(error.error || "Failed to create blog");
       }
     } catch (error) {
       console.error("Error creating blog:", error);
+      alert("Failed to create blog");
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
+  };
+
+  const addTag = (value: string) => {
+    if (value.trim() && !formData.tags.includes(value.trim())) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, value.trim()],
+      }));
+    }
+  };
+
+  const removeTag = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((_, i) => i !== index),
+    }));
+  };
+
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9 -]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
+  };
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const title = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      title,
+      slug: generateSlug(title),
+    }));
   };
 
   return (
@@ -86,16 +92,27 @@ const AddBlog = () => {
       </div>
 
       <form onSubmit={handleSubmit} className="blog-form">
-        <div className="form-section">
-          <h3>Basic Information</h3>
-          <div className="form-grid">
+        <div className="form-grid">
+          {/* Basic Information */}
+          <div className="form-section">
+            <h3>Basic Information</h3>
             <div className="form-group">
               <label>Title *</label>
               <input
                 type="text"
-                name="title"
                 value={formData.title}
-                onChange={handleInputChange}
+                onChange={handleTitleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Slug *</label>
+              <input
+                type="text"
+                value={formData.slug}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, slug: e.target.value }))
+                }
                 required
               />
             </div>
@@ -103,128 +120,170 @@ const AddBlog = () => {
               <label>Author *</label>
               <input
                 type="text"
-                name="author"
                 value={formData.author}
-                onChange={handleInputChange}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, author: e.target.value }))
+                }
                 required
               />
             </div>
             <div className="form-group">
               <label>Category *</label>
               <select
-                name="category"
                 value={formData.category}
-                onChange={handleInputChange}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, category: e.target.value }))
+                }
                 required
               >
                 <option value="">Select Category</option>
-                <option value="Travel Tips">Travel Tips</option>
-                <option value="Destination Guides">Destination Guides</option>
+                <option value="Travel">Travel</option>
                 <option value="Adventure">Adventure</option>
                 <option value="Culture">Culture</option>
                 <option value="Food">Food</option>
                 <option value="Photography">Photography</option>
+                <option value="Tips">Tips</option>
+                <option value="News">News</option>
               </select>
             </div>
+          </div>
+
+          {/* Content */}
+          <div className="form-section">
+            <h3>Content</h3>
             <div className="form-group">
-              <label>Status</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-              >
-                <option value="Draft">Draft</option>
-                <option value="Published">Published</option>
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Published Date</label>
-              <input
-                type="datetime-local"
-                name="publishedAt"
-                value={formData.publishedAt}
-                onChange={handleInputChange}
+              <label>Excerpt *</label>
+              <textarea
+                value={formData.excerpt}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, excerpt: e.target.value }))
+                }
+                rows={3}
+                placeholder="Brief description of the blog post..."
+                required
               />
             </div>
+            <div className="form-group">
+              <label>Content *</label>
+              <textarea
+                value={formData.content}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, content: e.target.value }))
+                }
+                rows={12}
+                placeholder="Write your blog content here..."
+                required
+              />
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div className="form-section">
+            <h3>Tags</h3>
+            <div className="form-group">
+              <label>Add Tags</label>
+              <div className="tag-input">
+                <input
+                  type="text"
+                  placeholder="Add a tag and press Enter"
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addTag(e.currentTarget.value);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    const input = e.currentTarget
+                      .previousElementSibling as HTMLInputElement;
+                    addTag(input.value);
+                    input.value = "";
+                  }}
+                  className="btn btn-sm btn-outline-primary"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="tags-list">
+                {formData.tags.map((tag, index) => (
+                  <div key={index} className="tag-item">
+                    <span>{tag}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeTag(index)}
+                      className="btn btn-sm btn-outline-danger"
+                    >
+                      <i className="bi bi-x"></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Media & Settings */}
+          <div className="form-section">
+            <h3>Media & Settings</h3>
             <div className="form-group">
               <label>Featured Image URL</label>
               <input
                 type="url"
-                name="featuredImage"
                 value={formData.featuredImage}
-                onChange={handleInputChange}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    featuredImage: e.target.value,
+                  }))
+                }
+                placeholder="https://example.com/image.jpg"
               />
             </div>
-          </div>
-        </div>
-
-        <div className="form-section">
-          <h3>Content</h3>
-          <div className="form-group">
-            <label>Excerpt *</label>
-            <textarea
-              name="excerpt"
-              value={formData.excerpt}
-              onChange={handleInputChange}
-              rows={3}
-              placeholder="Brief description of the blog post"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label>Content *</label>
-            <textarea
-              name="content"
-              value={formData.content}
-              onChange={handleInputChange}
-              rows={15}
-              placeholder="Write your blog content here..."
-              required
-            />
-          </div>
-        </div>
-
-        <div className="form-section">
-          <h3>Tags</h3>
-          <div className="list-manager">
-            <div className="add-item">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add tag"
-              />
-              <button type="button" onClick={addTag}>
-                <i className="bi bi-plus"></i>
-              </button>
-            </div>
-            <div className="item-list">
-              {formData.tags.map((tag, index) => (
-                <div key={index} className="item tag-item">
-                  <span>{tag}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeTag(index)}
-                    className="btn-remove"
-                  >
-                    <i className="bi bi-x"></i>
-                  </button>
-                </div>
-              ))}
+            <div className="form-row">
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={formData.featured}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        featured: e.target.checked,
+                      }))
+                    }
+                  />
+                  Featured Blog
+                </label>
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, status: e.target.value }))
+                  }
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Published">Published</option>
+                  <option value="Archived">Archived</option>
+                </select>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? "Creating..." : "Create Blog"}
-          </button>
           <button
             type="button"
             onClick={() => router.back()}
             className="btn btn-outline-secondary"
           >
             Cancel
+          </button>
+          <button type="submit" disabled={saving} className="btn btn-primary">
+            {saving ? "Creating..." : "Create Blog"}
           </button>
         </div>
       </form>

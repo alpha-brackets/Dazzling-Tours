@@ -1,0 +1,143 @@
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import { Testimonial } from "@/models";
+import { MongoQuery } from "@/lib/types";
+import {
+  withRoleAuth,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/lib/middleware/auth";
+import { UserRole } from "@/lib/enums/roles";
+
+// GET /api/testimonials - Get all testimonials
+export async function GET(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const status = searchParams.get("status");
+    const featured = searchParams.get("featured");
+    const tourId = searchParams.get("tourId");
+    const search = searchParams.get("search");
+
+    const query: MongoQuery = {};
+
+    if (status) query.status = status;
+    if (featured === "true") query.featured = true;
+    if (tourId) query.tourId = tourId;
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
+        { designation: { $regex: search, $options: "i" } },
+        { company: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const testimonials = await Testimonial.find(query)
+      .populate("tourId", "title")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Testimonial.countDocuments(query);
+
+    return NextResponse.json({
+      success: true,
+      data: testimonials,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching testimonials:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch testimonials" },
+      { status: 500 }
+    );
+  }
+}
+
+// POST /api/testimonials - Create a new testimonial (Super Admin only)
+export const POST = withRoleAuth(UserRole.SUPER_ADMIN, async (request) => {
+  try {
+    await connectDB();
+
+    const body = await request.json();
+
+    // Validate required fields
+    const requiredFields = ["name", "designation", "content", "rating"];
+    for (const field of requiredFields) {
+      if (!body[field]) {
+        return createErrorResponse(`${field} is required`, 400);
+      }
+    }
+
+    // Validate rating is between 1 and 5
+    if (body.rating < 1 || body.rating > 5) {
+      return createErrorResponse("Rating must be between 1 and 5", 400);
+    }
+
+    const testimonial = new Testimonial(body);
+    await testimonial.save();
+
+    return createSuccessResponse(
+      testimonial,
+      "Testimonial created successfully",
+      201
+    );
+  } catch (error) {
+    console.error("Error creating testimonial:", error);
+    return createErrorResponse("Failed to create testimonial", 500);
+  }
+});
+
+// PUT /api/testimonials - Update multiple testimonials (bulk operations) (Super Admin only)
+export const PUT = withRoleAuth(UserRole.SUPER_ADMIN, async (request) => {
+  try {
+    await connectDB();
+
+    const body = await request.json();
+    const { action, testimonialIds, data } = body;
+
+    if (!action || !testimonialIds || !Array.isArray(testimonialIds)) {
+      return createErrorResponse("Action and testimonialIds are required", 400);
+    }
+
+    let result;
+    switch (action) {
+      case "updateStatus":
+        result = await Testimonial.updateMany(
+          { _id: { $in: testimonialIds } },
+          { status: data.status }
+        );
+        break;
+      case "updateFeatured":
+        result = await Testimonial.updateMany(
+          { _id: { $in: testimonialIds } },
+          { featured: data.featured }
+        );
+        break;
+      case "delete":
+        result = await Testimonial.deleteMany({ _id: { $in: testimonialIds } });
+        break;
+      default:
+        return createErrorResponse("Invalid action", 400);
+    }
+
+    return createSuccessResponse(
+      result,
+      `Testimonials ${action} completed successfully`
+    );
+  } catch (error) {
+    console.error("Error updating testimonials:", error);
+    return createErrorResponse("Failed to update testimonials", 500);
+  }
+});

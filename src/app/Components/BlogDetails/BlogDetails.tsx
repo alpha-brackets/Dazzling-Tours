@@ -1,13 +1,58 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import loadBackgroundImages from "../Common/loadBackgroundImages";
 import Link from "next/link";
 import Image from "next/image";
+import { useGetCommentsByBlog, useCreateComment } from "@/lib/hooks";
 
 const BlogDetails = () => {
+  const [commentForm, setCommentForm] = useState({
+    name: "",
+    email: "",
+    content: "",
+  });
+  const [blogId] = useState("507f1f77bcf86cd799439011"); // This should come from props or URL params
+
+  useGetCommentsByBlog(blogId, {
+    status: "Approved",
+    includeReplies: true,
+  });
+
+  const createCommentMutation = useCreateComment();
+
   useEffect(() => {
     loadBackgroundImages();
   }, []);
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    createCommentMutation.mutate(
+      {
+        ...commentForm,
+        blogId,
+      },
+      {
+        onSuccess: () => {
+          setCommentForm({
+            name: "",
+            email: "",
+            content: "",
+          });
+        },
+      }
+    );
+  };
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setCommentForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   return (
     <section className="news-details fix section-padding">
@@ -212,7 +257,21 @@ const BlogDetails = () => {
                 </div>
                 <div className="comment-form-wrap pt-5">
                   <h3>Leave a comments</h3>
-                  <form action="#" id="contact-form" method="POST">
+                  {createCommentMutation.isSuccess && (
+                    <div className="alert alert-success">
+                      <i className="bi bi-check-circle"></i>
+                      Thank you! Your comment has been submitted and is awaiting
+                      approval.
+                    </div>
+                  )}
+                  {createCommentMutation.isError && (
+                    <div className="alert alert-danger">
+                      <i className="bi bi-exclamation-triangle"></i>
+                      Sorry, there was an error submitting your comment. Please
+                      try again.
+                    </div>
+                  )}
+                  <form onSubmit={handleCommentSubmit}>
                     <div className="row g-4">
                       <div className="col-lg-6">
                         <div className="form-clt">
@@ -222,6 +281,9 @@ const BlogDetails = () => {
                             name="name"
                             id="name"
                             placeholder="Your Name"
+                            value={commentForm.name}
+                            onChange={handleInputChange}
+                            required
                           />
                         </div>
                       </div>
@@ -229,10 +291,13 @@ const BlogDetails = () => {
                         <div className="form-clt">
                           <span>Your Email*</span>
                           <input
-                            type="text"
+                            type="email"
                             name="email"
                             id="email6"
                             placeholder="Your Email"
+                            value={commentForm.email}
+                            onChange={handleInputChange}
+                            required
                           />
                         </div>
                       </div>
@@ -240,15 +305,25 @@ const BlogDetails = () => {
                         <div className="form-clt">
                           <span>Message*</span>
                           <textarea
-                            name="message"
+                            name="content"
                             id="message"
                             placeholder="Write Message"
+                            value={commentForm.content}
+                            onChange={handleInputChange}
+                            required
                           ></textarea>
                         </div>
                       </div>
                       <div className="col-lg-6">
-                        <button type="submit" className="theme-btn ">
-                          post comment<i className="bi bi-arrow-right"></i>
+                        <button
+                          type="submit"
+                          className="theme-btn"
+                          disabled={createCommentMutation.isPending}
+                        >
+                          {createCommentMutation.isPending
+                            ? "Posting..."
+                            : "Post Comment"}
+                          <i className="bi bi-arrow-right"></i>
                         </button>
                       </div>
                     </div>

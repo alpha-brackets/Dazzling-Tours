@@ -2,8 +2,17 @@
 import Image from "next/image";
 import React, { useRef } from "react";
 import Slider from "react-slick";
+import { useGetTestimonials } from "@/lib/hooks";
 
 const Testimonial2 = () => {
+  const { data: testimonialsData, isLoading: loading } = useGetTestimonials({
+    status: "Active",
+    featured: true,
+    limit: 6,
+  });
+
+  const testimonials = testimonialsData?.data || [];
+
   const settings = {
     dots: false,
     infinite: true,
@@ -50,32 +59,26 @@ const Testimonial2 = () => {
     }
   };
 
-  const testimonialContent = [
-    {
-      subtitle: "Trader, USA",
-      title: "Esther Howard",
-      rating: "4.7 /5.0",
-      review: "(01/2000) Reviews",
-      content:
-        "There are many variations of passages of available, but the majority have suffered alteration in some form, by injected humour, randomised words which do not look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there is not anything",
-    },
-    {
-      subtitle: "Trader, USA",
-      title: "Esther Howard",
-      rating: "4.7 /5.0",
-      review: "(01/2000) Reviews",
-      content:
-        "There are many variations of passages of available, but the majority have suffered alteration in some form, by injected humour, randomised words which do not look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there is not anything",
-    },
-    {
-      subtitle: "Trader, USA",
-      title: "Esther Howard",
-      rating: "4.7 /5.0",
-      review: "(01/2000) Reviews",
-      content:
-        "There are many variations of passages of available, but the majority have suffered alteration in some form, by injected humour, randomised words which do not look even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there is not anything",
-    },
-  ];
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <i
+        key={i}
+        className={`bi bi-star${i < Math.floor(rating) ? "-fill" : ""}`}
+      ></i>
+    ));
+  };
+
+  if (loading) {
+    return (
+      <section className="testimonial-section section-padding fix section-bg">
+        <div className="container">
+          <div className="text-center">
+            <p>Loading testimonials...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="testimonial-section section-padding fix section-bg">
@@ -103,8 +106,8 @@ const Testimonial2 = () => {
                 <div className="swiper testimonial-slider2">
                   <div className="swiper-wrapper">
                     <Slider ref={sliderRef} {...settings}>
-                      {testimonialContent.map((item, i) => (
-                        <div key={i} className="swiper-slide">
+                      {testimonials.map((testimonial) => (
+                        <div key={testimonial._id} className="swiper-slide">
                           <div className="testimonial-card-items">
                             <div className="star-item">
                               <div className="icon">
@@ -117,28 +120,28 @@ const Testimonial2 = () => {
                                 >
                                   <path
                                     d="M2 24.8696H16.4927C20.3157 24.8696 22.9395 27.7946 22.9395 31.3751V39.4945C22.9395 43.075 20.3157 45.9998 16.4927 45.9998H8.44679C4.89858 45.9998 2 43.075 2 39.4945V24.8696"
-                                    stroke="#1CA8CB"
+                                    stroke="var(--theme)"
                                     strokeWidth="3"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                   />
                                   <path
                                     d="M2 24.8699C2 9.6148 4.82365 7.09343 13.3194 2"
-                                    stroke="#1CA8CB"
+                                    stroke="var(--theme)"
                                     strokeWidth="3"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                   />
                                   <path
                                     d="M31.0605 24.8696H45.5532C49.3763 24.8696 52 27.7946 52 31.3751V39.4945C52 43.075 49.3763 45.9998 45.5532 45.9998H37.5073C33.9591 45.9998 31.0605 43.075 31.0605 39.4945V24.8696"
-                                    stroke="#1CA8CB"
+                                    stroke="var(--theme)"
                                     strokeWidth="3"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                   />
                                   <path
                                     d="M31.0605 24.8699C31.0605 9.6148 33.884 7.09343 42.3798 2"
-                                    stroke="#1CA8CB"
+                                    stroke="var(--theme)"
                                     strokeWidth="3"
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -146,21 +149,22 @@ const Testimonial2 = () => {
                                 </svg>
                               </div>
                               <div className="star">
-                                <i className="bi bi-star-fill"></i>
-                                <i className="bi bi-star-fill"></i>
-                                <i className="bi bi-star-fill"></i>
-                                <i className="bi bi-star-fill"></i>
-                                <i className="bi bi-star-fill"></i>
-                                <span>{item.rating}</span>
+                                {renderStars(testimonial.rating)}
+                                <span>
+                                  {testimonial.rating.toFixed(1)} /5.0
+                                </span>
                               </div>
                             </div>
-                            <p>{item.content}</p>
+                            <p>&ldquo;{testimonial.content}&rdquo;</p>
                             <div className="client-info-items">
                               <div className="info-text">
-                                <h6>{item.title}</h6>
-                                <p>{item.subtitle}</p>
+                                <h6>{testimonial.name}</h6>
+                                <p>{testimonial.designation}</p>
+                                {testimonial.company && (
+                                  <small>{testimonial.company}</small>
+                                )}
                               </div>
-                              <h5>{item.review}</h5>
+                              <h5>({testimonial.location || "Traveler"})</h5>
                             </div>
                           </div>
                         </div>

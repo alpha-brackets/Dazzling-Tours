@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import Nav from "./Nav";
 import Link from "next/link";
 import Image from "next/image";
-export default function Header1({ variant }: any) {
+
+export default function Header1() {
   const [mobileToggle, setMobileToggle] = useState(false);
   const [isSticky, setIsSticky] = useState<string>("");
   const [prevScrollPos, setPrevScrollPos] = useState<number>(0);
@@ -32,9 +33,7 @@ export default function Header1({ variant }: any) {
   return (
     <div>
       <header
-        className={`cs_site_header header_style_2 header_style_2_0 cs_style_1 header_sticky_style1 ${
-          variant ? variant : ""
-        } cs_sticky_header cs_site_header_full_width ${
+        className={`cs_site_header header_style_2 header_style_2_0 cs_style_1 header_sticky_style1  cs_sticky_header cs_site_header_full_width ${
           mobileToggle ? "cs_mobile_toggle_active" : ""
         } ${isSticky ? isSticky : ""}`}
       >
@@ -77,7 +76,6 @@ export default function Header1({ variant }: any) {
                     </a>
                     <Link href="/contact" className="theme-btn">
                       <span>
-                        {" "}
                         Request A Quote <i className="bi bi-arrow-right"></i>
                       </span>
                     </Link>

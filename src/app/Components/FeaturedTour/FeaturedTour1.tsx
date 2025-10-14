@@ -81,7 +81,7 @@ const FeaturedTour1 = () => {
 
   return (
     <section className="featured-tour-section section-padding section-bg">
-      <div className="left-shape">
+      {/* <div className="left-shape">
         <Image
           src="/assets/img/feature/plane-shape.png"
           alt="img"
@@ -96,7 +96,7 @@ const FeaturedTour1 = () => {
           width={372}
           height={112}
         />
-      </div>
+      </div> */}
       <div className="array-button">
         <button onClick={previous} className="array-prev">
           <Image

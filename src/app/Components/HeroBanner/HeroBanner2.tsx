@@ -11,7 +11,7 @@ const HeroBanner2 = () => {
     <section className="hero-section-2">
       <div
         className="hero-2 bg-cover"
-        data-background="/assets/img/hero/hero1.jpg"
+        data-background="/assets/img/hero/hero2.webp"
       >
         {/* Black overlay for better text visibility */}
         <div className="hero-overlay"></div>

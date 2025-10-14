@@ -1,0 +1,202 @@
+import { z } from "zod";
+import { TourStatus } from "../enums/tourStatus";
+
+// Base tour validation schema
+export const tourSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Tour title is required")
+    .min(3, "Tour title must be at least 3 characters")
+    .max(100, "Tour title must be less than 100 characters")
+    .trim(),
+
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .min(10, "Description must be at least 10 characters")
+    .max(2000, "Description must be less than 2000 characters")
+    .trim(),
+
+  shortDescription: z
+    .string()
+    .min(1, "Short description is required")
+    .min(10, "Short description must be at least 10 characters")
+    .max(200, "Short description must be less than 200 characters")
+    .trim(),
+
+  price: z
+    .number()
+    .min(0, "Price must be greater than or equal to 0")
+    .max(100000, "Price must be less than 100,000"),
+
+  duration: z
+    .string()
+    .min(1, "Duration is required")
+    .min(2, "Duration must be at least 2 characters")
+    .max(50, "Duration must be less than 50 characters")
+    .trim(),
+
+  location: z
+    .string()
+    .min(1, "Location is required")
+    .min(2, "Location must be at least 2 characters")
+    .max(100, "Location must be less than 100 characters")
+    .trim(),
+
+  category: z
+    .string()
+    .min(1, "Category is required")
+    .min(2, "Category must be at least 2 characters")
+    .max(50, "Category must be less than 50 characters")
+    .trim(),
+
+  images: z.array(z.string().url("Invalid image URL")).optional().default([]),
+
+  highlights: z
+    .array(z.string().min(1, "Highlight cannot be empty").trim())
+    .min(1, "At least one highlight is required")
+    .max(10, "Maximum 10 highlights allowed"),
+
+  itinerary: z
+    .array(
+      z.object({
+        day: z
+          .number()
+          .min(1, "Day must be at least 1")
+          .max(365, "Day must be less than 365"),
+        title: z
+          .string()
+          .min(1, "Itinerary title is required")
+          .min(3, "Itinerary title must be at least 3 characters")
+          .max(100, "Itinerary title must be less than 100 characters")
+          .trim(),
+        description: z
+          .string()
+          .min(1, "Itinerary description is required")
+          .min(10, "Itinerary description must be at least 10 characters")
+          .max(500, "Itinerary description must be less than 500 characters")
+          .trim(),
+      })
+    )
+    .min(1, "At least one itinerary day is required")
+    .max(30, "Maximum 30 itinerary days allowed"),
+
+  includes: z
+    .array(z.string().min(1, "Include item cannot be empty").trim())
+    .min(1, "At least one include item is required")
+    .max(15, "Maximum 15 include items allowed"),
+
+  excludes: z
+    .array(z.string().min(1, "Exclude item cannot be empty").trim())
+    .optional()
+    .default([]),
+
+  difficulty: z
+    .enum(["Easy", "Medium", "Hard"], {
+      message: "Difficulty must be Easy, Medium, or Hard",
+    })
+    .default("Easy"),
+
+  groupSize: z
+    .number()
+    .min(1, "Group size must be at least 1")
+    .max(100, "Group size must be less than 100")
+    .default(10),
+
+  rating: z
+    .number()
+    .min(0, "Rating must be at least 0")
+    .max(5, "Rating must be at most 5")
+    .default(0),
+
+  reviews: z.number().min(0, "Reviews count must be at least 0").default(0),
+
+  featured: z.boolean().default(false),
+
+  status: z
+    .enum([TourStatus.ACTIVE, TourStatus.INACTIVE], {
+      message: "Status must be Active or Inactive",
+    })
+    .default(TourStatus.ACTIVE),
+});
+
+// Schema for creating a new tour
+export const createTourSchema = tourSchema;
+
+// Schema for updating a tour (all fields optional except _id)
+export const updateTourSchema = tourSchema.partial().extend({
+  _id: z.string().min(1, "Tour ID is required"),
+});
+
+// Type inference from schemas
+export type TourFormData = z.infer<typeof tourSchema>;
+export type CreateTourFormData = z.infer<typeof createTourSchema>;
+export type UpdateTourFormData = z.infer<typeof updateTourSchema>;
+
+// Validation helper functions
+export const validateTourData = (data: unknown) => {
+  return tourSchema.safeParse(data);
+};
+
+export const validateCreateTourData = (data: unknown) => {
+  return createTourSchema.safeParse(data);
+};
+
+export const validateUpdateTourData = (data: unknown) => {
+  return updateTourSchema.safeParse(data);
+};
+
+// Field-specific validation functions
+export const validateTitle = (title: string) => {
+  return tourSchema.shape.title.safeParse(title);
+};
+
+export const validatePrice = (price: number) => {
+  return tourSchema.shape.price.safeParse(price);
+};
+
+export const validateDescription = (description: string) => {
+  return tourSchema.shape.description.safeParse(description);
+};
+
+export const validateShortDescription = (shortDescription: string) => {
+  return tourSchema.shape.shortDescription.safeParse(shortDescription);
+};
+
+export const validateDuration = (duration: string) => {
+  return tourSchema.shape.duration.safeParse(duration);
+};
+
+export const validateLocation = (location: string) => {
+  return tourSchema.shape.location.safeParse(location);
+};
+
+export const validateCategory = (category: string) => {
+  return tourSchema.shape.category.safeParse(category);
+};
+
+export const validateHighlights = (highlights: string[]) => {
+  return tourSchema.shape.highlights.safeParse(highlights);
+};
+
+export const validateIncludes = (includes: string[]) => {
+  return tourSchema.shape.includes.safeParse(includes);
+};
+
+export const validateExcludes = (excludes: string[]) => {
+  return tourSchema.shape.excludes.safeParse(excludes);
+};
+
+export const validateItinerary = (
+  itinerary: Array<{ day: number; title: string; description: string }>
+) => {
+  return tourSchema.shape.itinerary.safeParse(itinerary);
+};
+
+export const validateGroupSize = (groupSize: number) => {
+  return tourSchema.shape.groupSize.safeParse(groupSize);
+};
+
+export const validateRating = (rating: number) => {
+  return tourSchema.shape.rating.safeParse(rating);
+};

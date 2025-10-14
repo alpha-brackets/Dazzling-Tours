@@ -1,0 +1,108 @@
+import { NextRequest, NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import { Testimonial } from "@/models";
+import {
+  withRoleAuth,
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/lib/middleware/auth";
+import { UserRole } from "@/lib/enums/roles";
+
+// GET /api/testimonials/[id] - Get a single testimonial
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    await connectDB();
+
+    const resolvedParams = await params;
+    const testimonial = await Testimonial.findById(resolvedParams.id).populate(
+      "tourId",
+      "title"
+    );
+
+    if (!testimonial) {
+      return NextResponse.json(
+        { success: false, error: "Testimonial not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: testimonial,
+    });
+  } catch (error) {
+    console.error("Error fetching testimonial:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch testimonial" },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/testimonials/[id] - Update a testimonial (Super Admin only)
+export const PUT = withRoleAuth(
+  UserRole.SUPER_ADMIN,
+  async (request: NextRequest) => {
+    try {
+      await connectDB();
+
+      // Extract params from the URL
+      const url = new URL(request.url);
+      const pathSegments = url.pathname.split("/");
+      const id = pathSegments[pathSegments.length - 1];
+
+      const body = await request.json();
+
+      // Validate rating if provided
+      if (body.rating && (body.rating < 1 || body.rating > 5)) {
+        return createErrorResponse("Rating must be between 1 and 5", 400);
+      }
+
+      const testimonial = await Testimonial.findByIdAndUpdate(id, body, {
+        new: true,
+        runValidators: true,
+      }).populate("tourId", "title");
+
+      if (!testimonial) {
+        return createErrorResponse("Testimonial not found", 404);
+      }
+
+      return createSuccessResponse(
+        testimonial,
+        "Testimonial updated successfully"
+      );
+    } catch (error) {
+      console.error("Error updating testimonial:", error);
+      return createErrorResponse("Failed to update testimonial", 500);
+    }
+  }
+);
+
+// DELETE /api/testimonials/[id] - Delete a testimonial (Super Admin only)
+export const DELETE = withRoleAuth(
+  UserRole.SUPER_ADMIN,
+  async (request: NextRequest) => {
+    try {
+      await connectDB();
+
+      // Extract params from the URL
+      const url = new URL(request.url);
+      const pathSegments = url.pathname.split("/");
+      const id = pathSegments[pathSegments.length - 1];
+
+      const testimonial = await Testimonial.findByIdAndDelete(id);
+
+      if (!testimonial) {
+        return createErrorResponse("Testimonial not found", 404);
+      }
+
+      return createSuccessResponse(null, "Testimonial deleted successfully");
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      return createErrorResponse("Failed to delete testimonial", 500);
+    }
+  }
+);

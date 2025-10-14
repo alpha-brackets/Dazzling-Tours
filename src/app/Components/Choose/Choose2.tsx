@@ -1,17 +1,16 @@
 "use client";
-import React, { useEffect } from "react";
-import loadBackgroundImages from "../Common/loadBackgroundImages";
+import React from "react";
 import Image from "next/image";
 
 const Choose2 = () => {
-  useEffect(() => {
-    loadBackgroundImages();
-  }, []);
-
   return (
     <section
-      className="choose-us-section section-padding bg-cover fix"
-      data-background="/assets/img/choose-us-bg-2.jpg"
+      className="choose-us-section section-padding fix"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(253, 125, 2, 0.1) 0%, rgba(2, 109, 247, 0.05) 50%, rgba(255, 193, 7, 0.08) 100%)",
+        position: "relative",
+      }}
     >
       <div className="container">
         <div className="choose-us-wrapper">
@@ -32,12 +31,7 @@ const Choose2 = () => {
                 </p>
                 <div className="choose-us-area">
                   <div className="line-shape">
-                    <Image
-                      src="/assets/img/line-shape2.png"
-                      alt="img"
-                      width={2}
-                      height={279}
-                    />
+                    <div className="custom-line"></div>
                   </div>
                   <div
                     className="choose-us-items wow fadeInUp wow"
@@ -94,7 +88,7 @@ const Choose2 = () => {
             >
               <div className="choose-us-thumb">
                 <Image
-                  src="/assets/img/choose-us-bg.webp"
+                  src="/assets/img/choose/Choose1.webp"
                   className="wow img-custom-anim-left"
                   alt="img"
                   width={828}

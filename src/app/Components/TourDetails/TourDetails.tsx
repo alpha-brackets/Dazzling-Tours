@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
 import loadBackgroundImages from "../Common/loadBackgroundImages";
-import Link from "next/link";
 import Image from "next/image";
 
 const TourDetails = () => {

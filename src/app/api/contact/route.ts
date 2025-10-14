@@ -50,6 +50,27 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
+
+    // Validate required fields
+    const requiredFields = ["name", "email", "subject", "message"];
+    for (const field of requiredFields) {
+      if (!body[field]) {
+        return NextResponse.json(
+          { success: false, error: `${field} is required` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(body.email)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid email format" },
+        { status: 400 }
+      );
+    }
+
     const contact = new Contact(body);
     await contact.save();
 
@@ -65,6 +86,53 @@ export async function POST(request: NextRequest) {
     console.error("Error creating contact:", error);
     return NextResponse.json(
       { success: false, error: "Failed to submit contact inquiry" },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/contact - Update multiple contact inquiries (bulk operations)
+export async function PUT(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const body = await request.json();
+    const { action, contactIds, data } = body;
+
+    if (!action || !contactIds || !Array.isArray(contactIds)) {
+      return NextResponse.json(
+        { success: false, error: "Action and contactIds are required" },
+        { status: 400 }
+      );
+    }
+
+    let result;
+    switch (action) {
+      case "updateStatus":
+        result = await Contact.updateMany(
+          { _id: { $in: contactIds } },
+          { status: data.status }
+        );
+        break;
+      case "delete":
+        result = await Contact.deleteMany({ _id: { $in: contactIds } });
+        break;
+      default:
+        return NextResponse.json(
+          { success: false, error: "Invalid action" },
+          { status: 400 }
+        );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+      message: `Contact inquiries ${action} completed successfully`,
+    });
+  } catch (error) {
+    console.error("Error updating contact inquiries:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to update contact inquiries" },
       { status: 500 }
     );
   }

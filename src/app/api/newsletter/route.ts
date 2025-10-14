@@ -99,6 +99,94 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// PUT /api/newsletter - Update newsletter subscription
+export async function PUT(request: NextRequest) {
+  try {
+    await connectDB();
+
+    const body = await request.json();
+    const { action, email, status } = body;
+
+    if (!action || !email) {
+      return NextResponse.json(
+        { success: false, error: "Action and email are required" },
+        { status: 400 }
+      );
+    }
+
+    let result;
+    switch (action) {
+      case "unsubscribe":
+        result = await Newsletter.findOneAndUpdate(
+          { email },
+          {
+            status: "Unsubscribed",
+            unsubscribedAt: new Date(),
+          },
+          { new: true }
+        );
+        break;
+      case "reactivate":
+        result = await Newsletter.findOneAndUpdate(
+          { email },
+          {
+            status: "Active",
+            subscribedAt: new Date(),
+            unsubscribedAt: undefined,
+          },
+          { new: true }
+        );
+        break;
+      case "updateStatus":
+        if (!status) {
+          return NextResponse.json(
+            { success: false, error: "Status is required" },
+            { status: 400 }
+          );
+        }
+        const updateData: {
+          status: string;
+          unsubscribedAt?: Date;
+          subscribedAt?: Date;
+        } = { status };
+        if (status === "Unsubscribed") {
+          updateData.unsubscribedAt = new Date();
+        } else if (status === "Active") {
+          updateData.subscribedAt = new Date();
+          updateData.unsubscribedAt = undefined;
+        }
+        result = await Newsletter.findOneAndUpdate({ email }, updateData, {
+          new: true,
+        });
+        break;
+      default:
+        return NextResponse.json(
+          { success: false, error: "Invalid action" },
+          { status: 400 }
+        );
+    }
+
+    if (!result) {
+      return NextResponse.json(
+        { success: false, error: "Email not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+      message: `Newsletter ${action} completed successfully`,
+    });
+  } catch (error) {
+    console.error("Error updating newsletter:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to update newsletter" },
+      { status: 500 }
+    );
+  }
+}
+
 // DELETE /api/newsletter - Unsubscribe from newsletter
 export async function DELETE(request: NextRequest) {
   try {

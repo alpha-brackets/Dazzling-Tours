@@ -3,6 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --primary: #fd7d02;
+  --primary-light: #ffb366;
+  --primary-dark: #cc5f00;
+  --complementary: #026df7;
+  --accent: #ffc107;
+  --neutral-dark: #1a1a1a;
+  --neutral-light: #f8f9fa;
 }
 
 /* Custom theme variables */

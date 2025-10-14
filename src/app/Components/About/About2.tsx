@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import { IconTick } from "../Common/icons";
 
 const About2 = () => {
   return (
@@ -9,49 +10,41 @@ const About2 = () => {
         <div className="about-wrapper-2">
           <div className="row g-4">
             <div className="col-lg-6">
-              <div className="about-image">
+              <div
+                className="about-image wow fadeInUp wow"
+                data-wow-delay=".3s"
+              >
                 <Image
-                  src="/assets/img/about/03.jpg"
-                  className="wow img-custom-anim-left"
+                  src="/assets/img/about/about1.webp"
                   alt="img"
-                  width={330}
-                  height={512}
+                  width={450}
+                  height={449}
                 />
-                <div className="shape-image float-bob-y">
+                <div
+                  className="about-image-2 wow fadeInUp wow"
+                  data-wow-delay=".5s"
+                >
                   <Image
-                    src="/assets/img/about/04.png"
+                    src="/assets/img/about/about2.webp"
                     alt="img"
-                    width={196}
-                    height={109}
+                    width={150}
+                    height={150}
                   />
                 </div>
-                <div className="group-image float-bob-x">
+                <div
+                  className="about-image-3 wow fadeInUp wow"
+                  data-wow-delay=".7s"
+                >
                   <Image
-                    src="/assets/img/about/group.png"
+                    src="/assets/img/about/about3.webp"
                     alt="img"
-                    width={170}
-                    height={50}
+                    width={200}
+                    height={200}
                   />
-                </div>
-                <div className="about-image-2">
-                  <Image
-                    src="/assets/img/about/05.jpg"
-                    className="wow img-custom-anim-top"
-                    alt="img"
-                    width={284}
-                    height={411}
-                  />
-                  <div className="plane-shape">
-                    <Image
-                      src="/assets/img/about/plane-shape2.png"
-                      alt="img"
-                      width={370}
-                      height={205}
-                    />
-                  </div>
                 </div>
               </div>
             </div>
+
             <div className="col-lg-6">
               <div className="about-content">
                 <div className="section-title">
@@ -72,12 +65,7 @@ const About2 = () => {
                 >
                   <div className="about-icon-items">
                     <div className="icon">
-                      <Image
-                        src="/assets/img/check.png"
-                        alt="img"
-                        width={34}
-                        height={30}
-                      />
+                      <IconTick />
                     </div>
                     <div className="content">
                       <h5>
@@ -98,12 +86,7 @@ const About2 = () => {
                 >
                   <div className="about-icon-items">
                     <div className="icon">
-                      <Image
-                        src="/assets/img/check.png"
-                        alt="img"
-                        width={34}
-                        height={30}
-                      />
+                      <IconTick />
                     </div>
                     <div className="content">
                       <h5>

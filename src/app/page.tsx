@@ -1,29 +1,25 @@
 import React from "react";
-import HeroBanner2 from "@/app/Components/HeroBanner/HeroBanner2";
 import FeaturedTour1 from "@/app/Components/FeaturedTour/FeaturedTour1";
-import Destination1 from "@/app/Components/Destination/Destination1";
-import About1 from "@/app/Components/About/About1";
 import Counter1 from "@/app/Components/Counter/Counter1";
-import Testimonial1 from "@/app/Components/Testimonial/Testimonial1";
-import Cta1 from "@/app/Components/Cta/Cta1";
-import Instagram1 from "@/app/Components/Instagram/Instagram1";
-import Footer1 from "@/app/Components/Footer/Footer1";
-import Header1 from "@/app/Components/Header/Header1";
+import HeroBanner2 from "@/app/Components/HeroBanner/HeroBanner2";
+import About2 from "./Components/About/About2";
+import Choose2 from "./Components/Choose/Choose2";
+import Testimonial2 from "./Components/Testimonial/Testimonial2";
+import Cta2 from "./Components/Cta/Cta2";
+import Blog3 from "./Components/Blogs/Blog3";
 
 const HomePage = () => {
   return (
-    <div className="main-page-area">
-      <Header1 />
+    <>
       <HeroBanner2 />
+      <About2 />
       <FeaturedTour1 />
-      <Destination1 />
-      <About1 />
+      <Choose2 />
       <Counter1 />
-      <Testimonial1 />
-      <Cta1 />
-      <Instagram1 />
-      <Footer1 />
-    </div>
+      <Testimonial2 />
+      <Cta2 />
+      <Blog3 />
+    </>
   );
 };
 

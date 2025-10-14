@@ -3,6 +3,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import "slick-carousel/slick/slick.css";
 import "./assets/main.css";
+import ConditionalLayout from "./Components/Common/ConditionalLayout";
+import { QueryProvider } from "./Components/Common/QueryProvider";
+import { NotificationProvider } from "@/lib/contexts/NotificationContext";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -52,7 +55,11 @@ export default function RootLayout({
       <body
         className={`${manrope.variable} ${work_sans.variable} ${kalam.variable}`}
       >
-        {children}
+        <NotificationProvider>
+          <QueryProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </QueryProvider>
+        </NotificationProvider>
       </body>
     </html>
   );

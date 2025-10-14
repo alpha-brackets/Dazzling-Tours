@@ -1,14 +1,17 @@
 import React from "react";
-import HeroBanner1 from "@/app/Components/HeroBanner/HeroBanner1";
-import BlogDetails from "@/app/Components/BlogDetails/BlogDetails";
+import BreadCrumb from "../../../Components/Common/BreadCrumb";
+import BlogDetails from "../../../Components/BlogDetails/BlogDetails";
 
-const BlogDetailsPage = () => {
+const page = () => {
   return (
-    <>
-      <HeroBanner1 />
-      <BlogDetails />
-    </>
+    <div>
+      <BreadCrumb
+        bgImg="/assets/img/breadcrumb/breadcrumb.jpg"
+        Title="Blog Details"
+      ></BreadCrumb>
+      <BlogDetails></BlogDetails>
+    </div>
   );
 };
 
-export default BlogDetailsPage;
+export default page;

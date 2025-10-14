@@ -1,13 +1,34 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import loadBackgroundImages from "../Common/loadBackgroundImages";
 import Link from "next/link";
 import Image from "next/image";
+import { useSubscribeNewsletter, useNotification } from "@/lib/hooks";
 
 const Footer1 = () => {
+  const [email, setEmail] = useState("");
+
+  const subscribeMutation = useSubscribeNewsletter();
+  const { showSuccess } = useNotification();
+
   useEffect(() => {
     loadBackgroundImages();
   }, []);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+
+    subscribeMutation.mutate(
+      { email },
+      {
+        onSuccess: () => {
+          setEmail("");
+          showSuccess("Thank you for subscribing to our newsletter!");
+        },
+      }
+    );
+  };
 
   return (
     <footer
@@ -36,16 +57,28 @@ const Footer1 = () => {
                 <div className="footer-content">
                   <h3>Subscribe Newsletter</h3>
                   <p>Get Our Latest Deals and Update</p>
-                  <div className="footer-input">
-                    <input
-                      type="email"
-                      id="email2"
-                      placeholder="Your email address"
-                    />
-                    <button className="newsletter-btn theme-btn" type="submit">
-                      Subscribe <i className="bi bi-arrow-right"></i>
-                    </button>
-                  </div>
+                  <form onSubmit={handleNewsletterSubmit}>
+                    <div className="footer-input">
+                      <input
+                        type="email"
+                        id="email2"
+                        placeholder="Your email address"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                      <button
+                        className="newsletter-btn theme-btn"
+                        type="submit"
+                        disabled={subscribeMutation.isPending}
+                      >
+                        {subscribeMutation.isPending
+                          ? "Subscribing..."
+                          : "Subscribe"}{" "}
+                        <i className="bi bi-arrow-right"></i>
+                      </button>
+                    </div>
+                  </form>
                   <div className="social-icon d-flex align-items-center justify-content-center">
                     <a href="#">
                       <i className="bi bi-facebook"></i>
@@ -79,48 +112,19 @@ const Footer1 = () => {
                     <Link href="/about">About Us</Link>
                   </li>
                   <li>
-                    <Link href="/blog">Blog</Link>
+                    <Link href="/blogs">Blogs</Link>
                   </li>
-                  {/* <li>
-                    <Link href="/service">Services</Link>
-                  </li> */}
+
                   <li>
-                    <Link href="/tour">Tour</Link>
+                    <Link href="/tours">Tours</Link>
+                  </li>
+                  <li>
+                    <Link href="/contact">Contact</Link>
                   </li>
                 </ul>
               </div>
             </div>
-            {/* <div
-              className="col-xl-3 col-lg-4 col-md-6 col-sm-6 ps-lg-5 wow fadeInUp wow"
-              data-wow-delay=".6s"
-            >
-              <div className="single-widget-items">
-                <div className="widget-head">
-                  <h4>Services</h4>
-                </div>
-                <ul className="list-items">
-                  <li>
-                    <Link href="/tour/tour-details">Wanderlust Adventures</Link>
-                  </li>
-                  <li>
-                    <Link href="/tour/tour-details">Globe Trotters Travel</Link>
-                  </li>
-                  <li>
-                    <Link href="/tour/tour-details">
-                      Odyssey Travel Services
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="/tour/tour-details">Jet Set Journeys</Link>
-                  </li>
-                  <li>
-                    <Link href="/tour/tour-details">
-                      Dream Destinations Travel
-                    </Link>
-                  </li>
-                </ul>
-              </div>
-            </div> */}
+
             <div
               className="col-xl-3 col-lg-4 col-md-6 col-sm-6 ps-xl-5 wow fadeInUp wow"
               data-wow-delay=".6s"
@@ -136,7 +140,7 @@ const Footer1 = () => {
                     </div>
                     <div className="content">
                       <h6>
-                        9550 Bolsa Ave #126, <br />
+                        2464 Royal Ln. Mesa, New Jersey 45463. <br />
                         United States
                       </h6>
                     </div>
@@ -147,7 +151,7 @@ const Footer1 = () => {
                     </div>
                     <div className="content">
                       <h6>
-                        <a href="mailto:info@touron.com">
+                        <a href="mailto:info@dazzlingtours.com">
                           info@dazzlingtours.com
                         </a>
                       </h6>
@@ -159,8 +163,8 @@ const Footer1 = () => {
                     </div>
                     <div className="content">
                       <h6>
-                        <a href="tel:+256214203215">+256 214 203 215</a> <br />
-                        <a href="tel:+10987654321">+1 098 765 4321</a>
+                        <a href="tel:+256214203215">Hot:+256 214 203 215</a>{" "}
+                        <br />
                       </h6>
                     </div>
                   </div>

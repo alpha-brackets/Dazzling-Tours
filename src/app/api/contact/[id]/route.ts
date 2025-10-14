@@ -44,6 +44,17 @@ export async function PUT(
     const body = await request.json();
     const resolvedParams = await params;
 
+    // Validate email format if email is being updated
+    if (body.email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(body.email)) {
+        return NextResponse.json(
+          { success: false, error: "Invalid email format" },
+          { status: 400 }
+        );
+      }
+    }
+
     const contact = await Contact.findByIdAndUpdate(
       resolvedParams.id,
       { ...body, updatedAt: new Date() },

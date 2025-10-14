@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { seedDatabase, isDatabaseEmpty } from "@/lib/seed";
 
 // POST /api/seed - Seed the database with sample data
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     // Check if database is already populated
     const isEmpty = await isDatabaseEmpty();
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/seed - Check if database is empty
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const isEmpty = await isDatabaseEmpty();
 

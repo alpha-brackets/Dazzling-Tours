@@ -39,7 +39,7 @@ const Cta2 = () => {
               </h2>
             </div>
             <div className="cta-btn wow fadeInUp wow" data-wow-delay=".5s">
-              <Link href="/tour/tour-details" className="theme-btn">
+              <Link href="/tour" className="theme-btn">
                 Find Out More<i className="bi bi-arrow-right"></i>
               </Link>
               <div className="watch-btn">

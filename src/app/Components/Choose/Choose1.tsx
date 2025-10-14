@@ -1,62 +1,38 @@
 "use client";
-import React, { useEffect } from "react";
-import loadBackgroundImages from "../Common/loadBackgroundImages";
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 const Choose1 = () => {
-  useEffect(() => {
-    loadBackgroundImages();
-  }, []);
-
   return (
     <section
       className="travel-feature-section section-padding fix"
-      data-background="/assets/img/travel-bg.jpg"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(253, 125, 2, 0.1) 0%, rgba(2, 109, 247, 0.05) 50%, rgba(255, 193, 7, 0.08) 100%)",
+        position: "relative",
+      }}
     >
-      <div className="shape-1 float-bob-y">
-        <Image
-          src="/assets/img/plane-shape1.png"
-          alt="img"
-          width={218}
-          height={244}
-        />
-      </div>
-      <div className="shape-2 float-bob-x">
-        <Image
-          src="/assets/img/plane-shape2.png"
-          alt="img"
-          width={310}
-          height={459}
-        />
-      </div>
       <div className="container">
         <div className="feature-wrapper">
           <div className="row g-4">
             <div className="col-lg-6">
               <div className="feature-content">
                 <div className="section-title">
-                  <span className="sub-title wow fadeInUp">
-                    Are you ready to travel?
-                  </span>
+                  <span className="sub-title wow fadeInUp">Why Choose Us</span>
                   <h2 className="wow fadeInUp wow" data-wow-delay=".2s">
-                    World Leading Online Tour Booking Platform
+                    Experience Northern Pakistan Like Never Before
                   </h2>
                 </div>
                 <p className="wow fadeInUp wow" data-wow-delay=".3s">
-                  There are many variations of passages of Lorem Ipsum
-                  available, but the majority have suffered alteration in some
-                  form, by injected humour, or randomised words which do not
-                  look even slightly believable.
+                  Discover the breathtaking beauty of Northern Pakistan with our
+                  expert-guided tours. From majestic mountains to pristine
+                  lakes, we offer unforgettable adventures in Pakistan&apos;s
+                  most stunning landscapes.
                 </p>
                 <div className="feature-area">
                   <div className="line-shape">
-                    <Image
-                      src="/assets/img/line-shape.png"
-                      alt="img"
-                      width={1}
-                      height={174}
-                    />
+                    <div className="custom-line"></div>
                   </div>
                   <div
                     className="feature-items wow fadeInUp wow"
@@ -73,8 +49,8 @@ const Choose1 = () => {
                       </div>
                       <div className="content">
                         <h5>
-                          Most Adventure <br />
-                          Tour Ever
+                          Mountain Trekking <br />
+                          Adventures
                         </h5>
                       </div>
                     </div>
@@ -84,8 +60,8 @@ const Choose1 = () => {
                       </li>
                       <li>
                         <span>
-                          There are many variations of <br />
-                          passages of available,
+                          Expert guides for safe and <br />
+                          memorable mountain experiences,
                         </span>
                       </li>
                     </ul>
@@ -105,8 +81,8 @@ const Choose1 = () => {
                       </div>
                       <div className="content">
                         <h5>
-                          Real Tour Starts <br />
-                          from Here
+                          Cultural Heritage <br />
+                          Exploration
                         </h5>
                       </div>
                     </div>
@@ -116,8 +92,8 @@ const Choose1 = () => {
                       </li>
                       <li>
                         <span>
-                          There are many variations of <br />
-                          passages of available,
+                          Discover rich local culture and <br />
+                          traditional mountain communities,
                         </span>
                       </li>
                     </ul>
@@ -128,15 +104,15 @@ const Choose1 = () => {
                   className="theme-btn wow fadeInUp wow"
                   data-wow-delay=".9s"
                 >
-                  Contact US<i className="bi bi-arrow-right"></i>
+                  Plan Your Adventure<i className="bi bi-arrow-right"></i>
                 </Link>
               </div>
             </div>
             <div className="col-lg-6">
               <div className="feature-image wow img-custom-anim-left">
                 <Image
-                  src="/assets/img/man-image.png"
-                  alt="img"
+                  src="/assets/img/choose/Choose1.webp"
+                  alt="Northern Pakistan Mountains"
                   width={636}
                   height={577}
                 />

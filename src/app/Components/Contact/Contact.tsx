@@ -1,7 +1,44 @@
+"use client";
 import Image from "next/image";
-import React from "react";
+import React, { useState } from "react";
+import { useCreateContactInquiry, useNotification } from "@/lib/hooks";
 
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const createContactMutation = useCreateContactInquiry();
+  const { showSuccess } = useNotification();
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    createContactMutation.mutate(formData, {
+      onSuccess: () => {
+        setFormData({
+          name: "",
+          email: "",
+          subject: "",
+          message: "",
+        });
+        showSuccess("Thank you! Your message has been sent successfully.");
+      },
+    });
+  };
   return (
     <div>
       <section className="contact-us-section fix section-padding">
@@ -91,7 +128,7 @@ const Contact = () => {
                     </h2>
                   </div>
                   <div className="comment-form-wrap">
-                    <form action="#" id="contact-form" method="POST">
+                    <form onSubmit={handleSubmit} id="contact-form">
                       <div className="row g-4">
                         <div className="col-lg-6">
                           <div className="form-clt">
@@ -100,16 +137,22 @@ const Contact = () => {
                               name="name"
                               id="name"
                               placeholder="Your Name"
+                              value={formData.name}
+                              onChange={handleInputChange}
+                              required
                             />
                           </div>
                         </div>
                         <div className="col-lg-6">
                           <div className="form-clt">
                             <input
-                              type="text"
+                              type="email"
                               name="email"
                               id="email4"
                               placeholder="Your Email"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              required
                             />
                           </div>
                         </div>
@@ -118,8 +161,11 @@ const Contact = () => {
                             <input
                               type="text"
                               name="subject"
-                              id="name"
+                              id="subject"
                               placeholder="Subject"
+                              value={formData.subject}
+                              onChange={handleInputChange}
+                              required
                             />
                           </div>
                         </div>
@@ -129,12 +175,21 @@ const Contact = () => {
                               name="message"
                               id="message"
                               placeholder="Your Message"
+                              value={formData.message}
+                              onChange={handleInputChange}
+                              required
                             ></textarea>
                           </div>
                         </div>
                         <div className="col-lg-6">
-                          <button type="submit" className="theme-btn">
-                            Submit Massage
+                          <button
+                            type="submit"
+                            className="theme-btn"
+                            disabled={createContactMutation.isPending}
+                          >
+                            {createContactMutation.isPending
+                              ? "Sending..."
+                              : "Submit Message"}
                           </button>
                         </div>
                       </div>

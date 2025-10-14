@@ -1,9 +1,45 @@
 "use client";
 import Image from "next/image";
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Slider from "react-slick";
 
+interface Testimonial {
+  _id: string;
+  name: string;
+  designation: string;
+  company?: string;
+  content: string;
+  rating: number;
+  image?: string;
+  location?: string;
+  status: string;
+  featured: boolean;
+}
+
 const Testimonial1 = () => {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTestimonials();
+  }, []);
+
+  const fetchTestimonials = async () => {
+    try {
+      const response = await fetch(
+        "/api/testimonials?status=Active&featured=true&limit=6"
+      );
+      const data = await response.json();
+      if (data.success) {
+        setTestimonials(data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching testimonials:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const settings = {
     dots: false,
     infinite: true,
@@ -50,29 +86,26 @@ const Testimonial1 = () => {
     }
   };
 
-  const testimonialContent = [
-    {
-      img: "/assets/img/testimonial/client-1.png",
-      subtitle: "Web Designer",
-      title: "Kristin Watson",
-      content:
-        "Praesent ut lacus a velit tincidunt aliquam a eget urna. Sed ullamcorper tristique nisl at pharetra turpis accumsan et etiam eu sollicitudin eros. In imperdiet accumsan.",
-    },
-    {
-      img: "/assets/img/testimonial/client-2.png",
-      subtitle: "President of Sales",
-      title: "Wade Warren",
-      content:
-        "Praesent ut lacus a velit tincidunt aliquam a eget urna. Sed ullamcorper tristique nisl at pharetra turpis accumsan et etiam eu sollicitudin eros. In imperdiet accumsan.",
-    },
-    {
-      img: "/assets/img/testimonial/client-3.png",
-      subtitle: "Brooklyn Simmons",
-      title: "Brooklyn Simmons",
-      content:
-        "Praesent ut lacus a velit tincidunt aliquam a eget urna. Sed ullamcorper tristique nisl at pharetra turpis accumsan et etiam eu sollicitudin eros. In imperdiet accumsan.",
-    },
-  ];
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <i
+        key={i}
+        className={`bi bi-star${i < Math.floor(rating) ? "-fill" : ""}`}
+      ></i>
+    ));
+  };
+
+  if (loading) {
+    return (
+      <section className="testimonial-section section-padding fix bg-cover">
+        <div className="container">
+          <div className="text-center">
+            <p>Loading testimonials...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="testimonial-section section-padding fix bg-cover">
@@ -95,30 +128,32 @@ const Testimonial1 = () => {
           <div className="swiper testimonial-slider">
             <div className="swiper-wrapper cs_slider_gap_301">
               <Slider ref={sliderRef} {...settings}>
-                {testimonialContent.map((item, i) => (
-                  <div key={i} className="swiper-slide">
+                {testimonials.map((testimonial) => (
+                  <div key={testimonial._id} className="swiper-slide">
                     <div className="testimonial-card-items">
                       <div className="star">
-                        <i className="bi bi-star-fill"></i>
-                        <i className="bi bi-star-fill"></i>
-                        <i className="bi bi-star-fill"></i>
-                        <i className="bi bi-star-fill"></i>
-                        <i className="bi bi-star-fill"></i>
+                        {renderStars(testimonial.rating)}
                       </div>
-                      <p>{item.content}</p>
+                      <p>&ldquo;{testimonial.content}&rdquo;</p>
                       <div className="client-info-items">
                         <div className="client-info">
                           <div className="client-image">
                             <Image
-                              src={item.img}
-                              alt="img"
+                              src={
+                                testimonial.image ||
+                                "/assets/img/testimonial/client-1.png"
+                              }
+                              alt={testimonial.name}
                               width={60}
                               height={60}
                             />
                           </div>
                           <div className="text">
-                            <h4>{item.title}</h4>
-                            <p>{item.subtitle}</p>
+                            <h4>{testimonial.name}</h4>
+                            <p>{testimonial.designation}</p>
+                            {testimonial.company && (
+                              <small>{testimonial.company}</small>
+                            )}
                           </div>
                         </div>
                         <div className="icon">

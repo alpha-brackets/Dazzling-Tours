@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
-import { Tour, Booking, Contact, Newsletter } from "@/models";
+import { Tour, Booking, Contact } from "@/models";
 
 // Utility function to validate email
 export function isValidEmail(email: string): boolean {
@@ -47,7 +47,7 @@ export function generateBookingReference(): string {
 
 // Utility function to validate required fields
 export function validateRequiredFields(
-  data: any,
+  data: Record<string, unknown>,
   requiredFields: string[]
 ): string[] {
   const missingFields: string[] = [];
@@ -87,23 +87,36 @@ export function paginateResults(page: number, limit: number, total: number) {
 
 // Utility function to handle API errors
 export function handleApiError(
-  error: any,
+  error: unknown,
   message: string = "An error occurred"
 ) {
   console.error("API Error:", error);
 
-  if (error.name === "ValidationError") {
+  if (
+    error &&
+    typeof error === "object" &&
+    "name" in error &&
+    error.name === "ValidationError" &&
+    "errors" in error
+  ) {
     return NextResponse.json(
       {
         success: false,
         error: "Validation Error",
-        details: Object.values(error.errors).map((err: any) => err.message),
+        details: Object.values(
+          (error as { errors: Record<string, { message: string }> }).errors
+        ).map((err) => err.message),
       },
       { status: 400 }
     );
   }
 
-  if (error.code === 11000) {
+  if (
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    (error as { code: number }).code === 11000
+  ) {
     return NextResponse.json(
       {
         success: false,

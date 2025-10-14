@@ -1,103 +1,141 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-
-interface Tour {
-  _id: string;
-  title: string;
-  price: number;
-  duration: string;
-  location: string;
-  category: string;
-  status: string;
-  featured: boolean;
-  createdAt: string;
-}
+import {
+  useGetTours,
+  useUpdateTour,
+  useDeleteTour,
+  useNotification,
+} from "@/lib/hooks";
+import { TourStatus, TOUR_STATUS_OPTIONS } from "@/lib/enums";
+import PaginationComponent from "@/app/Components/Common/PaginationComponent";
+import { TextInput, Select } from "@/app/Components/Form";
+import { Group } from "@/app/Components/Common";
+import { Stack } from "@/app/Components/Common";
 
 const ToursList = () => {
-  const [tours, setTours] = useState<Tour[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
 
-  useEffect(() => {
-    fetchTours();
-  }, []);
-
-  const fetchTours = async () => {
-    try {
-      const response = await fetch("/api/tours");
-      const data = await response.json();
-      if (data.success) {
-        setTours(data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching tours:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteTour = async (id: string) => {
-    if (confirm("Are you sure you want to delete this tour?")) {
-      try {
-        const response = await fetch(`/api/tours/${id}`, {
-          method: "DELETE",
-        });
-        if (response.ok) {
-          setTours(tours.filter((tour) => tour._id !== id));
-        }
-      } catch (error) {
-        console.error("Error deleting tour:", error);
-      }
-    }
-  };
-
-  const filteredTours = tours.filter((tour) => {
-    const matchesSearch =
-      tour.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tour.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      filterStatus === "all" || tour.status === filterStatus;
-    return matchesSearch && matchesStatus;
+  const { data: toursData, isLoading: loading } = useGetTours({
+    page: currentPage,
+    limit: pageSize,
+    status: filterStatus === "all" ? undefined : filterStatus,
+    search: searchTerm || undefined,
   });
+
+  const updateTourMutation = useUpdateTour();
+  const deleteTourMutation = useDeleteTour();
+  const { showSuccess } = useNotification();
+
+  const tours = toursData?.data || [];
+  const pagination = toursData?.pagination;
+
+  const deleteTour = (id: string) => {
+    if (confirm("Are you sure you want to delete this tour?")) {
+      deleteTourMutation.mutate(id, {
+        onSuccess: () => {
+          showSuccess("Tour deleted successfully!");
+        },
+      });
+    }
+  };
+
+  const toggleFeatured = (id: string, currentFeatured: boolean) => {
+    updateTourMutation.mutate(
+      {
+        _id: id,
+        featured: !currentFeatured,
+      },
+      {
+        onSuccess: () => {
+          showSuccess(
+            `Tour ${!currentFeatured ? "featured" : "unfeatured"} successfully!`
+          );
+        },
+      }
+    );
+  };
+
+  const toggleStatus = (id: string, currentStatus: TourStatus) => {
+    updateTourMutation.mutate(
+      {
+        _id: id,
+        status:
+          currentStatus === TourStatus.ACTIVE
+            ? TourStatus.INACTIVE
+            : TourStatus.ACTIVE,
+      },
+      {
+        onSuccess: () => {
+          showSuccess(
+            `Tour status updated to ${
+              currentStatus === TourStatus.ACTIVE
+                ? TourStatus.INACTIVE
+                : TourStatus.ACTIVE
+            }!`
+          );
+        },
+      }
+    );
+  };
+
+  // Reset to first page when filters change
+  const handleSearchChange = (value: string) => {
+    console.log(value);
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    console.log(value);
+    setFilterStatus(value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page: number) => {
+    console.log(page);
+    setCurrentPage(page);
+  };
 
   if (loading) {
     return <div className="loading">Loading tours...</div>;
   }
 
   return (
-    <div className="tours-list">
-      <div className="page-header">
-        <h1>Tours Management</h1>
-        <Link href="/admin/tours/add" className="btn btn-primary">
-          <i className="bi bi-plus-circle"></i> Add New Tour
-        </Link>
-      </div>
+    <div>
+      <Stack>
+        <div className="page-header">
+          <h1>Tours Management</h1>
+          <Link href="/admin/tours/add" className="btn btn-primary">
+            <i className="bi bi-plus-circle"></i> Add New Tour
+          </Link>
+        </div>
 
-      {/* Filters */}
-      <div className="filters">
-        <div className="search-box">
-          <input
-            type="text"
+        {/* Filters */}
+
+        <Group>
+          <TextInput
             placeholder="Search tours..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
+            leftIcon={<i className="bi bi-search"></i>}
           />
-          <i className="bi bi-search"></i>
-        </div>
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="all">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
-      </div>
 
-      {/* Tours Table */}
-      <div className="tours-table">
+          <Select
+            value={filterStatus}
+            onChange={handleStatusChange}
+            data={[
+              { value: "all", label: "All Status" },
+              ...TOUR_STATUS_OPTIONS,
+            ]}
+          />
+        </Group>
+
+        {/* Tours Table */}
+
         <table>
           <thead>
             <tr>
@@ -112,7 +150,7 @@ const ToursList = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredTours.map((tour) => (
+            {tours.map((tour) => (
               <tr key={tour._id}>
                 <td>{tour.title}</td>
                 <td>{tour.location}</td>
@@ -120,16 +158,24 @@ const ToursList = () => {
                 <td>{tour.duration}</td>
                 <td>{tour.category}</td>
                 <td>
-                  <span className={`status-badge ${tour.status.toLowerCase()}`}>
+                  <button
+                    onClick={() => toggleStatus(tour._id, tour.status)}
+                    className={`status-badge ${tour.status.toLowerCase()} clickable`}
+                  >
                     {tour.status}
-                  </span>
+                  </button>
                 </td>
                 <td>
-                  {tour.featured ? (
-                    <i className="bi bi-star-fill text-warning"></i>
-                  ) : (
-                    <i className="bi bi-star text-muted"></i>
-                  )}
+                  <button
+                    onClick={() => toggleFeatured(tour._id, tour.featured)}
+                    className="btn btn-sm btn-link p-0"
+                  >
+                    {tour.featured ? (
+                      <i className="bi bi-star-fill text-warning"></i>
+                    ) : (
+                      <i className="bi bi-star text-muted"></i>
+                    )}
+                  </button>
                 </td>
                 <td>
                   <div className="action-buttons">
@@ -140,9 +186,8 @@ const ToursList = () => {
                       <i className="bi bi-pencil"></i>
                     </Link>
                     <Link
-                      href={`/tours/${tour._id}`}
+                      href={`/admin/tours/view/${tour._id}`}
                       className="btn btn-sm btn-outline-info"
-                      target="_blank"
                     >
                       <i className="bi bi-eye"></i>
                     </Link>
@@ -158,13 +203,23 @@ const ToursList = () => {
             ))}
           </tbody>
         </table>
-      </div>
 
-      {filteredTours.length === 0 && (
-        <div className="no-data">
-          <p>No tours found</p>
-        </div>
-      )}
+        {tours.length === 0 && !loading && (
+          <div className="no-data">
+            <p>No tours found</p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {pagination && (
+          <PaginationComponent
+            pagination={pagination}
+            currentPage={currentPage}
+            onPageChange={handlePageChange}
+            pageSize={pageSize}
+          />
+        )}
+      </Stack>
     </div>
   );
 };
