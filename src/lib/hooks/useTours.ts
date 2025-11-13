@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { api } from "@/lib/privateAxios";
 import {
   CreateTourData,
   UpdateTourData,
@@ -40,11 +41,10 @@ export const useGetTours = (params?: {
         });
       }
 
-      const response = await fetch(`/api/tours?${searchParams.toString()}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch tours");
-      }
-      return response.json();
+      const response = await api.get<ToursResponse>(
+        `/api/tours?${searchParams.toString()}`
+      );
+      return response.data;
     },
   });
 };
@@ -53,11 +53,8 @@ export const useGetTour = (id: string) => {
   return useQuery<TourResponse>({
     queryKey: tourKeys.detail(id),
     queryFn: async () => {
-      const response = await fetch(`/api/tours/${id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch tour");
-      }
-      return response.json();
+      const response = await api.get<TourResponse>(`/api/tours/${id}`);
+      return response.data;
     },
     enabled: !!id,
   });
@@ -68,18 +65,8 @@ export const useCreateTour = () => {
 
   return useMutation<TourResponse, Error, CreateTourData>({
     mutationFn: async (data) => {
-      const response = await fetch("/api/tours", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create tour");
-      }
-      return response.json();
+      const response = await api.post<TourResponse>("/api/tours", data);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tourKeys.lists() });
@@ -93,18 +80,11 @@ export const useUpdateTour = () => {
   return useMutation<TourResponse, Error, UpdateTourData>({
     mutationFn: async (data) => {
       const { _id, ...updateData } = data;
-      const response = await fetch(`/api/tours/${_id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update tour");
-      }
-      return response.json();
+      const response = await api.put<TourResponse>(
+        `/api/tours/${_id}`,
+        updateData
+      );
+      return response.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: tourKeys.lists() });
@@ -120,14 +100,10 @@ export const useDeleteTour = () => {
 
   return useMutation<{ success: boolean }, Error, string>({
     mutationFn: async (id) => {
-      const response = await fetch(`/api/tours/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete tour");
-      }
-      return response.json();
+      const response = await api.delete<{ success: boolean }>(
+        `/api/tours/${id}`
+      );
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tourKeys.lists() });
@@ -144,18 +120,12 @@ export const useBulkUpdateTours = () => {
     { ids: string[]; action: string; data?: Record<string, unknown> }
   >({
     mutationFn: async ({ ids, action, data }) => {
-      const response = await fetch("/api/tours", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ids, action, ...data }),
+      const response = await api.put<{ success: boolean }>("/api/tours", {
+        ids,
+        action,
+        ...data,
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to bulk update tours");
-      }
-      return response.json();
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tourKeys.lists() });

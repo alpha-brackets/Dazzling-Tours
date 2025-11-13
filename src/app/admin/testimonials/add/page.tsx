@@ -1,259 +1,262 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import { useRouter } from "next/navigation";
-
-interface Tour {
-  _id: string;
-  title: string;
-}
+import { CreateTestimonialData } from "@/lib/types/testimonial";
+import { useCreateTestimonial, useNotification, useForm } from "@/lib/hooks";
+import { useGetTours } from "@/lib/hooks/useTours";
+import { Page, Button } from "@/app/Components/Common";
+import {
+  TextInput,
+  Textarea,
+  Select,
+  Checkbox,
+  ImageUpload,
+  StarRating,
+} from "@/app/Components/Form";
 
 const AddTestimonial = () => {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
-  const [tours, setTours] = useState<Tour[]>([]);
-  const [formData, setFormData] = useState({
-    name: "",
-    designation: "",
-    company: "",
-    content: "",
-    rating: 5,
-    image: "",
-    location: "",
-    tourId: "",
-    status: "Active",
-    featured: false,
+  const createTestimonialMutation = useCreateTestimonial();
+  const { showSuccess, showError } = useNotification();
+  const { data: toursData, isLoading: toursLoading } = useGetTours();
+
+  const form = useForm<CreateTestimonialData>({
+    initialValues: {
+      name: "",
+      content: "",
+      rating: 5,
+      image: "",
+      location: "",
+      tourId: "",
+      status: "Active",
+      featured: false,
+    },
+    validate: (values) => {
+      const errors: Record<string, string> = {};
+      if (!values.name.trim()) errors.name = "Name is required";
+      if (!values.content.trim()) errors.content = "Content is required";
+      if (values.rating < 1 || values.rating > 5)
+        errors.rating = "Rating must be between 1 and 5";
+      return errors;
+    },
+    validateOnChange: true,
+    validateOnBlur: true,
   });
 
-  useEffect(() => {
-    fetchTours();
-  }, []);
+  // Memoize tours data to prevent unnecessary re-computations
+  const tours = useMemo(() => {
+    return toursData?.data || [];
+  }, [toursData?.data]);
 
-  const fetchTours = async () => {
-    try {
-      const response = await fetch("/api/tours");
-      const data = await response.json();
-      if (data.success) {
-        setTours(data.data);
-      }
-    } catch (error) {
-      console.error("Error fetching tours:", error);
-    }
-  };
+  // Memoize tour options for the Select component
+  const tourOptions = useMemo(() => {
+    return [
+      { value: "", label: "Select a tour (optional)" },
+      ...tours.map((tour) => ({
+        value: tour._id,
+        label: tour.title,
+      })),
+    ];
+  }, [tours]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-
-    try {
-      const response = await fetch("/api/testimonials", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
+  const handleSubmit = form.handleSubmit(async (values) => {
+    createTestimonialMutation.mutate(values, {
+      onSuccess: () => {
+        showSuccess("Testimonial created successfully!");
         router.push("/admin/testimonials");
-      } else {
-        const error = await response.json();
-        alert(error.error || "Failed to create testimonial");
-      }
-    } catch (error) {
-      console.error("Error creating testimonial:", error);
-      alert("Failed to create testimonial");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <button
-        key={i}
-        type="button"
-        onClick={() => setFormData((prev) => ({ ...prev, rating: i + 1 }))}
-        className={`star-btn ${i < rating ? "active" : ""}`}
-      >
-        <i className={`bi bi-star${i < rating ? "-fill" : ""}`}></i>
-      </button>
-    ));
-  };
+      },
+      onError: (error) => {
+        showError(error.message || "Failed to create testimonial");
+      },
+    });
+  });
 
   return (
-    <div className="add-testimonial">
-      <div className="page-header">
-        <h1>Add New Testimonial</h1>
-        <button
+    <Page
+      title="Add New Testimonial"
+      description="Create a new customer testimonial"
+      loading={toursLoading}
+      headerActions={
+        <Button
+          color="secondary"
+          variant="outline"
+          leftIcon={<i className="bi bi-arrow-left"></i>}
           onClick={() => router.back()}
-          className="btn btn-outline-secondary"
         >
-          <i className="bi bi-arrow-left"></i> Back
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="testimonial-form">
-        <div className="form-grid">
-          {/* Basic Information */}
+          Back
+        </Button>
+      }
+    >
+      <div className="form-container">
+        <form
+          id="testimonial-form"
+          onSubmit={handleSubmit}
+          className="testimonial-form"
+        >
           <div className="form-section">
-            <h3>Basic Information</h3>
-            <div className="form-group">
-              <label>Name *</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, name: e.target.value }))
-                }
+            <div className="section-header">
+              <h3>
+                <i className="bi bi-person-circle"></i> Basic Information
+              </h3>
+              <p className="section-description">
+                Essential details about the person giving the testimonial
+              </p>
+            </div>
+            <div className="form-grid">
+              <TextInput
+                label="Name"
+                placeholder="e.g., John Smith"
+                value={form.values.name}
+                onChange={(value) => form.setFieldValue("name", value)}
+                error={form.errors.name}
                 required
               />
-            </div>
-            <div className="form-group">
-              <label>Designation *</label>
-              <input
-                type="text"
-                value={formData.designation}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    designation: e.target.value,
-                  }))
-                }
-                placeholder="e.g., CEO, Travel Blogger, Customer"
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label>Company</label>
-              <input
-                type="text"
-                value={formData.company}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, company: e.target.value }))
-                }
-                placeholder="Company name (optional)"
-              />
-            </div>
-            <div className="form-group">
-              <label>Location</label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, location: e.target.value }))
-                }
+              <TextInput
+                label="Location"
                 placeholder="City, Country (optional)"
+                value={form.values.location}
+                onChange={(value) => form.setFieldValue("location", value)}
               />
             </div>
           </div>
 
-          {/* Testimonial Content */}
           <div className="form-section">
-            <h3>Testimonial Content</h3>
+            <div className="section-header">
+              <h3>
+                <i className="bi bi-image"></i> Profile Image
+              </h3>
+              <p className="section-description">
+                Upload a profile image for the testimonial
+              </p>
+            </div>
+            <ImageUpload
+              label="Profile Image"
+              description="Upload a profile image for the testimonial. This will be displayed alongside the testimonial."
+              value={form.values.image ? [form.values.image] : []}
+              onChange={(images) =>
+                form.setFieldValue("image", images[0] || "")
+              }
+              maxFiles={1}
+              maxSize={5}
+              multiple={false}
+              acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
+            />
+          </div>
+
+          <div className="form-section">
+            <div className="section-header">
+              <h3>
+                <i className="bi bi-chat-quote"></i> Testimonial Content
+              </h3>
+              <p className="section-description">
+                The testimonial content and rating
+              </p>
+            </div>
             <div className="form-group">
-              <label>Content *</label>
-              <textarea
-                value={formData.content}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, content: e.target.value }))
-                }
-                rows={6}
+              <Textarea
+                label="Content"
                 placeholder="Write the testimonial content here..."
+                value={form.values.content}
+                onChange={(value) => form.setFieldValue("content", value)}
+                rows={6}
+                error={form.errors.content}
                 required
               />
             </div>
             <div className="form-group">
-              <label>Rating *</label>
-              <div className="rating-input">
-                {renderStars(formData.rating)}
-                <span className="rating-text">
-                  ({formData.rating} out of 5)
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tour Association */}
-          <div className="form-section">
-            <h3>Tour Association</h3>
-            <div className="form-group">
-              <label>Related Tour</label>
-              <select
-                value={formData.tourId}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, tourId: e.target.value }))
+              <label>Rating</label>
+              <StarRating
+                rating={form.values.rating}
+                onRatingChange={(rating) =>
+                  form.setFieldValue("rating", rating)
                 }
-              >
-                <option value="">Select a tour (optional)</option>
-                {tours.map((tour) => (
-                  <option key={tour._id} value={tour._id}>
-                    {tour.title}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Settings */}
-          <div className="form-section">
-            <h3>Settings</h3>
-            <div className="form-group">
-              <label>Image URL</label>
-              <input
-                type="url"
-                value={formData.image}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, image: e.target.value }))
-                }
-                placeholder="https://example.com/image.jpg"
+                maxStars={5}
+                size="md"
               />
+              {form.errors.rating && (
+                <div className="invalid-feedback">{form.errors.rating}</div>
+              )}
+            </div>
+          </div>
+
+          <div className="form-section">
+            <div className="section-header">
+              <h3>
+                <i className="bi bi-map"></i> Tour Association
+              </h3>
+              <p className="section-description">
+                Link this testimonial to a specific tour (optional)
+              </p>
+            </div>
+            <Select
+              label="Related Tour"
+              value={form.values.tourId}
+              onChange={(value) => form.setFieldValue("tourId", value)}
+              data={tourOptions}
+              searchable={true}
+              clearable={true}
+            />
+          </div>
+
+          <div className="form-section">
+            <div className="section-header">
+              <h3>
+                <i className="bi bi-gear"></i> Settings
+              </h3>
+              <p className="section-description">
+                Configure testimonial visibility and status
+              </p>
             </div>
             <div className="form-row">
-              <div className="form-group">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={formData.featured}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        featured: e.target.checked,
-                      }))
-                    }
-                  />
-                  Featured Testimonial
-                </label>
-              </div>
-              <div className="form-group">
-                <label>Status</label>
-                <select
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, status: e.target.value }))
-                  }
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
+              <Checkbox
+                label="Featured Testimonial"
+                description="Display this testimonial prominently on the homepage"
+                checked={form.values.featured}
+                onChange={(checked) => form.setFieldValue("featured", checked)}
+              />
+              <Select
+                label="Status"
+                value={form.values.status}
+                onChange={(value) =>
+                  form.setFieldValue("status", value as "Active" | "Inactive")
+                }
+                data={[
+                  { value: "Active", label: "Active" },
+                  { value: "Inactive", label: "Inactive" },
+                ]}
+              />
             </div>
           </div>
-        </div>
+        </form>
 
         <div className="form-actions">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="btn btn-outline-secondary"
-          >
-            Cancel
-          </button>
-          <button type="submit" disabled={saving} className="btn btn-primary">
-            {saving ? "Creating..." : "Create Testimonial"}
-          </button>
+          <div className="actions-container">
+            <Button
+              color="secondary"
+              leftIcon={<i className="bi bi-arrow-left"></i>}
+              onClick={() => router.back()}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="testimonial-form"
+              loading={createTestimonialMutation.isPending}
+              leftIcon={
+                !createTestimonialMutation.isPending ? (
+                  <i className="bi bi-check-lg"></i>
+                ) : undefined
+              }
+              disabled={createTestimonialMutation.isPending}
+            >
+              {createTestimonialMutation.isPending
+                ? "Creating..."
+                : "Create Testimonial"}
+            </Button>
+          </div>
         </div>
-      </form>
-    </div>
+      </div>
+    </Page>
   );
 };
 

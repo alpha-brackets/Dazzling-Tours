@@ -10,12 +10,13 @@ import {
 import { TourStatus, TOUR_STATUS_OPTIONS } from "@/lib/enums";
 import PaginationComponent from "@/app/Components/Common/PaginationComponent";
 import { TextInput, Select } from "@/app/Components/Form";
-import { Group } from "@/app/Components/Common";
-import { Stack } from "@/app/Components/Common";
+import { Group, Stack, Page } from "@/app/Components/Common";
 
 const ToursList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterFeatured, setFilterFeatured] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
 
@@ -23,6 +24,13 @@ const ToursList = () => {
     page: currentPage,
     limit: pageSize,
     status: filterStatus === "all" ? undefined : filterStatus,
+    category: filterCategory === "all" ? undefined : filterCategory,
+    featured:
+      filterFeatured === "all"
+        ? undefined
+        : filterFeatured === "true"
+        ? true
+        : false,
     search: searchTerm || undefined,
   });
 
@@ -95,27 +103,36 @@ const ToursList = () => {
     setCurrentPage(1);
   };
 
+  const handleCategoryChange = (value: string) => {
+    console.log(value);
+    setFilterCategory(value);
+    setCurrentPage(1);
+  };
+
+  const handleFeaturedChange = (value: string) => {
+    console.log(value);
+    setFilterFeatured(value);
+    setCurrentPage(1);
+  };
+
   const handlePageChange = (page: number) => {
     console.log(page);
     setCurrentPage(page);
   };
 
-  if (loading) {
-    return <div className="loading">Loading tours...</div>;
-  }
-
   return (
-    <div>
+    <Page
+      title="Tours Management"
+      description="Manage your tour packages, view bookings, and update tour information"
+      loading={loading}
+      headerActions={
+        <Link href="/admin/tours/add" className="btn btn-primary">
+          <i className="bi bi-plus-circle"></i> Add New Tour
+        </Link>
+      }
+    >
       <Stack>
-        <div className="page-header">
-          <h1>Tours Management</h1>
-          <Link href="/admin/tours/add" className="btn btn-primary">
-            <i className="bi bi-plus-circle"></i> Add New Tour
-          </Link>
-        </div>
-
         {/* Filters */}
-
         <Group>
           <TextInput
             placeholder="Search tours..."
@@ -132,10 +149,34 @@ const ToursList = () => {
               ...TOUR_STATUS_OPTIONS,
             ]}
           />
+
+          <Select
+            value={filterCategory}
+            onChange={handleCategoryChange}
+            data={[
+              { value: "all", label: "All Categories" },
+              { value: "Adventure", label: "Adventure" },
+              { value: "Cultural", label: "Cultural" },
+              { value: "City Tour", label: "City Tour" },
+              { value: "Beach", label: "Beach" },
+              { value: "Mountain", label: "Mountain" },
+              { value: "Nature", label: "Nature" },
+              { value: "Relaxation", label: "Relaxation" },
+            ]}
+          />
+
+          <Select
+            value={filterFeatured}
+            onChange={handleFeaturedChange}
+            data={[
+              { value: "all", label: "All Tours" },
+              { value: "true", label: "Featured Only" },
+              { value: "false", label: "Non-Featured Only" },
+            ]}
+          />
         </Group>
 
         {/* Tours Table */}
-
         <table>
           <thead>
             <tr>
@@ -220,7 +261,7 @@ const ToursList = () => {
           />
         )}
       </Stack>
-    </div>
+    </Page>
   );
 };
 

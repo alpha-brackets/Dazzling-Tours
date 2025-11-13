@@ -8,13 +8,14 @@ import {
   TextInput,
   NumberInput,
   Textarea,
+  TiptapRichTextEditor,
   Select,
   Checkbox,
   ListManager,
   ItineraryManager,
   ImageUpload,
 } from "@/app/Components/Form";
-import { Button } from "@/app/Components/Common";
+import { Button, Page } from "@/app/Components/Common";
 import { createTourSchema } from "@/lib/validation/tour";
 
 const AddTour = () => {
@@ -70,28 +71,19 @@ const AddTour = () => {
   });
 
   return (
-    <div className="add-tour">
-      <div className="page-header">
-        <div className="header-content">
-          <div className="header-text">
-            <h1>Add New Tour</h1>
-            <p className="page-description">
-              Create a new tour package with all necessary details
-            </p>
-          </div>
-          <div className="header-actions">
-            <Button
-              variant="outline"
-              color="secondary"
-              leftIcon={<i className="bi bi-arrow-left"></i>}
-              onClick={() => router.back()}
-            >
-              Back
-            </Button>
-          </div>
-        </div>
-      </div>
-
+    <Page
+      title="Add New Tour"
+      description="Create a new tour package with all necessary details"
+      headerActions={
+        <Button
+          color="secondary"
+          leftIcon={<i className="bi bi-arrow-left"></i>}
+          onClick={() => router.back()}
+        >
+          Back
+        </Button>
+      }
+    >
       <div className="form-container">
         <form id="tour-form" onSubmit={handleSubmit} className="tour-form">
           <div className="form-section">
@@ -224,13 +216,13 @@ const AddTour = () => {
               />
             </div>
             <div className="form-group">
-              <Textarea
+              <TiptapRichTextEditor
                 label="Full Description"
                 description="Detailed description that appears on the tour details page"
                 {...form.getFieldProps("description")}
                 placeholder="e.g., Embark on an unforgettable journey through centuries of history and culture. This comprehensive tour takes you through ancient temples, traditional villages, and modern cities, offering a perfect blend of historical exploration and contemporary experiences. Our expert guides will share fascinating stories and insights about local traditions, architecture, and way of life. You'll have the opportunity to interact with local communities, taste authentic cuisine, and participate in traditional activities. The tour includes comfortable accommodations, all meals, and transportation, ensuring a hassle-free and enriching experience."
                 rows={6}
-                maxLength={1000}
+                maxLength={2000}
                 showCharCount
                 required
               />
@@ -389,7 +381,7 @@ const AddTour = () => {
         <div className="form-actions">
           <div className="actions-container">
             <Button
-              variant="outline"
+              color="secondary"
               leftIcon={<i className="bi bi-arrow-left"></i>}
               onClick={() => router.back()}
             >
@@ -397,8 +389,6 @@ const AddTour = () => {
             </Button>
             <Button
               type="submit"
-              variant="filled"
-              color="primary"
               loading={createTourMutation.isPending}
               leftIcon={
                 !createTourMutation.isPending ? (
@@ -412,7 +402,7 @@ const AddTour = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Page>
   );
 };
 

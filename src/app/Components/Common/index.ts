@@ -8,3 +8,16 @@ export { default as ActionIcon } from "./ActionIcon";
 export type { ActionIconProps } from "./ActionIcon";
 export { default as Button } from "./Button";
 export type { ButtonProps } from "./Button";
+export { default as Page } from "./Page";
+export type { PageProps } from "./Page";
+export { default as Avatar } from "./Avatar";
+export type { AvatarProps } from "./Avatar";
+export {
+  default as Loading,
+  LoadingSpinner,
+  LoadingDots,
+  LoadingSkeleton,
+  LoadingPulse,
+  LoadingOverlay,
+} from "./Loading";
+export type { LoadingProps } from "./Loading";

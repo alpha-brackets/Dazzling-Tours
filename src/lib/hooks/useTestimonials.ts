@@ -1,52 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
-// Types
-interface Testimonial {
-  _id: string;
-  name: string;
-  designation: string;
-  company?: string;
-  content: string;
-  rating: number;
-  image?: string;
-  location?: string;
-  tourId?: string;
-  status: string;
-  featured: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CreateTestimonialData {
-  name: string;
-  designation: string;
-  company?: string;
-  content: string;
-  rating: number;
-  image?: string;
-  location?: string;
-  tourId?: string;
-  status?: string;
-  featured?: boolean;
-}
-
-interface UpdateTestimonialData extends Partial<CreateTestimonialData> {
-  _id: string;
-}
-
-interface TestimonialsResponse {
-  success: boolean;
-  data: Testimonial[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
-
-interface TestimonialResponse {
-  success: boolean;
-  data: Testimonial;
-}
+import { api } from "@/lib/privateAxios";
+import {
+  CreateTestimonialData,
+  UpdateTestimonialData,
+  TestimonialsResponse,
+  TestimonialResponse,
+} from "@/lib/types/testimonial";
 
 // Query Keys
 export const testimonialKeys = {
@@ -80,13 +39,10 @@ export const useGetTestimonials = (params?: {
         });
       }
 
-      const response = await fetch(
+      const response = await api.get<TestimonialsResponse>(
         `/api/testimonials?${searchParams.toString()}`
       );
-      if (!response.ok) {
-        throw new Error("Failed to fetch testimonials");
-      }
-      return response.json();
+      return response.data;
     },
   });
 };
@@ -95,11 +51,10 @@ export const useGetTestimonial = (id: string) => {
   return useQuery<TestimonialResponse>({
     queryKey: testimonialKeys.detail(id),
     queryFn: async () => {
-      const response = await fetch(`/api/testimonials/${id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch testimonial");
-      }
-      return response.json();
+      const response = await api.get<TestimonialResponse>(
+        `/api/testimonials/${id}`
+      );
+      return response.data;
     },
     enabled: !!id,
   });
@@ -110,18 +65,11 @@ export const useCreateTestimonial = () => {
 
   return useMutation<TestimonialResponse, Error, CreateTestimonialData>({
     mutationFn: async (data) => {
-      const response = await fetch("/api/testimonials", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create testimonial");
-      }
-      return response.json();
+      const response = await api.post<TestimonialResponse>(
+        "/api/testimonials",
+        data
+      );
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: testimonialKeys.lists() });
@@ -135,18 +83,11 @@ export const useUpdateTestimonial = () => {
   return useMutation<TestimonialResponse, Error, UpdateTestimonialData>({
     mutationFn: async (data) => {
       const { _id, ...updateData } = data;
-      const response = await fetch(`/api/testimonials/${_id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update testimonial");
-      }
-      return response.json();
+      const response = await api.put<TestimonialResponse>(
+        `/api/testimonials/${_id}`,
+        updateData
+      );
+      return response.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: testimonialKeys.lists() });
@@ -162,14 +103,10 @@ export const useDeleteTestimonial = () => {
 
   return useMutation<{ success: boolean }, Error, string>({
     mutationFn: async (id) => {
-      const response = await fetch(`/api/testimonials/${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete testimonial");
-      }
-      return response.json();
+      const response = await api.delete<{ success: boolean }>(
+        `/api/testimonials/${id}`
+      );
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: testimonialKeys.lists() });
@@ -186,18 +123,11 @@ export const useBulkUpdateTestimonials = () => {
     { ids: string[]; action: string; data?: Record<string, unknown> }
   >({
     mutationFn: async ({ ids, action, data }) => {
-      const response = await fetch("/api/testimonials", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ ids, action, ...data }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to bulk update testimonials");
-      }
-      return response.json();
+      const response = await api.put<{ success: boolean }>(
+        "/api/testimonials",
+        { ids, action, ...data }
+      );
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: testimonialKeys.lists() });

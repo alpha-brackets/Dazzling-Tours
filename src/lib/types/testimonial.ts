@@ -3,12 +3,15 @@ import { PaginatedResponse, SingleResponse } from "./common";
 export interface Testimonial {
   _id: string;
   name: string;
-  email: string;
+  content: string;
   rating: number;
-  review: string;
-  tourId?: string;
-  tourTitle?: string;
-  status: string;
+  image?: string;
+  location?: string;
+  tourId?: {
+    _id: string;
+    title: string;
+  };
+  status: "Active" | "Inactive";
   featured: boolean;
   createdAt: string;
   updatedAt: string;
@@ -16,11 +19,12 @@ export interface Testimonial {
 
 export interface CreateTestimonialData {
   name: string;
-  email: string;
+  content: string;
   rating: number;
-  review: string;
+  image?: string;
+  location?: string;
   tourId?: string;
-  status?: string;
+  status?: "Active" | "Inactive";
   featured?: boolean;
 }
 

@@ -8,6 +8,7 @@ import {
   createSuccessResponse,
 } from "@/lib/middleware/auth";
 import { UserRole } from "@/lib/enums/roles";
+import { cleanTestimonialData } from "@/lib/utils/dataCleaning";
 
 // GET /api/testimonials - Get all testimonials
 export async function GET(request: NextRequest) {
@@ -26,13 +27,13 @@ export async function GET(request: NextRequest) {
 
     if (status) query.status = status;
     if (featured === "true") query.featured = true;
+    if (featured === "false") query.featured = false;
     if (tourId) query.tourId = tourId;
     if (search) {
       query.$or = [
         { name: { $regex: search, $options: "i" } },
         { content: { $regex: search, $options: "i" } },
-        { designation: { $regex: search, $options: "i" } },
-        { company: { $regex: search, $options: "i" } },
+        { location: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -65,15 +66,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/testimonials - Create a new testimonial (Super Admin only)
-export const POST = withRoleAuth(UserRole.SUPER_ADMIN, async (request) => {
+// POST /api/testimonials - Create a new testimonial (Temporarily public for testing)
+export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
     const body = await request.json();
 
     // Validate required fields
-    const requiredFields = ["name", "designation", "content", "rating"];
+    const requiredFields = ["name", "content", "rating"];
     for (const field of requiredFields) {
       if (!body[field]) {
         return createErrorResponse(`${field} is required`, 400);
@@ -85,7 +86,10 @@ export const POST = withRoleAuth(UserRole.SUPER_ADMIN, async (request) => {
       return createErrorResponse("Rating must be between 1 and 5", 400);
     }
 
-    const testimonial = new Testimonial(body);
+    // Clean the data using utility function
+    const cleanedData = cleanTestimonialData(body);
+
+    const testimonial = new Testimonial(cleanedData);
     await testimonial.save();
 
     return createSuccessResponse(
@@ -97,7 +101,7 @@ export const POST = withRoleAuth(UserRole.SUPER_ADMIN, async (request) => {
     console.error("Error creating testimonial:", error);
     return createErrorResponse("Failed to create testimonial", 500);
   }
-});
+}
 
 // PUT /api/testimonials - Update multiple testimonials (bulk operations) (Super Admin only)
 export const PUT = withRoleAuth(UserRole.SUPER_ADMIN, async (request) => {

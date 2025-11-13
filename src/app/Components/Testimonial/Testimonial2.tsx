@@ -159,9 +159,8 @@ const Testimonial2 = () => {
                             <div className="client-info-items">
                               <div className="info-text">
                                 <h6>{testimonial.name}</h6>
-                                <p>{testimonial.designation}</p>
-                                {testimonial.company && (
-                                  <small>{testimonial.company}</small>
+                                {testimonial.location && (
+                                  <p>{testimonial.location}</p>
                                 )}
                               </div>
                               <h5>({testimonial.location || "Traveler"})</h5>

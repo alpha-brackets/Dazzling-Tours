@@ -1,5 +1,5 @@
 "use client";
-import React, { forwardRef, useEffect, useState } from "react";
+import React, { forwardRef, useEffect, useState, useRef } from "react";
 
 export interface SelectProps
   extends Omit<
@@ -41,6 +41,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       placeholder,
       data,
       children,
+      searchable = false,
+      clearable = false,
       validateOnChange = false,
       validator,
       // Form integration props
@@ -56,11 +58,46 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       error
     );
     const [hasBeenTouched, setHasBeenTouched] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedLabel, setSelectedLabel] = useState("");
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     // Update internal error when external error changes
     useEffect(() => {
       setInternalError(error);
     }, [error]);
+
+    // Update selected label when value changes
+    useEffect(() => {
+      if (formValue && data) {
+        const selectedItem = data.find((item) => item.value === formValue);
+        if (selectedItem) {
+          setSelectedLabel(selectedItem.label);
+        }
+      } else {
+        setSelectedLabel("");
+      }
+    }, [formValue, data]);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsOpen(false);
+          setSearchTerm("");
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }, []);
 
     const sizeClasses = {
       xs: "form-input-xs",
@@ -83,9 +120,13 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       ${className}
     `.trim();
 
-    const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = e.target.value;
+    // Filter data based on search term
+    const filteredData =
+      data?.filter((item) =>
+        item.label.toLowerCase().includes(searchTerm.toLowerCase())
+      ) || [];
 
+    const handleChange = (value: string) => {
       // Run validation if enabled and validator is provided
       if (validateOnChange && validator && hasBeenTouched) {
         const validationError = validator(value);
@@ -96,14 +137,17 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       if (formOnChange) {
         formOnChange(value);
       }
+
+      setIsOpen(false);
+      setSearchTerm("");
     };
 
-    const handleBlur = (e: React.FocusEvent<HTMLSelectElement>) => {
+    const handleBlur = () => {
       setHasBeenTouched(true);
 
       // Run validation on blur if validator is provided
-      if (validator) {
-        const validationError = validator(e.target.value);
+      if (validator && formValue) {
+        const validationError = validator(formValue);
         setInternalError(validationError);
       }
 
@@ -120,6 +164,89 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       }
     };
 
+    const handleClear = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      handleChange("");
+    };
+
+    const handleToggleDropdown = () => {
+      if (disabled) return;
+      setIsOpen(!isOpen);
+      if (!isOpen && inputRef.current) {
+        inputRef.current.focus();
+      }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handleToggleDropdown();
+      } else if (e.key === "Escape") {
+        setIsOpen(false);
+        setSearchTerm("");
+      }
+    };
+
+    // If not searchable, render as regular select
+    if (!searchable) {
+      return (
+        <div className="form-group">
+          {label && (
+            <label className="form-label">
+              {label}
+              {required && <span className="form-required">*</span>}
+            </label>
+          )}
+
+          {description && <p className="form-description">{description}</p>}
+
+          <div className="form-input-container">
+            <select
+              ref={ref}
+              className={`${baseClasses} form-input-with-right-icon`}
+              disabled={disabled}
+              value={formValue !== undefined ? formValue : ""}
+              onChange={(e) => handleChange(e.target.value)}
+              onBlur={handleBlur}
+              onFocus={handleFocus}
+              {...props}
+            >
+              {placeholder && (
+                <option value="" disabled>
+                  {placeholder}
+                </option>
+              )}
+
+              {data
+                ? data.map((item) => (
+                    <option
+                      key={item.value}
+                      value={item.value}
+                      disabled={item.disabled}
+                    >
+                      {item.label}
+                    </option>
+                  ))
+                : children}
+            </select>
+
+            {/* Custom dropdown arrow */}
+            <div className="form-input-icon-right">
+              <i className="bi bi-chevron-down form-text-gray-400"></i>
+            </div>
+          </div>
+
+          {internalError && (
+            <p className="form-error">
+              <i className="bi bi-exclamation-circle form-error-icon"></i>
+              {internalError}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // Searchable select implementation
     return (
       <div className="form-group">
         {label && (
@@ -131,40 +258,83 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
         {description && <p className="form-description">{description}</p>}
 
-        <div className="form-input-container">
-          <select
-            ref={ref}
-            className={`${baseClasses} form-input-with-right-icon`}
-            disabled={disabled}
-            value={formValue !== undefined ? formValue : ""}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            onFocus={handleFocus}
-            {...props}
+        <div className="form-input-container" ref={dropdownRef}>
+          <div
+            className={`${baseClasses} form-input-with-right-icon searchable-select-trigger`}
+            onClick={handleToggleDropdown}
+            onKeyDown={handleKeyDown}
+            tabIndex={disabled ? -1 : 0}
+            role="combobox"
+            aria-expanded={isOpen}
+            aria-haspopup="listbox"
           >
-            {placeholder && (
-              <option value="" disabled>
-                {placeholder}
-              </option>
-            )}
+            <span className={!selectedLabel ? "text-muted" : ""}>
+              {selectedLabel || placeholder || "Select an option..."}
+            </span>
 
-            {data
-              ? data.map((item) => (
-                  <option
-                    key={item.value}
-                    value={item.value}
-                    disabled={item.disabled}
-                  >
-                    {item.label}
-                  </option>
-                ))
-              : children}
-          </select>
-
-          {/* Custom dropdown arrow */}
-          <div className="form-input-icon-right">
-            <i className="bi bi-chevron-down form-text-gray-400"></i>
+            <div className="form-input-icon-right">
+              {clearable && formValue && (
+                <button
+                  type="button"
+                  className="btn-clear"
+                  onClick={handleClear}
+                  aria-label="Clear selection"
+                >
+                  <i className="bi bi-x-circle"></i>
+                </button>
+              )}
+              <i
+                className={`bi bi-chevron-${
+                  isOpen ? "up" : "down"
+                } form-text-gray-400`}
+              ></i>
+            </div>
           </div>
+
+          {isOpen && (
+            <div className="searchable-select-dropdown">
+              <div className="searchable-select-search">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="form-control"
+                  placeholder="Search options..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setIsOpen(false);
+                      setSearchTerm("");
+                    }
+                  }}
+                />
+                <i className="bi bi-search search-icon"></i>
+              </div>
+
+              <div className="searchable-select-options">
+                {filteredData.length > 0 ? (
+                  filteredData.map((item) => (
+                    <div
+                      key={item.value}
+                      className={`searchable-select-option ${
+                        item.value === formValue ? "selected" : ""
+                      } ${item.disabled ? "disabled" : ""}`}
+                      onClick={() => !item.disabled && handleChange(item.value)}
+                    >
+                      {item.label}
+                      {item.value === formValue && (
+                        <i className="bi bi-check selected-icon"></i>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="searchable-select-no-results">
+                    No options found
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {internalError && (

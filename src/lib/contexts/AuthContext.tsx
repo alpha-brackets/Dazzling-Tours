@@ -7,6 +7,7 @@ import React, {
   ReactNode,
 } from "react";
 import { UserRole } from "@/lib/enums/roles";
+import { api } from "@/lib/privateAxios";
 
 interface User {
   _id: string;
@@ -98,13 +99,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchUserProfile = async (authToken: string) => {
     try {
-      const response = await fetch("/api/auth/me", {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-        },
-      });
+      // Set the token in localStorage so privateAxios can use it
+      localStorage.setItem("admin_token", authToken);
 
-      const data = await response.json();
+      const response = await api.get<{
+        success: boolean;
+        data: { user: User };
+        message?: string;
+      }>("/api/auth/me");
+      const data = response.data;
 
       if (data.success) {
         setUser(data.data.user);
@@ -230,16 +233,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     newPassword: string
   ) => {
     try {
-      const response = await fetch("/api/auth/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
+      const response = await api.post<{ success: boolean; message: string }>(
+        "/api/auth/change-password",
+        {
+          currentPassword,
+          newPassword,
+        }
+      );
 
-      const data = await response.json();
+      const data = response.data;
       return data;
     } catch (error) {
       console.error("Change password error:", error);

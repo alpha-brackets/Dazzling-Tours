@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Tour } from "@/models";
 import { MongoQuery } from "@/lib/types";
+import { cleanTourData } from "@/lib/utils/dataCleaning";
 
 // GET /api/tours - Get all tours
 export async function GET(request: NextRequest) {
@@ -18,15 +19,14 @@ export async function GET(request: NextRequest) {
 
     const query: MongoQuery = {};
 
-    // Apply status filter: if provided, use it; otherwise default to Active for public listing
+    // Apply status filter: if provided and not "all", use it; otherwise show all tours
     if (status && status !== "all") {
       query.status = status;
-    } else {
-      query.status = "Active";
     }
 
     if (category) query.category = category;
     if (featured === "true") query.featured = true;
+    if (featured === "false") query.featured = false;
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: "i" } },
@@ -105,7 +105,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tour = new Tour(body);
+    // Clean the data using utility function
+    const cleanedData = cleanTourData(body);
+
+    const tour = new Tour(cleanedData);
     await tour.save();
 
     return NextResponse.json(

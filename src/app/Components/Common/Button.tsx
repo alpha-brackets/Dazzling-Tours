@@ -29,14 +29,14 @@ const Button: React.FC<ButtonProps> = React.memo(
     children,
     ...rest
   }) => {
-    const baseClasses = "ui-btn";
+    const baseClasses = "btn";
 
     const variantClasses = {
-      filled: "btn-filled",
+      filled: "", // Bootstrap's default filled style
       light: "btn-light",
       outline: "btn-outline",
-      subtle: "btn-subtle",
-      transparent: "btn-transparent",
+      subtle: "btn-link", // Bootstrap's link style for subtle
+      transparent: "btn-link", // Use link style for transparent
     };
 
     const colorClasses = {
@@ -44,25 +44,25 @@ const Button: React.FC<ButtonProps> = React.memo(
       secondary: "btn-secondary",
       success: "btn-success",
       warning: "btn-warning",
-      error: "btn-error",
-      gray: "btn-gray",
+      error: "btn-danger", // Bootstrap uses 'danger' instead of 'error'
+      gray: "btn-secondary", // Use secondary for gray
     };
 
     const sizeClasses = {
-      xs: "btn-xs",
+      xs: "btn-sm", // Bootstrap doesn't have xs, use sm
       sm: "btn-sm",
-      md: "btn-md",
+      md: "", // Bootstrap's default size
       lg: "btn-lg",
-      xl: "btn-xl",
+      xl: "btn-lg", // Bootstrap doesn't have xl, use lg
     };
 
     const radiusClasses = {
-      xs: "btn-radius-xs",
-      sm: "btn-radius-sm",
-      md: "btn-radius-md",
-      lg: "btn-radius-lg",
-      xl: "btn-radius-xl",
-      round: "btn-radius-round",
+      xs: "rounded-0",
+      sm: "rounded-1",
+      md: "rounded-2",
+      lg: "rounded-3",
+      xl: "rounded-4",
+      round: "rounded-pill",
     };
 
     const classes = [
@@ -71,26 +71,31 @@ const Button: React.FC<ButtonProps> = React.memo(
       colorClasses[color],
       sizeClasses[size],
       radiusClasses[radius],
-      loading && "btn-loading",
-      disabled && "btn-disabled",
-      fullWidth && "btn-full-width",
+      loading && "disabled",
+      disabled && "disabled",
+      fullWidth && "w-100",
       className,
     ]
       .filter(Boolean)
-      .join(" ");
+      .join(" ")
+      .trim();
 
     return (
       <button className={classes} disabled={disabled || loading} {...rest}>
         {loading ? (
           <>
-            <i className="bi bi-arrow-clockwise btn-spinner"></i>
+            <span
+              className="spinner-border spinner-border-sm me-2"
+              role="status"
+              aria-hidden="true"
+            ></span>
             <span>Loading...</span>
           </>
         ) : (
           <>
-            {leftIcon && <span className="btn-left-icon">{leftIcon}</span>}
-            <span className="btn-content">{children}</span>
-            {rightIcon && <span className="btn-right-icon">{rightIcon}</span>}
+            {leftIcon && <span className="me-2">{leftIcon}</span>}
+            <span>{children}</span>
+            {rightIcon && <span className="ms-2">{rightIcon}</span>}
           </>
         )}
       </button>

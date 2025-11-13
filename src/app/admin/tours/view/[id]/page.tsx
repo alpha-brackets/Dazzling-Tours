@@ -1,280 +1,405 @@
 "use client";
-import React from "react";
-import Link from "next/link";
+import React, { use } from "react";
 import { useGetTour } from "@/lib/hooks";
-import { ImageGallery } from "@/app/Components/Common";
+import { Page, Button } from "@/app/Components/Common";
 import Image from "next/image";
 
-const ViewTour = ({ params }: { params: { id: string } }) => {
-  const { data, isLoading } = useGetTour(params.id);
+const ViewTour = ({ params }: { params: Promise<{ id: string }> }) => {
+  const resolvedParams = use(params);
+  const { data, isLoading } = useGetTour(resolvedParams.id);
   const tour = data?.data;
-
-  if (isLoading) {
-    return <div className="loading">Loading tour...</div>;
-  }
 
   if (!tour) {
     return (
-      <section className="admin-view">
-        <div className="container">
-          <div className="card">
-            <div className="card-body">
-              <h1>View Tour</h1>
-              <p>Tour not found</p>
-            </div>
+      <Page
+        title="View Tour"
+        description="Tour details and information"
+        loading={isLoading}
+        headerActions={
+          <Button
+            color="secondary"
+            variant="outline"
+            leftIcon={<i className="bi bi-arrow-left"></i>}
+            onClick={() => window.history.back()}
+          >
+            Back
+          </Button>
+        }
+      >
+        <div className="card">
+          <div className="card-body text-center py-5">
+            <i
+              className="bi bi-exclamation-triangle text-warning"
+              style={{ fontSize: "3rem" }}
+            ></i>
+            <h3 className="mt-3">Tour Not Found</h3>
+            <p className="text-muted">
+              The tour you&apos;re looking for doesn&apos;t exist or has been
+              removed.
+            </p>
+            <Button
+              color="primary"
+              leftIcon={<i className="bi bi-arrow-left"></i>}
+              onClick={() => window.history.back()}
+            >
+              Go Back
+            </Button>
           </div>
         </div>
-      </section>
+      </Page>
     );
   }
 
   return (
-    <div className="admin-view">
-      <div className="page-header">
-        <div className="header-content">
-          <div className="header-text">
-            <h1>View Tour</h1>
-            <p className="page-description">Tour details and information</p>
-          </div>
-          <div className="header-actions">
-            <Link
-              href={`/admin/tours/edit/${tour._id}`}
-              className="btn btn-primary"
-            >
-              <i className="bi bi-pencil"></i> Edit
-            </Link>
-            <Link href="/admin/tours" className="btn btn-outline-secondary">
-              <i className="bi bi-arrow-left"></i> Back
-            </Link>
-          </div>
+    <Page
+      title="View Tour"
+      description="Tour details and information"
+      loading={isLoading}
+      headerActions={
+        <div className="d-flex gap-2">
+          <Button
+            color="primary"
+            variant="outline"
+            leftIcon={<i className="bi bi-eye"></i>}
+            onClick={() => window.open(`/tours/${tour._id}`, "_blank")}
+          >
+            Preview
+          </Button>
+          <Button
+            color="primary"
+            leftIcon={<i className="bi bi-pencil"></i>}
+            onClick={() =>
+              (window.location.href = `/admin/tours/edit/${tour._id}`)
+            }
+          >
+            Edit
+          </Button>
+          <Button
+            color="secondary"
+            variant="outline"
+            leftIcon={<i className="bi bi-arrow-left"></i>}
+            onClick={() => window.history.back()}
+          >
+            Back
+          </Button>
         </div>
-      </div>
-
-      <div className="form-container">
-        <div className="card">
-          <div className="card-body">
-            <div className="tour-overview">
+      }
+    >
+      {/* Tour Overview */}
+      <div className="card mb-4">
+        <div className="card-body">
+          <div className="row align-items-center">
+            <div className="col-lg-8">
               <div className="tour-header">
-                <h2 className="tour-title">{tour.title}</h2>
-                <div className="tour-meta">
+                <h2 className="mb-3">{tour.title}</h2>
+                <div className="tour-meta mb-3">
                   <span
-                    className={`badge status-badge ${tour.status?.toLowerCase()}`}
+                    className={`badge me-2 ${
+                      tour.status?.toLowerCase() === "active"
+                        ? "bg-success"
+                        : "bg-secondary"
+                    }`}
                   >
                     {tour.status || "Active"}
                   </span>
                   {tour.featured && (
-                    <span className="badge featured-badge">
-                      <i className="bi bi-star-fill"></i> Featured
+                    <span className="badge bg-warning text-dark me-2">
+                      Featured
                     </span>
                   )}
                   {tour.category && (
-                    <span className="badge category-badge">
+                    <span className="badge bg-info text-white me-2">
                       {tour.category}
                     </span>
                   )}
                 </div>
-              </div>
-
-              <div className="tour-description">
-                <p className="short-description">
-                  {tour.shortDescription || tour.description}
-                </p>
-              </div>
-
-              <div className="tour-details-grid">
-                <div className="detail-item">
-                  <i className="bi bi-geo-alt"></i>
-                  <div className="detail-content">
-                    <span className="detail-label">Location</span>
-                    <span className="detail-value">{tour.location}</span>
-                  </div>
+                <div className="tour-description">
+                  <p className="text-muted mb-0">{tour.shortDescription}</p>
                 </div>
-                <div className="detail-item">
-                  <i className="bi bi-calendar3"></i>
-                  <div className="detail-content">
-                    <span className="detail-label">Duration</span>
-                    <span className="detail-value">{tour.duration}</span>
-                  </div>
-                </div>
-                <div className="detail-item">
-                  <i className="bi bi-cash"></i>
-                  <div className="detail-content">
-                    <span className="detail-label">Price</span>
-                    <span className="detail-value">${tour.price}</span>
-                  </div>
-                </div>
-                {typeof tour.groupSize === "number" && (
-                  <div className="detail-item">
-                    <i className="bi bi-people"></i>
-                    <div className="detail-content">
-                      <span className="detail-label">Group Size</span>
-                      <span className="detail-value">
-                        {tour.groupSize} people
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {tour.difficulty && (
-                  <div className="detail-item">
-                    <i className="bi bi-speedometer2"></i>
-                    <div className="detail-content">
-                      <span className="detail-label">Difficulty</span>
-                      <span className="detail-value">{tour.difficulty}</span>
-                    </div>
-                  </div>
-                )}
-                {tour.rating > 0 && (
-                  <div className="detail-item">
-                    <i className="bi bi-star-fill"></i>
-                    <div className="detail-content">
-                      <span className="detail-label">Rating</span>
-                      <span className="detail-value">
-                        {tour.rating}/5 ({tour.reviews} reviews)
-                      </span>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
-
-            {/* Tour Images Gallery */}
-            {Array.isArray(tour.images) && tour.images.length > 0 && (
-              <div className="content-section">
-                <div className="section-header">
-                  <h3>
-                    <i className="bi bi-images"></i> Tour Images
-                  </h3>
-                  <p className="section-description">
-                    Visual showcase of tour destinations and activities
-                  </p>
+            <div className="col-lg-4">
+              <div className="text-center">
+                <div className="price-display mb-2">
+                  <span className="h3 text-primary">${tour.price}</span>
+                  <span className="text-muted ms-1">per person</span>
                 </div>
-                <ImageGallery
-                  images={tour.images}
-                  alt={tour.title}
-                  aspectRatio="4/3"
-                  showThumbnails={true}
-                />
-              </div>
-            )}
-
-            {Array.isArray(tour.highlights) && tour.highlights.length > 0 && (
-              <div className="content-section">
-                <div className="section-header">
-                  <h3>
-                    <i className="bi bi-star"></i> Highlights
-                  </h3>
-                  <p className="section-description">
-                    Key features and attractions
-                  </p>
-                </div>
-                <div className="highlights-list">
-                  {tour.highlights.map((highlight, idx) => (
-                    <div key={idx} className="highlight-item">
-                      <i className="bi bi-check-circle-fill"></i>
-                      <span>{highlight}</span>
-                    </div>
-                  ))}
+                <div className="price-details">
+                  <small className="text-muted">
+                    <i className="bi bi-clock me-1"></i>
+                    {tour.duration}
+                  </small>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-            {Array.isArray(tour.includes) && tour.includes.length > 0 && (
-              <div className="content-section">
-                <div className="section-header">
-                  <h3>
-                    <i className="bi bi-check-circle"></i> Includes
-                  </h3>
-                  <p className="section-description">
-                    What&apos;s included in the tour price
-                  </p>
+      {/* Tour Details */}
+      <div className="card mb-4">
+        <div className="card-header bg-light">
+          <h5 className="mb-0">Tour Details</h5>
+        </div>
+        <div className="card-body">
+          <div className="row g-3">
+            <div className="col-md-6 col-lg-4">
+              <div className="detail-item">
+                <i className="bi bi-geo-alt text-primary me-2"></i>
+                <div className="detail-content">
+                  <span className="detail-label">Location</span>
+                  <span className="detail-value">{tour.location}</span>
                 </div>
-                <div className="includes-list">
-                  {tour.includes.map((include, idx) => (
-                    <div key={idx} className="include-item">
-                      <i className="bi bi-plus-circle-fill"></i>
-                      <span>{include}</span>
-                    </div>
-                  ))}
+              </div>
+            </div>
+            {typeof tour.groupSize === "number" && (
+              <div className="col-md-6 col-lg-4">
+                <div className="detail-item">
+                  <i className="bi bi-people text-primary me-2"></i>
+                  <div className="detail-content">
+                    <span className="detail-label">Group Size</span>
+                    <span className="detail-value">
+                      {tour.groupSize} people
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
-
-            {Array.isArray(tour.excludes) && tour.excludes.length > 0 && (
-              <div className="content-section">
-                <div className="section-header">
-                  <h3>
-                    <i className="bi bi-x-circle"></i> Excludes
-                  </h3>
-                  <p className="section-description">
-                    What&apos;s not included in the tour price
-                  </p>
-                </div>
-                <div className="excludes-list">
-                  {tour.excludes.map((exclude, idx) => (
-                    <div key={idx} className="exclude-item">
-                      <i className="bi bi-dash-circle-fill"></i>
-                      <span>{exclude}</span>
-                    </div>
-                  ))}
+            {tour.difficulty && (
+              <div className="col-md-6 col-lg-4">
+                <div className="detail-item">
+                  <i className="bi bi-speedometer2 text-primary me-2"></i>
+                  <div className="detail-content">
+                    <span className="detail-label">Difficulty</span>
+                    <span className="detail-value">{tour.difficulty}</span>
+                  </div>
                 </div>
               </div>
             )}
-
-            {Array.isArray(tour.itinerary) && tour.itinerary.length > 0 && (
-              <div className="content-section">
-                <div className="section-header">
-                  <h3>
-                    <i className="bi bi-calendar-check"></i> Itinerary
-                  </h3>
-                  <p className="section-description">
-                    Detailed day-by-day schedule
-                  </p>
-                </div>
-                <div className="itinerary-list">
-                  {tour.itinerary.map((item, idx) => (
-                    <div key={idx} className="itinerary-item">
-                      <div className="day-number">
-                        <span>Day {item.day}</span>
-                      </div>
-                      <div className="day-content">
-                        <h4 className="day-title">{item.title}</h4>
-                        <p className="day-description">{item.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {Array.isArray(tour.images) && tour.images.length > 0 && (
-              <div className="content-section">
-                <div className="section-header">
-                  <h3>
-                    <i className="bi bi-images"></i> Images
-                  </h3>
-                  <p className="section-description">
-                    Tour photos and galleries
-                  </p>
-                </div>
-                <div className="image-gallery">
-                  {tour.images.map((src, idx) => (
-                    <div key={idx} className="gallery-item">
-                      <Image
-                        src={src}
-                        alt={`Tour image ${idx + 1}`}
-                        className="gallery-image"
-                        width={100}
-                        height={100}
-                      />
-                    </div>
-                  ))}
+            {tour.rating > 0 && (
+              <div className="col-md-6 col-lg-4">
+                <div className="detail-item">
+                  <i className="bi bi-star-fill text-warning me-2"></i>
+                  <div className="detail-content">
+                    <span className="detail-label">Rating</span>
+                    <span className="detail-value">
+                      {tour.rating}/5 ({tour.reviews} reviews)
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Full Description */}
+      {tour.description && (
+        <div className="card mb-4">
+          <div className="card-header bg-light">
+            <h5 className="mb-0">Full Description</h5>
+          </div>
+          <div className="card-body">
+            <div className="full-description">
+              <div
+                className="rich-text-content"
+                dangerouslySetInnerHTML={{ __html: tour.description }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tour Images Gallery */}
+      {Array.isArray(tour.images) && tour.images.length > 0 && (
+        <div className="card mb-4">
+          <div className="card-header bg-light">
+            <h5 className="mb-0">Tour Images</h5>
+          </div>
+          <div className="card-body">
+            <div className="tour-images-container">
+              <div className="main-image-container mb-3">
+                {tour.images[0] && (
+                  <div className="main-image">
+                    <Image
+                      src={tour.images[0]}
+                      alt={`${tour.title} - Main Image`}
+                      width={800}
+                      height={400}
+                      className="img-fluid rounded"
+                      style={{
+                        width: "100%",
+                        height: "400px",
+                        objectFit: "cover",
+                        objectPosition: "center",
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {tour.images.length > 1 && (
+                <div className="thumbnail-images">
+                  <div className="row g-2">
+                    {tour.images.slice(1).map((image, idx) => (
+                      <div key={idx + 1} className="col-md-3 col-sm-4 col-6">
+                        <div className="thumbnail-image">
+                          <Image
+                            src={image}
+                            alt={`${tour.title} - Image ${idx + 2}`}
+                            width={200}
+                            height={120}
+                            className="img-fluid rounded"
+                            style={{
+                              width: "100%",
+                              height: "120px",
+                              objectFit: "cover",
+                              objectPosition: "center",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              // Swap with main image
+                              const newImages = [...tour.images];
+                              [newImages[0], newImages[idx + 1]] = [
+                                newImages[idx + 1],
+                                newImages[0],
+                              ];
+                              // You could implement state management here if needed
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Highlights */}
+      {Array.isArray(tour.highlights) && tour.highlights.length > 0 && (
+        <div className="card mb-4">
+          <div className="card-header bg-light">
+            <h5 className="mb-0">Highlights</h5>
+          </div>
+          <div className="card-body">
+            <div className="highlights-list">
+              {tour.highlights.map((highlight, idx) => (
+                <div key={idx} className="highlight-item">
+                  <i className="bi bi-check-circle-fill text-success me-2"></i>
+                  <span>{highlight}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Includes */}
+      {Array.isArray(tour.includes) && tour.includes.length > 0 && (
+        <div className="card mb-4">
+          <div className="card-header bg-light">
+            <h5 className="mb-0">Includes</h5>
+          </div>
+          <div className="card-body">
+            <div className="includes-list">
+              {tour.includes.map((include, idx) => (
+                <div key={idx} className="include-item">
+                  <i className="bi bi-plus-circle-fill text-success me-2"></i>
+                  <span>{include}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Excludes */}
+      {Array.isArray(tour.excludes) && tour.excludes.length > 0 && (
+        <div className="card mb-4">
+          <div className="card-header bg-light">
+            <h5 className="mb-0">Excludes</h5>
+          </div>
+          <div className="card-body">
+            <div className="excludes-list">
+              {tour.excludes.map((exclude, idx) => (
+                <div key={idx} className="exclude-item">
+                  <i className="bi bi-dash-circle-fill text-danger me-2"></i>
+                  <span>{exclude}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Itinerary */}
+      {Array.isArray(tour.itinerary) && tour.itinerary.length > 0 && (
+        <div className="card mb-4">
+          <div className="card-header bg-light">
+            <h5 className="mb-0">Itinerary</h5>
+          </div>
+          <div className="card-body">
+            <div className="itinerary-list">
+              {tour.itinerary.map((item, idx) => (
+                <div key={idx} className="itinerary-item">
+                  <div className="day-number">
+                    <span className="badge bg-primary">Day {item.day}</span>
+                  </div>
+                  <div className="day-content">
+                    <h6 className="day-title">{item.title}</h6>
+                    <p className="day-description text-muted">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tour Metadata */}
+      <div className="card mb-4">
+        <div className="card-header bg-light">
+          <h5 className="mb-0">Tour Information</h5>
+        </div>
+        <div className="card-body">
+          <div className="tour-metadata">
+            <div className="row">
+              <div className="col-md-6">
+                <div className="metadata-item">
+                  <i className="bi bi-calendar-plus text-primary me-2"></i>
+                  <div className="metadata-content">
+                    <span className="metadata-label">Created</span>
+                    <span className="metadata-value">
+                      {tour.createdAt
+                        ? new Date(tour.createdAt).toLocaleDateString()
+                        : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="metadata-item">
+                  <i className="bi bi-calendar-check text-primary me-2"></i>
+                  <div className="metadata-content">
+                    <span className="metadata-label">Last Updated</span>
+                    <span className="metadata-value">
+                      {tour.updatedAt
+                        ? new Date(tour.updatedAt).toLocaleDateString()
+                        : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Page>
   );
 };
 

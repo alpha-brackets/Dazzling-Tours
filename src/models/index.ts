@@ -271,8 +271,6 @@ const NewsletterSchema = new Schema<INewsletter>({
 // Testimonial Model
 export interface ITestimonial extends Document {
   name: string;
-  designation: string;
-  company?: string;
   content: string;
   rating: number;
   image?: string;
@@ -287,8 +285,6 @@ export interface ITestimonial extends Document {
 const TestimonialSchema = new Schema<ITestimonial>(
   {
     name: { type: String, required: true },
-    designation: { type: String, required: true },
-    company: { type: String },
     content: { type: String, required: true },
     rating: { type: Number, required: true, min: 1, max: 5 },
     image: { type: String },
