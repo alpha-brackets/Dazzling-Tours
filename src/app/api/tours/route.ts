@@ -108,13 +108,53 @@ export async function POST(request: NextRequest) {
     // Clean the data using utility function
     const cleanedData = cleanTourData(body);
 
+    // Always ensure SEO object exists (with provided data or defaults)
+    cleanedData.seo = {
+      metaTitle: body.seo?.metaTitle || "",
+      metaDescription: body.seo?.metaDescription || "",
+      slug: body.seo?.slug || "",
+      focusKeyword: body.seo?.focusKeyword || "",
+      ogImage: body.seo?.ogImage || "",
+    };
+
     const tour = new Tour(cleanedData);
+
+    // Ensure SEO is set if not already present
+    if (!tour.seo) {
+      tour.seo = {
+        metaTitle: "",
+        metaDescription: "",
+        slug: "",
+        focusKeyword: "",
+        ogImage: "",
+      };
+    }
+
     await tour.save();
+
+    // Fetch fresh from database to ensure we get the saved data
+    const savedTour = await Tour.findById(tour._id);
+
+    // Convert Mongoose document to plain object to ensure all fields are included
+    const tourData = savedTour?.toObject
+      ? savedTour.toObject({ flattenMaps: true })
+      : savedTour || tour.toObject?.() || tour;
+
+    // Ensure SEO is always in the response, even if empty
+    if (!tourData.seo) {
+      tourData.seo = {
+        metaTitle: "",
+        metaDescription: "",
+        slug: "",
+        focusKeyword: "",
+        ogImage: "",
+      };
+    }
 
     return NextResponse.json(
       {
         success: true,
-        data: tour,
+        data: tourData,
         message: "Tour created successfully",
       },
       { status: 201 }

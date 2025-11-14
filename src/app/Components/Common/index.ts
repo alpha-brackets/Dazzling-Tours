@@ -12,6 +12,8 @@ export { default as Page } from "./Page";
 export type { PageProps } from "./Page";
 export { default as Avatar } from "./Avatar";
 export type { AvatarProps } from "./Avatar";
+export { default as Badge } from "./Badge";
+export type { BadgeProps } from "./Badge";
 export {
   default as Loading,
   LoadingSpinner,

@@ -8,7 +8,12 @@ import {
   useNotification,
   useForm,
 } from "@/lib/hooks";
-import { TourStatus, TOUR_STATUS_OPTIONS } from "@/lib/enums";
+import {
+  TourStatus,
+  TOUR_STATUS_OPTIONS,
+  TourDifficulty,
+  TOUR_DIFFICULTY_OPTIONS,
+} from "@/lib/enums";
 import {
   TextInput,
   NumberInput,
@@ -19,6 +24,7 @@ import {
   ListManager,
   ItineraryManager,
   ImageUpload,
+  SEOFields,
 } from "@/app/Components/Form";
 import { Button, Page } from "@/app/Components/Common";
 import { updateTourSchema } from "@/lib/validation/tour";
@@ -48,12 +54,19 @@ const EditTour = ({ params }: { params: Promise<{ id: string }> }) => {
       itinerary: [],
       includes: [],
       excludes: [],
-      difficulty: "Easy",
+      difficulty: TourDifficulty.EASY,
       groupSize: 10,
       rating: 0,
       reviews: 0,
       featured: false,
       status: TourStatus.ACTIVE,
+      seo: {
+        metaTitle: "",
+        metaDescription: "",
+        slug: "",
+        focusKeyword: "",
+        ogImage: "",
+      },
     },
     validate: (values) => {
       const result = updateTourSchema.safeParse(values);
@@ -86,19 +99,38 @@ const EditTour = ({ params }: { params: Promise<{ id: string }> }) => {
         itinerary: tour.itinerary || [],
         includes: tour.includes || [],
         excludes: tour.excludes || [],
-        difficulty: tour.difficulty || "Easy",
+        difficulty: tour.difficulty || TourDifficulty.EASY,
         groupSize: tour.groupSize || 10,
         rating: tour.rating || 0,
         reviews: tour.reviews || 0,
         featured: tour.featured || false,
         status: tour.status || TourStatus.ACTIVE,
+        seo: tour.seo || {
+          metaTitle: "",
+          metaDescription: "",
+          slug: "",
+          focusKeyword: "",
+          ogImage: "",
+        },
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tour, resolvedParams.id]);
 
   const handleSubmit = form.handleSubmit(async (values) => {
-    updateTourMutation.mutate(values, {
+    // Ensure SEO object is included in submission
+    const submitData: UpdateTourData = {
+      ...values,
+      seo: values.seo || {
+        metaTitle: "",
+        metaDescription: "",
+        slug: "",
+        focusKeyword: "",
+        ogImage: "",
+      },
+    };
+
+    updateTourMutation.mutate(submitData, {
       onSuccess: () => {
         showSuccess("Tour updated successfully!");
         router.push("/admin/tours");
@@ -197,11 +229,7 @@ const EditTour = ({ params }: { params: Promise<{ id: string }> }) => {
               <Select
                 label="Difficulty Level"
                 {...form.getFieldProps("difficulty")}
-                data={[
-                  { value: "Easy", label: "Easy" },
-                  { value: "Medium", label: "Medium" },
-                  { value: "Hard", label: "Hard" },
-                ]}
+                data={TOUR_DIFFICULTY_OPTIONS}
               />
 
               <Select
@@ -210,10 +238,7 @@ const EditTour = ({ params }: { params: Promise<{ id: string }> }) => {
                 onChange={(value) =>
                   form.setFieldValue("status", value as TourStatus)
                 }
-                data={TOUR_STATUS_OPTIONS.map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
+                data={TOUR_STATUS_OPTIONS}
               />
             </div>
           </div>
@@ -436,6 +461,46 @@ const EditTour = ({ params }: { params: Promise<{ id: string }> }) => {
                 onChange={(checked) => form.setFieldValue("featured", checked)}
               />
             </div>
+          </div>
+
+          <div className="form-section">
+            <div className="section-header">
+              <h3>
+                <i className="bi bi-search"></i> SEO Settings
+              </h3>
+              <p className="section-description">
+                Optimize your tour for search engines and social media sharing
+              </p>
+            </div>
+            <SEOFields
+              values={
+                form.values.seo || {
+                  metaTitle: "",
+                  metaDescription: "",
+                  slug: "",
+                  focusKeyword: "",
+                  ogImage: "",
+                }
+              }
+              onChange={(seo) => {
+                // Ensure we always update the SEO object, even if it's empty
+                form.setFieldValue("seo", {
+                  metaTitle: seo.metaTitle || "",
+                  metaDescription: seo.metaDescription || "",
+                  slug: seo.slug || "",
+                  focusKeyword: seo.focusKeyword || "",
+                  ogImage: seo.ogImage || "",
+                });
+              }}
+              firstImageUrl={form.values.images?.[0]}
+              showSectionHeader={false}
+              title={form.values.title}
+              location={form.values.location}
+              shortDescription={form.values.shortDescription}
+              price={form.values.price}
+              duration={form.values.duration}
+              enableAutoGeneration={true}
+            />
           </div>
 
           <div className="form-actions">

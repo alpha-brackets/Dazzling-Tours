@@ -6,3 +6,4 @@ export * from "./testimonial";
 export * from "./contact";
 export * from "./newsletter";
 export * from "./notification";
+export * from "./seo";

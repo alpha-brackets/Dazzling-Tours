@@ -1,5 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { UserRole } from "@/lib/enums/roles";
+import { TourStatus, TourDifficulty } from "@/lib/enums/tour";
 
 // Tour Model
 export interface ITour extends Document {
@@ -19,12 +20,19 @@ export interface ITour extends Document {
   }[];
   includes: string[];
   excludes: string[];
-  difficulty: "Easy" | "Medium" | "Hard";
+  difficulty: TourDifficulty;
   groupSize: number;
   rating: number;
   reviews: number;
   featured: boolean;
-  status: "Active" | "Inactive";
+  status: TourStatus;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    slug?: string;
+    focusKeyword?: string;
+    ogImage?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,17 +59,25 @@ const TourSchema = new Schema<ITour>(
     excludes: [{ type: String }],
     difficulty: {
       type: String,
-      enum: ["Easy", "Medium", "Hard"],
-      default: "Easy",
+      enum: TourDifficulty,
+      default: TourDifficulty.EASY,
     },
     groupSize: { type: Number, default: 10 },
     rating: { type: Number, default: 0, min: 0, max: 5 },
     reviews: { type: Number, default: 0 },
     featured: { type: Boolean, default: false },
-    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    status: { type: String, enum: TourStatus, default: TourStatus.ACTIVE },
+    seo: {
+      metaTitle: { type: String, default: "" },
+      metaDescription: { type: String, default: "" },
+      slug: { type: String, default: "" },
+      focusKeyword: { type: String, default: "" },
+      ogImage: { type: String, default: "" },
+    },
   },
   {
     timestamps: true,
+    strict: true,
   }
 );
 

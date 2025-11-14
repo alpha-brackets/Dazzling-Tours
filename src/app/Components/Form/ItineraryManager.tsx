@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { Badge } from "../Common";
 
 export interface ItineraryManagerProps {
   label?: string;
@@ -107,7 +108,9 @@ const ItineraryManager: React.FC<ItineraryManagerProps> = ({
             <div key={index} className="item itinerary-item">
               <div className="itinerary-content">
                 <div className="day-header">
-                  <span className="day-number">Day {item.day}</span>
+                  <Badge color="blue" size="sm" radius="xl">
+                    Day {item.day}
+                  </Badge>
                   <h4 className="day-title">{item.title}</h4>
                 </div>
                 <p className="day-description">{item.description}</p>

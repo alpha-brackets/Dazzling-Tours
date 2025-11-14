@@ -20,9 +20,14 @@ export async function GET(
       );
     }
 
+    // Convert Mongoose document to plain object to ensure all fields are included
+    const tourData = tour.toObject
+      ? tour.toObject({ flattenMaps: true })
+      : tour;
+
     return NextResponse.json({
       success: true,
-      data: tour,
+      data: tourData,
     });
   } catch (error) {
     console.error("Error fetching tour:", error);
@@ -33,8 +38,8 @@ export async function GET(
   }
 }
 
-// PUT /api/tours/[id] - Update a tour
-export async function PUT(
+// PATCH /api/tours/[id] - Update a tour
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -60,10 +65,42 @@ export async function PUT(
       );
     }
 
-    const tour = await Tour.findByIdAndUpdate(resolvedParams.id, body, {
-      new: true,
-      runValidators: true,
+    // Remove _id from body if present (shouldn't be updated)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { _id, seo, ...otherData } = body;
+
+    // Build update object with $set operator
+    const updateQuery: Record<string, unknown> = {};
+
+    // Add all other fields to update
+    Object.keys(otherData).forEach((key) => {
+      if (key !== "seo" && otherData[key] !== undefined) {
+        updateQuery[key] = otherData[key];
+      }
     });
+
+    // Handle SEO - set the entire object
+    if (seo !== undefined) {
+      updateQuery.seo = {
+        metaTitle: seo.metaTitle || "",
+        metaDescription: seo.metaDescription || "",
+        slug: seo.slug || "",
+        focusKeyword: seo.focusKeyword || "",
+        ogImage: seo.ogImage || "",
+      };
+    }
+
+    // Use findByIdAndUpdate with $set operator
+    const tour = await Tour.findByIdAndUpdate(
+      resolvedParams.id,
+      { $set: updateQuery },
+      {
+        new: true,
+        runValidators: true,
+        upsert: false,
+        setDefaultsOnInsert: true,
+      }
+    );
 
     if (!tour) {
       return NextResponse.json(
@@ -72,15 +109,23 @@ export async function PUT(
       );
     }
 
+    // Convert Mongoose document to plain object to ensure all fields are included
+    const tourData = tour.toObject
+      ? tour.toObject({ flattenMaps: true })
+      : tour;
+
     return NextResponse.json({
       success: true,
-      data: tour,
+      data: tourData,
       message: "Tour updated successfully",
     });
   } catch (error) {
     console.error("Error updating tour:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update tour" },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to update tour",
+      },
       { status: 500 }
     );
   }

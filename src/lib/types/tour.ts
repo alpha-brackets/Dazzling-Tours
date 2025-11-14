@@ -1,5 +1,6 @@
 import { PaginatedResponse, SingleResponse } from "./common";
-import { TourStatus } from "../enums/tourStatus";
+import { TourStatus } from "../enums/tour";
+import { SEOFields } from "./seo";
 
 export interface Tour {
   _id: string;
@@ -25,6 +26,8 @@ export interface Tour {
   reviews: number;
   featured: boolean;
   status: TourStatus;
+  // SEO fields
+  seo?: SEOFields;
   createdAt: string;
   updatedAt: string;
 }
@@ -52,6 +55,8 @@ export interface CreateTourData {
   reviews?: number;
   featured?: boolean;
   status?: TourStatus;
+  // SEO fields
+  seo?: SEOFields;
 }
 
 export interface UpdateTourData extends Partial<CreateTourData> {

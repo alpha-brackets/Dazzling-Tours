@@ -399,6 +399,158 @@ const ViewTour = ({ params }: { params: Promise<{ id: string }> }) => {
           </div>
         </div>
       </div>
+
+      {/* SEO Details */}
+      <div className="card mb-4">
+        <div className="card-header bg-light">
+          <h5 className="mb-0">
+            <i className="bi bi-search me-2"></i>SEO Details
+          </h5>
+        </div>
+        <div className="card-body">
+          <div className="seo-details">
+            <div className="row g-3">
+              {/* Meta Title */}
+              {tour.seo?.metaTitle && (
+                <div className="col-12">
+                  <div className="seo-item">
+                    <div className="seo-label">
+                      <i className="bi bi-type text-primary me-2"></i>
+                      <strong>Meta Title</strong>
+                      <span className="badge bg-info ms-2">
+                        {tour.seo.metaTitle.length}/60
+                      </span>
+                    </div>
+                    <div className="seo-value mt-2">
+                      <p className="mb-0">{tour.seo.metaTitle}</p>
+                      <small className="text-muted">
+                        This title appears in search engine results
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Meta Description */}
+              {tour.seo?.metaDescription && (
+                <div className="col-12">
+                  <div className="seo-item">
+                    <div className="seo-label">
+                      <i className="bi bi-text-paragraph text-primary me-2"></i>
+                      <strong>Meta Description</strong>
+                      <span className="badge bg-info ms-2">
+                        {tour.seo.metaDescription.length}/160
+                      </span>
+                    </div>
+                    <div className="seo-value mt-2">
+                      <p className="mb-0">{tour.seo.metaDescription}</p>
+                      <small className="text-muted">
+                        This description appears in search engine results
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* URL Slug */}
+              {tour.seo?.slug && (
+                <div className="col-md-6">
+                  <div className="seo-item">
+                    <div className="seo-label">
+                      <i className="bi bi-link-45deg text-primary me-2"></i>
+                      <strong>URL Slug</strong>
+                    </div>
+                    <div className="seo-value mt-2">
+                      <code className="bg-light p-2 rounded d-block">
+                        /tours/{tour.seo.slug}
+                      </code>
+                      <small className="text-muted">
+                        SEO-friendly URL path
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Focus Keyword */}
+              {tour.seo?.focusKeyword && (
+                <div className="col-md-6">
+                  <div className="seo-item">
+                    <div className="seo-label">
+                      <i className="bi bi-key text-primary me-2"></i>
+                      <strong>Focus Keyword</strong>
+                    </div>
+                    <div className="seo-value mt-2">
+                      <span className="badge bg-primary">
+                        {tour.seo.focusKeyword}
+                      </span>
+                      <small className="text-muted d-block mt-1">
+                        Primary keyword for this tour
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* OG Image */}
+              {tour.seo?.ogImage && (
+                <div className="col-12">
+                  <div className="seo-item">
+                    <div className="seo-label">
+                      <i className="bi bi-image text-primary me-2"></i>
+                      <strong>OG Image</strong>
+                    </div>
+                    <div className="seo-value mt-2">
+                      <div className="og-image-preview">
+                        <Image
+                          src={tour.seo.ogImage}
+                          alt="OG Image Preview"
+                          width={120}
+                          height={120}
+                          className="rounded border"
+                          style={{
+                            width: "120px",
+                            height: "120px",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </div>
+                      <small className="text-muted d-block mt-2">
+                        Image used for social media sharing (Open Graph)
+                      </small>
+                      <a
+                        href={tour.seo.ogImage}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-sm btn-outline-primary mt-2"
+                      >
+                        <i className="bi bi-box-arrow-up-right me-1"></i>
+                        View Full Image
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* No SEO Data Message */}
+              {(!tour.seo ||
+                (!tour.seo.metaTitle &&
+                  !tour.seo.metaDescription &&
+                  !tour.seo.slug &&
+                  !tour.seo.focusKeyword &&
+                  !tour.seo.ogImage)) && (
+                <div className="col-12">
+                  <div className="alert alert-info mb-0">
+                    <i className="bi bi-info-circle me-2"></i>
+                    No SEO data configured for this tour. Consider adding SEO
+                    settings to improve search engine visibility.
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </Page>
   );
 };

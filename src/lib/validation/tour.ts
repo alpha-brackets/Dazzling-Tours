@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { TourStatus } from "../enums/tourStatus";
+import { TourStatus } from "../enums/tour";
 
 // Base tour validation schema
 export const tourSchema = z.object({
@@ -50,12 +50,28 @@ export const tourSchema = z.object({
     .max(50, "Category must be less than 50 characters")
     .trim(),
 
-  images: z.array(z.string().url("Invalid image URL")).optional().default([]),
+  images: z
+    .array(
+      z.string().refine(
+        (val) => {
+          try {
+            new URL(val);
+            return true;
+          } catch {
+            return false;
+          }
+        },
+        { message: "Invalid image URL" }
+      )
+    )
+    .optional()
+    .default([]),
 
   highlights: z
     .array(z.string().min(1, "Highlight cannot be empty").trim())
-    .min(1, "At least one highlight is required")
-    .max(10, "Maximum 10 highlights allowed"),
+    .max(10, "Maximum 10 highlights allowed")
+    .optional()
+    .default([]),
 
   itinerary: z
     .array(
@@ -78,13 +94,15 @@ export const tourSchema = z.object({
           .trim(),
       })
     )
-    .min(1, "At least one itinerary day is required")
-    .max(30, "Maximum 30 itinerary days allowed"),
+    .max(30, "Maximum 30 itinerary days allowed")
+    .optional()
+    .default([]),
 
   includes: z
     .array(z.string().min(1, "Include item cannot be empty").trim())
-    .min(1, "At least one include item is required")
-    .max(15, "Maximum 15 include items allowed"),
+    .max(15, "Maximum 15 include items allowed")
+    .optional()
+    .default([]),
 
   excludes: z
     .array(z.string().min(1, "Exclude item cannot be empty").trim())
@@ -118,6 +136,52 @@ export const tourSchema = z.object({
       message: "Status must be Active or Inactive",
     })
     .default(TourStatus.ACTIVE),
+
+  // SEO fields (optional)
+  seo: z
+    .object({
+      metaTitle: z
+        .string()
+        .max(60, "Meta title should be 60 characters or less")
+        .trim()
+        .optional(),
+      metaDescription: z
+        .string()
+        .max(160, "Meta description should be 160 characters or less")
+        .trim()
+        .optional(),
+      slug: z
+        .string()
+        .min(3, "Slug must be at least 3 characters")
+        .max(100, "Slug must be less than 100 characters")
+        .regex(
+          /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+          "Slug can only contain lowercase letters, numbers, and hyphens"
+        )
+        .trim()
+        .optional(),
+      focusKeyword: z
+        .string()
+        .max(50, "Focus keyword must be less than 50 characters")
+        .trim()
+        .optional(),
+      ogImage: z
+        .string()
+        .refine(
+          (val) => {
+            if (!val || val.trim() === "") return true; // Allow empty for optional field
+            try {
+              new URL(val);
+              return true;
+            } catch {
+              return false;
+            }
+          },
+          { message: "Invalid OG image URL" }
+        )
+        .optional(),
+    })
+    .optional(),
 });
 
 // Schema for creating a new tour

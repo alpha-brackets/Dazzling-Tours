@@ -9,6 +9,7 @@ export { default as ListManager } from "./ListManager";
 export { default as ItineraryManager } from "./ItineraryManager";
 export { default as ImageUpload } from "./ImageUpload";
 export { default as StarRating } from "./StarRating";
+export { default as SEOFields } from "./SEOFields";
 
 // Export types
 export type { TextInputProps } from "./TextInput";
@@ -20,3 +21,4 @@ export type { CheckboxProps } from "./Checkbox";
 export type { ListManagerProps } from "./ListManager";
 export type { ItineraryManagerProps } from "./ItineraryManager";
 export type { ImageUploadProps } from "./ImageUpload";
+export type { SEOFieldsProps } from "./SEOFields";

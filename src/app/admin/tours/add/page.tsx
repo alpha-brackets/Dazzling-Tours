@@ -1,9 +1,14 @@
 "use client";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CreateTourData } from "@/lib/types/tour";
 import { useCreateTour, useNotification, useForm } from "@/lib/hooks";
-import { TourStatus, TOUR_STATUS_OPTIONS } from "@/lib/enums";
+import {
+  TourStatus,
+  TOUR_STATUS_OPTIONS,
+  TourDifficulty,
+  TOUR_DIFFICULTY_OPTIONS,
+} from "@/lib/enums";
 import {
   TextInput,
   NumberInput,
@@ -14,6 +19,7 @@ import {
   ListManager,
   ItineraryManager,
   ImageUpload,
+  SEOFields,
 } from "@/app/Components/Form";
 import { Button, Page } from "@/app/Components/Common";
 import { createTourSchema } from "@/lib/validation/tour";
@@ -22,6 +28,8 @@ const AddTour = () => {
   const router = useRouter();
   const createTourMutation = useCreateTour();
   const { showSuccess, showError } = useNotification();
+  const slugManuallyEditedRef = useRef(false);
+  const metaTitleManuallyEditedRef = useRef(false);
 
   const form = useForm<CreateTourData>({
     initialValues: {
@@ -37,12 +45,19 @@ const AddTour = () => {
       itinerary: [],
       includes: [],
       excludes: [],
-      difficulty: "Easy",
+      difficulty: TourDifficulty.EASY,
       groupSize: 10,
       rating: 0,
       reviews: 0,
       featured: false,
       status: TourStatus.ACTIVE,
+      seo: {
+        metaTitle: "",
+        metaDescription: "",
+        slug: "",
+        focusKeyword: "",
+        ogImage: "",
+      },
     },
     validate: (values) => {
       const result = createTourSchema.safeParse(values);
@@ -57,6 +72,38 @@ const AddTour = () => {
     validateOnChange: true,
     validateOnBlur: true,
   });
+
+  // Ensure SEO object exists (auto-generation is now handled in SEOFields component)
+  useEffect(() => {
+    if (!form.values.seo) {
+      form.setFieldValue("seo", {
+        metaTitle: "",
+        metaDescription: "",
+        slug: "",
+        focusKeyword: "",
+        ogImage: "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-set OG image to first tour image
+  useEffect(() => {
+    if (
+      form.values.images &&
+      form.values.images.length > 0 &&
+      form.values.seo &&
+      !form.values.seo.ogImage
+    ) {
+      form.setFieldValue("seo", {
+        ...form.values.seo,
+        ogImage: form.values.images[0],
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.values.images]);
+
+  // Character counters for SEO fields
 
   const handleSubmit = form.handleSubmit(async (values) => {
     createTourMutation.mutate(values, {
@@ -153,11 +200,7 @@ const AddTour = () => {
               <Select
                 label="Difficulty Level"
                 {...form.getFieldProps("difficulty")}
-                data={[
-                  { value: "Easy", label: "Easy" },
-                  { value: "Medium", label: "Medium" },
-                  { value: "Hard", label: "Hard" },
-                ]}
+                data={TOUR_DIFFICULTY_OPTIONS}
               />
 
               <Select
@@ -166,10 +209,7 @@ const AddTour = () => {
                 onChange={(value) =>
                   form.setFieldValue("status", value as TourStatus)
                 }
-                data={TOUR_STATUS_OPTIONS.map((option) => ({
-                  value: option.value,
-                  label: option.label,
-                }))}
+                data={TOUR_STATUS_OPTIONS}
               />
             </div>
           </div>
@@ -260,6 +300,7 @@ const AddTour = () => {
                 )
               }
               maxItems={10}
+              error={form.errors.highlights}
             />
           </div>
 
@@ -289,6 +330,7 @@ const AddTour = () => {
                 )
               }
               maxItems={15}
+              error={form.errors.itinerary}
             />
           </div>
 
@@ -323,6 +365,7 @@ const AddTour = () => {
                 )
               }
               maxItems={15}
+              error={form.errors.includes}
             />
           </div>
 
@@ -376,31 +419,69 @@ const AddTour = () => {
               onChange={(checked) => form.setFieldValue("featured", checked)}
             />
           </div>
-        </form>
 
-        <div className="form-actions">
-          <div className="actions-container">
-            <Button
-              color="secondary"
-              leftIcon={<i className="bi bi-arrow-left"></i>}
-              onClick={() => router.back()}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              loading={createTourMutation.isPending}
-              leftIcon={
-                !createTourMutation.isPending ? (
-                  <i className="bi bi-check-lg"></i>
-                ) : undefined
+          <div className="form-section">
+            <div className="section-header">
+              <h3>
+                <i className="bi bi-search"></i> SEO Settings
+              </h3>
+              <p className="section-description">
+                Optimize your tour for search engines and social media sharing
+              </p>
+            </div>
+            <SEOFields
+              values={
+                form.values.seo || {
+                  metaTitle: "",
+                  metaDescription: "",
+                  slug: "",
+                  focusKeyword: "",
+                  ogImage: "",
+                }
               }
-              disabled={createTourMutation.isPending}
-            >
-              {createTourMutation.isPending ? "Creating..." : "Create Tour"}
-            </Button>
+              onChange={(seo) => form.setFieldValue("seo", seo)}
+              firstImageUrl={form.values.images?.[0]}
+              onSlugManuallyEdited={() => {
+                slugManuallyEditedRef.current = true;
+              }}
+              onMetaTitleManuallyEdited={() => {
+                metaTitleManuallyEditedRef.current = true;
+              }}
+              showSectionHeader={false}
+              title={form.values.title}
+              location={form.values.location}
+              shortDescription={form.values.shortDescription}
+              price={form.values.price}
+              duration={form.values.duration}
+              enableAutoGeneration={true}
+            />
           </div>
-        </div>
+
+          <div className="form-actions">
+            <div className="actions-container">
+              <Button
+                color="secondary"
+                leftIcon={<i className="bi bi-arrow-left"></i>}
+                onClick={() => router.back()}
+                type="button"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={createTourMutation.isPending}
+                leftIcon={
+                  !createTourMutation.isPending ? (
+                    <i className="bi bi-check-lg"></i>
+                  ) : undefined
+                }
+                disabled={createTourMutation.isPending}
+              >
+                {createTourMutation.isPending ? "Creating..." : "Create Tour"}
+              </Button>
+            </div>
+          </div>
+        </form>
       </div>
     </Page>
   );

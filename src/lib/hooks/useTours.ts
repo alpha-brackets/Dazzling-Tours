@@ -80,7 +80,7 @@ export const useUpdateTour = () => {
   return useMutation<TourResponse, Error, UpdateTourData>({
     mutationFn: async (data) => {
       const { _id, ...updateData } = data;
-      const response = await api.put<TourResponse>(
+      const response = await api.patch<TourResponse>(
         `/api/tours/${_id}`,
         updateData
       );
