@@ -14,12 +14,6 @@ const MONGODB_URI = process.env.MONGODB_URI;
 // Log connection type without exposing credentials
 const isAtlas = MONGODB_URI?.includes("mongodb+srv://");
 
-if (!MONGODB_URI) {
-  throw new Error(
-    "Please define the MONGODB_URI environment variable inside .env.local",
-  );
-}
-
 /**
  * Global is used here to maintain a cached connection across hot reloads
  * in development. This prevents connections growing exponentially
@@ -34,6 +28,12 @@ if (!cached) {
 async function connectDB() {
   if (cached?.conn) {
     return cached.conn;
+  }
+
+  if (!MONGODB_URI) {
+    throw new Error(
+      "Please define the MONGODB_URI environment variable inside .env.local",
+    );
   }
 
   if (!cached?.promise) {
