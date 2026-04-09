@@ -1,6 +1,4 @@
 import nodemailer from "nodemailer";
-import { MailtrapTransport } from "mailtrap";
-
 // Email configuration interface
 interface EmailConfig {
   host: string;
@@ -16,11 +14,14 @@ interface EmailConfig {
 const createTransporter = () => {
   // 1. Check for Mailtrap Token (API Transport - snippet preference)
   if (process.env.MAILTRAP_TOKEN) {
-    return nodemailer.createTransport(
-      MailtrapTransport({
-        token: process.env.MAILTRAP_TOKEN,
-      }),
-    );
+    return nodemailer.createTransport({
+      host: "smtp.mailtrap.io",
+      port: 2525,
+      auth: {
+        user: "api",
+        pass: process.env.MAILTRAP_TOKEN,
+      },
+    });
   }
 
   // 2. Check if Mailtrap SMTP is configured
