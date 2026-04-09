@@ -1,10 +1,5 @@
 import nodemailer from "nodemailer";
-import { Resend } from "resend";
-
-// Initialize Resend if API key is provided
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+import { MailtrapTransport } from "mailtrap";
 
 // Email configuration interface
 interface EmailConfig {
@@ -19,13 +14,22 @@ interface EmailConfig {
 
 // Create transporter based on environment variables
 const createTransporter = () => {
-  // Check if Mailtrap is configured (preferred for development/testing)
-  const useMailtrap =
+  // 1. Check for Mailtrap Token (API Transport - snippet preference)
+  if (process.env.MAILTRAP_TOKEN) {
+    return nodemailer.createTransport(
+      MailtrapTransport({
+        token: process.env.MAILTRAP_TOKEN,
+      }),
+    );
+  }
+
+  // 2. Check if Mailtrap SMTP is configured
+  const useMailtrapSMTP =
     process.env.MAILTRAP_HOST &&
     process.env.MAILTRAP_USER &&
     process.env.MAILTRAP_PASS;
 
-  if (useMailtrap) {
+  if (useMailtrapSMTP) {
     // Mailtrap configuration
     const config: EmailConfig = {
       host: process.env.MAILTRAP_HOST || "sandbox.smtp.mailtrap.io",
@@ -69,63 +73,36 @@ export interface EmailOptions {
   }>;
 }
 
+interface MailOptions extends nodemailer.SendMailOptions {
+  category?: string;
+}
+
 // Send email function
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
     const fromName = process.env.SMTP_FROM_NAME || "Dazzling Tours";
     const defaultFromEmail =
-      process.env.RESEND_FROM_EMAIL || process.env.SMTP_USER;
+      process.env.MAILTRAP_FROM_EMAIL ||
+      process.env.SMTP_USER ||
+      "hello@demomailtrap.co";
     const fromEmail = options.from || defaultFromEmail;
     const formattedFrom = `${fromName} <${fromEmail}>`;
 
-    // 1. Try Resend first (Production Preferred)
-    if (resend && process.env.NODE_ENV === "production") {
-      try {
-        const { error } = await resend.emails.send({
-          from: formattedFrom,
-          to: options.to,
-          subject: options.subject,
-          html: options.html,
-          text: options.text || options.html.replace(/<[^>]*>/g, ""),
-          replyTo: options.replyTo,
-          attachments: options.attachments?.map((att) => ({
-            filename: att.filename,
-            content: att.content,
-            path: att.path,
-          })),
-        });
-
-        if (error) {
-          console.error("Resend error:", error);
-          throw error;
-        }
-
-        return true;
-      } catch (resendError) {
-        console.warn(
-          "Resend failed, falling back to SMTP/Mailtrap:",
-          resendError,
-        );
-        // Fall through to Nodemailer...
-      }
-    }
-
-    // 2. Fallback to Nodemailer (Mailtrap/SMTP)
-    const hasMailtrap =
+    const hasMailtrapToken = !!process.env.MAILTRAP_TOKEN;
+    const hasMailtrapSMTP =
       !!process.env.MAILTRAP_HOST &&
       !!process.env.MAILTRAP_USER &&
       !!process.env.MAILTRAP_PASS;
     const hasSMTP = !!process.env.SMTP_USER && !!process.env.SMTP_PASS;
 
-    if (!hasMailtrap && !hasSMTP) {
+    if (!hasMailtrapToken && !hasMailtrapSMTP && !hasSMTP) {
       throw new Error(
-        "No mail service configured. Please set RESEND_API_KEY, Mailtrap, or SMTP credentials.",
+        "No mail service configured. Please set MAILTRAP_TOKEN or SMTP credentials.",
       );
     }
 
     const transporter = createTransporter();
-
-    const mailOptions = {
+    const mailOptions: MailOptions = {
       from: formattedFrom,
       to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
       subject: options.subject,
@@ -135,8 +112,14 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       attachments: options.attachments,
     };
 
-    await transporter.sendMail(mailOptions);
+    // Mailtrap specific properties if using Transport
+    if (hasMailtrapToken) {
+      mailOptions.category = options.subject.includes("Password")
+        ? "Password Reset"
+        : "Notification";
+    }
 
+    await transporter.sendMail(mailOptions);
     return true;
   } catch (error) {
     console.error("Email sending fatal error:", error);
@@ -193,8 +176,6 @@ export async function sendBulkEmails(
 // Verify email configuration
 export async function verifyEmailConfig(): Promise<boolean> {
   try {
-    if (resend) return true;
-
     const transporter = createTransporter();
     await transporter.verify();
     return true;
