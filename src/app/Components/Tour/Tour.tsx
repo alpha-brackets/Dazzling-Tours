@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect } from "react";
@@ -289,7 +290,7 @@ const Tour = () => {
                           <Image
                             src={
                               tour.images?.[0] ||
-                              "/assets/img/destination/01.jpg"
+                              `${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero2.webp`
                             }
                             alt={tour.title}
                             width={287}

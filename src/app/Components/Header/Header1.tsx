@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import { useEffect, useState } from "react";
 import Nav from "./Nav";
 import Link from "next/link";
@@ -42,7 +43,7 @@ export default function Header1() {
               <div className="cs_main_header_left">
                 <Link className="cs_site_branding" href="/">
                   <Image
-                    src="/assets/img/logo dazzling/Logo Black.png"
+                    src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`}
                     alt="Dazzling Tours"
                     width={110}
                     height={40}

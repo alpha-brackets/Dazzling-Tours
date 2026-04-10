@@ -1,3 +1,4 @@
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import Image from "next/image";
 
 const Choose = () => {
@@ -86,7 +87,7 @@ const Choose = () => {
             >
               <div className="choose-us-thumb">
                 <Image
-                  src="/assets/img/choose/Choose1.webp"
+                  src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/choose/Choose1.webp`}
                   className="wow img-custom-anim-left"
                   alt="img"
                   width={828}

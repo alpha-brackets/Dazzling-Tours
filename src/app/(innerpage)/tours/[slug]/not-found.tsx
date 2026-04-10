@@ -1,3 +1,4 @@
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React from "react";
 import Link from "next/link";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
@@ -6,7 +7,7 @@ export default function NotFound() {
   return (
     <div>
       <BreadCrumb
-        bgImg="/assets/img/breadcrumb/breadcrumb.jpg"
+        bgImg={`${IMAGEKIT_URL_ENDPOINT}/assets/img/tours/tourspage.png`}
         Title="Tour Not Found"
       />
       <section className="section-padding">

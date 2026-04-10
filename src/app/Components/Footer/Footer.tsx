@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React, { useEffect } from "react";
 import loadBackgroundImages from "../Common/loadBackgroundImages";
 import Link from "next/link";
@@ -13,7 +14,7 @@ const Footer = () => {
   return (
     <footer
       className="footer-section fix bg-cover"
-      data-background="/assets/img/footer/footer-bg.jpg"
+      data-background={`${IMAGEKIT_URL_ENDPOINT}/assets/img/footer/footer-bg.jpg`}
     >
       <div className="footer-overlay"></div>
       <div className="container">
@@ -28,7 +29,7 @@ const Footer = () => {
                 <div className="widget-head mb-3">
                   <Link href="/" className="d-flex justify-content-center">
                     <Image
-                      src="/assets/img/logo dazzling/Logo Black.png"
+                      src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`}
                       alt="Dazzling Tours"
                       width={200}
                       height={70}

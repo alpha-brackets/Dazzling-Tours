@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -105,7 +106,7 @@ const Blog3 = () => {
                 <div className="news-card-items-3 style-4">
                   <div className="news-image">
                     <Image
-                      src={blog.featuredImage || "/assets/img/news/08.jpg"}
+                      src={blog.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`}
                       alt={blog.title}
                       width={416}
                       height={347}

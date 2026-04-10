@@ -1,3 +1,4 @@
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React from "react";
 import type { Metadata } from "next";
 import BreadCrumb from "@/app/Components/Common/BreadCrumb";
@@ -14,7 +15,7 @@ const PrivacyPolicyPage = () => {
   return (
     <>
       <BreadCrumb
-        bgImg="/assets/img/breadcrumb/aboutpage.png"
+        bgImg={`${IMAGEKIT_URL_ENDPOINT}/assets/img/breadcrumb/aboutpage.png`}
         Title="Privacy Policy"
       />
       <section className="privacy-section section-padding pt-5 pb-5">

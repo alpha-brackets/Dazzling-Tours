@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
@@ -19,7 +20,7 @@ const About = () => {
                 data-wow-delay=".3s"
               >
                 <Image
-                  src="/assets/img/about/about1.webp"
+                  src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about1.webp`}
                   alt="Dazzling Tours team creating memorable travel experiences"
                   width={450}
                   height={449}
@@ -30,7 +31,7 @@ const About = () => {
                   data-wow-delay=".5s"
                 >
                   <Image
-                    src="/assets/img/about/about2.webp"
+                    src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about2.webp`}
                     alt="Travel experts planning personalized tours"
                     width={150}
                     height={150}
@@ -41,7 +42,7 @@ const About = () => {
                   data-wow-delay=".7s"
                 >
                   <Image
-                    src="/assets/img/about/about3.webp"
+                    src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about3.webp`}
                     alt="Beautiful destinations and travel adventures"
                     width={200}
                     height={200}

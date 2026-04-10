@@ -1,3 +1,4 @@
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React from "react";
 import type { Metadata } from "next";
 import BreadCrumb from "@/app/Components/Common/BreadCrumb";
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/assets/img/about/about1.webp",
+        url: `${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about1.webp`,
         alt: "Dazzling Tours - Explore the nature",
         width: 1200,
         height: 630,
@@ -35,7 +36,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "About Us | Dazzling Tours - Explore the nature",
     description: "Explore the nature",
-    images: ["/assets/img/about/about1.webp"],
+    images: [`${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about1.webp`],
   },
   alternates: {
     canonical: "/about-us",
@@ -55,7 +56,7 @@ export const metadata: Metadata = {
 
 const AboutPage = () => {
   // Structured Data (JSON-LD) for SEO
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || "http://dazzlingtours.pk";
 
   const organizationSchema = {
     "@context": "https://schema.org",
@@ -63,8 +64,8 @@ const AboutPage = () => {
     name: "Dazzling Tours",
     description: "Explore the nature",
     url: baseUrl,
-    logo: `${baseUrl}/assets/img/logo.png`,
-    image: `${baseUrl}/assets/img/about/about1.webp`,
+    logo: `${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`,
+    image: `${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about1.webp`,
     sameAs: [
       // TODO: Add social media links if available
     ],
@@ -81,14 +82,14 @@ const AboutPage = () => {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(organizationSchema),
         }}
+        id="org-schema-about"
       />
       <BreadCrumb
-        bgImg="/assets/img/breadcrumb/aboutpage.png"
+        bgImg={`${IMAGEKIT_URL_ENDPOINT}/assets/img/breadcrumb/aboutpage.png`}
         Title="About Us"
-      ></BreadCrumb>
+      />
       <About />
       <Choose />
-      {/* <Counter1 /> */}
       <Testimonial />
     </>
   );

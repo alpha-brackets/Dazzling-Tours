@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Slider from "react-slick";
@@ -242,7 +243,7 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
                             <span>View Gallery</span>
                           </div>
                           <Image
-                            src={img || "/assets/img/hero/hero1.webp"}
+                            src={img || `${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero1.webp`}
                             alt={`${tour.title} - ${idx + 1}`}
                             fill
                             priority={idx === 0}
@@ -508,7 +509,7 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
                               <Image
                                 src={
                                   testimonial.image ||
-                                  "/assets/img/testimonial/default-avatar.png"
+                                  `${IMAGEKIT_URL_ENDPOINT}/assets/img/testimonial/default-avatar.png`
                                 }
                                 alt={testimonial.name}
                                 width={110}
@@ -517,7 +518,7 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
                                 style={{ objectFit: "cover" }}
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).src =
-                                    "/assets/img/testimonial/default-avatar.png";
+                                    `${IMAGEKIT_URL_ENDPOINT}/assets/img/testimonial/default-avatar.png`;
                                 }}
                               />
                             </div>
@@ -1025,7 +1026,7 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
                       className="position-absolute top-0 start-0 w-100 h-100"
                       style={{
                         backgroundImage:
-                          "url('/assets/img/tours/scenic_footer.png')",
+                          `url('${IMAGEKIT_URL_ENDPOINT}/assets/img/tours/scenic_footer.png')`,
                         backgroundSize: "cover",
                         backgroundPosition: "center",
                         zIndex: 0,

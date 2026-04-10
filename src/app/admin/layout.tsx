@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
@@ -100,7 +101,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       <aside className="admin-sidebar">
         <div className="sidebar-header">
           <Image
-            src="/assets/img/logo dazzling/Logo White.png"
+            src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_White.png`}
             alt="Dazzling Tours"
             width={80}
             height={80}

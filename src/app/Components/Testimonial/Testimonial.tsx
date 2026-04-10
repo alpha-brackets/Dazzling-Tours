@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import Image from "next/image";
 import React, { useRef, useState } from "react";
 import Slider from "react-slick";
@@ -103,7 +104,7 @@ const Testimonial = () => {
 
   // Get the current testimonial's image for the left side, or use fallback
   const currentTestimonialImage =
-    testimonials[currentSlide]?.image || "/assets/img/testimonial/01.jpg";
+    testimonials[currentSlide]?.image || `${IMAGEKIT_URL_ENDPOINT}/assets/img/testimonial/default-avatar.png`;
 
   return (
     <section className="testimonial-section section-padding fix section-bg">

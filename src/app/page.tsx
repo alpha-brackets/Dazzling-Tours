@@ -1,67 +1,42 @@
-import React from "react";
-import type { Metadata } from "next";
-import FeaturedTour from "@/app/Components/FeaturedTour/FeaturedTour";
-import HeroBanner2 from "@/app/Components/HeroBanner/HeroBanner";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
+import { Metadata } from "next";
+import HeroBanner2 from "./Components/HeroBanner/HeroBanner";
 import About from "./Components/About/About";
+import FeaturedTour from "./Components/FeaturedTour/FeaturedTour";
 import Choose from "./Components/Choose/Choose";
 import Testimonial from "./Components/Testimonial/Testimonial";
 import Cta from "./Components/Cta/Cta";
 import Blog3 from "./Components/Blogs/Blog3";
 
-// SEO Metadata for Homepage
 export const metadata: Metadata = {
   title: "Dazzling Tours - Explore the nature",
-  description: "Explore the nature",
+  description:
+    "Discover the most beautiful places in Pakistan with Dazzling Tours. We offer customized tour packages for families and groups.",
   keywords: [
-    "travel agency",
-    "tour packages",
-    "travel tours",
-    "adventure tours",
-    "vacation packages",
-    "travel experiences",
-    "tour company",
+    "Pakistan Tours",
+    "Travel Agency",
+    "Family Tours",
     "Dazzling Tours",
-    "travel destinations",
-    "customized tours",
   ],
   openGraph: {
     title: "Dazzling Tours - Explore the nature",
-    description: "Explore the nature",
-    type: "website",
-    images: [
-      {
-        url: "/assets/img/hero/hero2.webp",
-        alt: "Dazzling Tours - Explore the nature",
-        width: 1200,
-        height: 630,
-      },
-    ],
+    description:
+      "Discover the most beautiful places in Pakistan with Dazzling Tours.",
+    url: `${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero2.webp`,
+    siteName: "Dazzling Tours",
+    images: [`${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero2.webp`],
   },
   twitter: {
     card: "summary_large_image",
     title: "Dazzling Tours - Explore the nature",
-    description: "Explore the nature",
-    images: ["/assets/img/hero/hero2.webp"],
-  },
-  alternates: {
-    canonical: "/",
-  },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-video-preview": -1,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-    },
+    description:
+      "Discover the most beautiful places in Pakistan with Dazzling Tours.",
+    images: [`${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero2.webp`],
   },
 };
 
-const HomePage = () => {
-  // Structured Data (JSON-LD) for SEO
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+export default function Home() {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://dazzlingtours.pk";
 
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -85,8 +60,8 @@ const HomePage = () => {
     name: "Dazzling Tours",
     description: "Explore the nature",
     url: baseUrl,
-    logo: `${baseUrl}/assets/img/dazzling-logo/Dazzling Tours Png.png`,
-    image: `${baseUrl}/assets/img/hero/hero2.webp`,
+    logo: `${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`,
+    image: `${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero2.webp`,
     sameAs: [
       // TODO: Add social media links if available
     ],
@@ -108,12 +83,14 @@ const HomePage = () => {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(websiteSchema),
         }}
+        id="website-schema"
       />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(organizationSchema),
         }}
+        id="org-schema"
       />
       <HeroBanner2 />
       <About />
@@ -124,6 +101,4 @@ const HomePage = () => {
       <Blog3 />
     </>
   );
-};
-
-export default HomePage;
+}

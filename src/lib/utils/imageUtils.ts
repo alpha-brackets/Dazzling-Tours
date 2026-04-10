@@ -1,9 +1,12 @@
 /**
- * Utility functions for image URL validation and filtering
- *
- * IMPORTANT: Only Cloudinary URLs (or other HTTP/HTTPS URLs) should be stored.
- * Data URLs (base64 encoded images) are NOT allowed and will be filtered out.
+ * Focused on ImageKit integration and avoiding base64 data URLs.
  */
+
+export const IMAGEKIT_URL_ENDPOINT =
+  process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT?.endsWith("/")
+    ? process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT.slice(0, -1)
+    : process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ||
+      "https://ik.imagekit.io/ojifgauic";
 
 /**
  * Check if a string is a data URL (base64 encoded image)
@@ -14,55 +17,39 @@ export function isDataUrl(url: string): boolean {
 }
 
 /**
- * Check if a URL is from Cloudinary
+ * Check if a URL is from ImageKit
  */
-export function isCloudinaryUrl(url: string): boolean {
+export function isImageKitUrl(url: string): boolean {
   if (!url || typeof url !== "string") return false;
-  try {
-    const urlObj = new URL(url);
-    return (
-      urlObj.hostname.includes("cloudinary.com") ||
-      urlObj.hostname.includes("res.cloudinary.com")
-    );
-  } catch {
-    return false;
-  }
+  return url.includes("ik.imagekit.io");
 }
 
 /**
- * Check if a string is a valid HTTP/HTTPS URL (not a data URL)
- * Accepts Cloudinary URLs and other valid HTTP/HTTPS URLs
+ * Check if a URL is valid (not a data URL and is an absolute URL)
  */
 export function isValidImageUrl(url: string): boolean {
   if (!url || typeof url !== "string") return false;
-
-  // Reject data URLs - these should never be stored
   if (isDataUrl(url)) return false;
 
-  // Check if it's a valid URL
   try {
     const urlObj = new URL(url);
-    // Only allow http and https protocols (Cloudinary uses https)
     return urlObj.protocol === "http:" || urlObj.protocol === "https:";
   } catch {
-    return false;
+    // If it's a relative path, we consider it valid (local assets)
+    return url.startsWith("/");
   }
 }
 
 /**
- * Filter out data URLs from an array of image URLs
- * Only keeps valid HTTP/HTTPS URLs (Cloudinary URLs, etc.)
+ * Filter an array of image URLs
  */
-export function filterValidImageUrls(
-  urls: (string | undefined | null)[],
-): string[] {
-  if (!Array.isArray(urls)) return [];
-
+export function filterValidImageUrls(urls: unknown[]): string[] {
+  if (!urls || !Array.isArray(urls)) return [];
   return urls
-    .filter((url): url is string => {
-      return typeof url === "string" && url.trim().length > 0;
-    })
-    .filter((url) => isValidImageUrl(url));
+    .filter(
+      (url): url is string => typeof url === "string" && isValidImageUrl(url),
+    )
+    .map((url) => url.trim());
 }
 
 /**
@@ -74,39 +61,77 @@ export function filterValidImageUrl(url: string | undefined | null): string {
   if (!isValidImageUrl(url)) return "";
   return url.trim();
 }
+
 /**
- * Extract Cloudinary public ID from a secure URL
- * Example: https://res.cloudinary.com/cloud-name/image/upload/v12345/folder/image_id.jpg
- * Returns: "folder/image_id"
+ * Extract an ID from an image URL for deletion purposes
+ * Focused on ImageKit file IDs.
  */
-export function extractPublicId(url: string): string | null {
-  if (!url || typeof url !== "string" || !isCloudinaryUrl(url)) return null;
+export function extractImageId(url: string): string | null {
+  if (!url || typeof url !== "string") return null;
 
-  try {
-    // Cloudinary URL format: https://res.cloudinary.com/cloud-name/image/upload/v12345/public_id.ext
-    // We need to handle folders as well: .../upload/v12345/folder/subfolder/public_id.ext
-
-    const parts = url.split("/");
-    const uploadIndex = parts.indexOf("upload");
-
-    if (uploadIndex === -1 || uploadIndex + 2 >= parts.length) return null;
-
-    // The public ID starts after the version (v12345) or immediately after 'upload' if no version
-    let startIndex = uploadIndex + 1;
-    if (
-      parts[startIndex].startsWith("v") &&
-      /^\d+$/.test(parts[startIndex].substring(1))
-    ) {
-      startIndex++;
-    }
-
-    const publicIdWithExt = parts.slice(startIndex).join("/");
-    // Remove the file extension
-    const lastDotIndex = publicIdWithExt.lastIndexOf(".");
-    if (lastDotIndex === -1) return publicIdWithExt;
-
-    return publicIdWithExt.substring(0, lastDotIndex);
-  } catch {
-    return null;
+  if (isImageKitUrl(url)) {
+    // Attempt to extract the last part of the path
+    // Note: Official ImageKit deletion requires fileId which isn't ALWAYS the filename.
+    // However, if the user didn't store the fileId, this is our best guess.
+    return url.split("/").pop() || null;
   }
+
+  return null;
+}
+
+/**
+ * Helper to get an optimized image URL
+ * If the image is local (/assets/...), it can be proxied through ImageKit ifconfigured.
+ * If it's already an ImageKit URL, it applies transformations.
+ */
+export function getOptimizedImage(
+  url: string,
+  width?: number,
+  height?: number,
+  quality: number = 80,
+): string {
+  if (!url) return "";
+
+  const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+
+  // If ImageKit is not configured, return the Original URL
+  if (!urlEndpoint) return url;
+
+  // Handle local images by proxying them through ImageKit
+  if (url.startsWith("/assets/")) {
+    const proxiedUrl = `${IMAGEKIT_URL_ENDPOINT}${url}`;
+    return transformImageKit(proxiedUrl, width, height, quality);
+  }
+
+  // If it's already an ImageKit URL, just transform it
+  if (isImageKitUrl(url)) {
+    return transformImageKit(url, width, height, quality);
+  }
+
+  // For other URLs (like external ones), we return as is
+  // (Unless they are also proxied via ImageKit)
+  return url;
+}
+
+/**
+ * Helper to get a transformed ImageKit URL
+ */
+export function transformImageKit(
+  url: string,
+  width?: number,
+  height?: number,
+  quality: number = 80,
+): string {
+  if (!url || !isImageKitUrl(url)) return url;
+
+  const transformations = [];
+  if (width) transformations.push(`w-${width}`);
+  if (height) transformations.push(`h-${height}`);
+  transformations.push(`q-${quality}`);
+  transformations.push("f-auto"); // Auto format
+
+  const trString = `tr=${transformations.join(",")}`;
+
+  // If URL already has queries, append with &, else with ?
+  return url.includes("?") ? `${url}&${trString}` : `${url}?${trString}`;
 }

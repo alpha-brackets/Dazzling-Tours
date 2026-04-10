@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React, { useEffect, useState } from "react";
 import loadBackgroundImages from "../Common/loadBackgroundImages";
 import Link from "next/link";
@@ -13,6 +14,8 @@ import {
 import { Loading, Icon } from "@/app/Components/Common";
 import { BlogStatus } from "@/lib/enums/blog";
 import { Comment } from "@/lib/types/comment";
+import { getOptimizedImage } from "@/lib/utils/imageUtils";
+import { Image as IKImage } from "@imagekit/next";
 
 const BlogDetails = ({ slug }: { slug: string }) => {
   const [commentForm, setCommentForm] = useState({
@@ -182,7 +185,7 @@ const BlogDetails = ({ slug }: { slug: string }) => {
                   <div
                     className="post-featured-thumb bg-cover"
                     style={{
-                      backgroundImage: `url(${blog.featuredImage || "/assets/img/news/post-4.jpg"})`,
+                      backgroundImage: `url(${getOptimizedImage(blog.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`, 1200)})`,
                     }}
                   >
                     <div className="post">
@@ -532,7 +535,7 @@ const BlogDetails = ({ slug }: { slug: string }) => {
                                 height: "75px",
                               }}
                             >
-                              <Image
+                              <IKImage
                                 src={recent.featuredImage || ""}
                                 alt={recent.title}
                                 width={75}

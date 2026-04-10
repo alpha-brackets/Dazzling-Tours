@@ -3,8 +3,8 @@ import connectDB from "@/lib/mongodb";
 import { Tour } from "@/models";
 import { MongoQuery } from "@/lib/types";
 import { cleanTourData } from "@/lib/utils/dataCleaning";
-import { deleteMultipleImages } from "@/lib/services/cloudinaryService";
-import { extractPublicId } from "@/lib/utils/imageUtils";
+import { imageService } from "@/lib/services/imageService";
+import { extractImageId } from "@/lib/utils/imageUtils";
 import { TourStatus } from "@/lib/enums";
 
 // GET /api/tours - Get all tours
@@ -353,14 +353,14 @@ export async function PUT(request: NextRequest) {
           }
         });
 
-        const publicIds = Array.from(new Set(allImages))
-          .map((url: string) => extractPublicId(url))
+        const imageIds = Array.from(new Set(allImages))
+          .map((url: string) => extractImageId(url))
           .filter((id: string | null): id is string => id !== null);
 
-        if (publicIds.length > 0) {
-          await deleteMultipleImages(publicIds).catch((err) =>
+        if (imageIds.length > 0) {
+          await imageService.deleteMultiple(imageIds).catch((err) =>
             console.error(
-              "Failed to delete bulk tour images from Cloudinary:",
+              "Failed to delete bulk tour images from provider:",
               err,
             ),
           );

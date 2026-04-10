@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React, { useState } from "react";
 import VideoModal from "../VideoModal/VideoModal";
 import Link from "next/link";
@@ -16,7 +17,7 @@ const Cta = () => {
     setToggle(!toggle);
   };
 
-  const backgroundImage = "/assets/img/cta/mountain-trip-family.jpg";
+  const backgroundImage = `${IMAGEKIT_URL_ENDPOINT}/assets/img/cta/mountain-trip-family.jpg`;
 
   return (
     <section

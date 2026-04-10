@@ -1,8 +1,9 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React, { useRef } from "react";
 import Slider from "react-slick";
 import Link from "next/link";
-import Image from "next/image";
+import { Image as IKImage } from "@imagekit/next";
 import { useGetTours } from "@/lib/hooks";
 import { TourStatus } from "@/lib/enums";
 import { formatCurrency } from "@/lib/utils/currencyConverter";
@@ -148,16 +149,16 @@ const FeaturedTour = () => {
         <div className="swiper tour-slider" style={{ position: "relative" }}>
           <div className="array-button">
             <button onClick={previous} className="array-prev">
-              <Image
-                src="/assets/img/offer/chervon-right.png"
+              <IKImage
+                src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/offer/chervon-right.png`}
                 alt="img"
                 width={24}
                 height={16}
               />
             </button>
             <button onClick={next} className="array-next">
-              <Image
-                src="/assets/img/icon/39.svg"
+              <IKImage
+                src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/icon/39.svg`}
                 alt="img"
                 width={24}
                 height={16}
@@ -170,11 +171,12 @@ const FeaturedTour = () => {
                 <div key={tour._id} className="swiper-slide">
                   <div className="feature-tour-items">
                     <div className="feature-tour-image">
-                      <Image
-                        src={tour.images[0] || "/assets/img/feature/01.jpg"}
+                      <IKImage
+                        src={tour.images[0]}
                         alt={tour.title}
                         width={308}
                         height={249}
+                        transformation={[{ width: 600, height: 500 }]} // Higher res for better quality
                       />
                       <ul className="location">
                         <li>
@@ -185,13 +187,13 @@ const FeaturedTour = () => {
                     </div>
                     <div className="feature-tour-content">
                       <h4>
-                        <Link href={`/tours/${tour.seo?.slug || tour._id}`}>
+                        <Link href={`/tours/${tour.seo?.slug}`}>
                           {tour.title}
                         </Link>
                       </h4>
                       <h5>
                         {formatCurrency(tour.price)}
-                        <span>/Per person</span>
+                        <span>/{tour.priceType}</span>
                       </h5>
                       <Link
                         href={`/tours/${tour.seo?.slug || tour._id}`}

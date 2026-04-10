@@ -1,3 +1,5 @@
+import { getOptimizedImage } from "@/lib/utils/imageUtils";
+
 export default function loadBackgroundImages() {
   const backgroundImages = document.querySelectorAll("[data-background]");
 
@@ -6,7 +8,9 @@ export default function loadBackgroundImages() {
       if (element instanceof HTMLElement) {
         const image = element.dataset.background;
         if (image) {
-          element.style.backgroundImage = `url('${image}')`;
+          // Pass a large width for background images by default
+          const optimizedImage = getOptimizedImage(image, 1920);
+          element.style.backgroundImage = `url('${optimizedImage}')`;
         }
       }
     });

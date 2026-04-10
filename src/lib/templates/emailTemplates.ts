@@ -1,3 +1,4 @@
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 // Email Templates for Newsletter Campaigns
 
 interface TemplateData {
@@ -11,7 +12,8 @@ interface TemplateData {
 const baseTemplate = (content: string, data: TemplateData = {}): string => {
   const companyName = data.companyName || "Dazzling Tours";
   const companyLogo =
-    data.companyLogo || "/assets/img/logo dazzling/Logo White.png";
+    data.companyLogo ||
+    `${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_White.png`;
   const year = new Date().getFullYear();
 
   return `

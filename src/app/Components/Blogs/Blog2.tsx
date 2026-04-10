@@ -1,4 +1,5 @@
 "use client";
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -251,7 +252,7 @@ const Blog2Content = () => {
                               <Image
                                 src={
                                   blog.featuredImage ||
-                                  "/assets/img/news/04.jpg"
+                                  `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`
                                 }
                                 alt={blog.title}
                                 width={376}

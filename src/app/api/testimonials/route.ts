@@ -9,8 +9,8 @@ import {
 } from "@/lib/middleware/auth";
 import { UserRole } from "@/lib/enums/roles";
 import { cleanTestimonialData } from "@/lib/utils/dataCleaning";
-import { deleteMultipleImages } from "@/lib/services/cloudinaryService";
-import { extractPublicId } from "@/lib/utils/imageUtils";
+import { imageService } from "@/lib/services/imageService";
+import { extractImageId } from "@/lib/utils/imageUtils";
 
 // GET /api/testimonials - Get all testimonials
 export async function GET(request: NextRequest) {
@@ -147,14 +147,14 @@ export const PUT = withRoleAuth(UserRole.SUPER_ADMIN, async (request) => {
           }
         });
 
-        const publicIds = Array.from(new Set(allImages))
-          .map((url: string) => extractPublicId(url))
+        const imageIds = Array.from(new Set(allImages))
+          .map((url: string) => extractImageId(url))
           .filter((id: string | null): id is string => id !== null);
 
-        if (publicIds.length > 0) {
-          await deleteMultipleImages(publicIds).catch((err) =>
+        if (imageIds.length > 0) {
+          await imageService.deleteMultiple(imageIds).catch((err) =>
             console.error(
-              "Failed to delete bulk testimonial images from Cloudinary:",
+              "Failed to delete bulk testimonial images from provider:",
               err,
             ),
           );

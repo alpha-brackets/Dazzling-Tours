@@ -1,10 +1,10 @@
-import * as cloudinary from "./cloudinaryService";
+import * as imagekit from "./imageKitService";
 import { ImageProvider } from "../enums/imageProvider";
 
-// Use environment variable to determine active provider, default to Cloudinary
+// Use environment variable to determine active provider, default to ImageKit
 const ACTIVE_PROVIDER =
   (process.env.NEXT_PUBLIC_IMAGE_PROVIDER as ImageProvider) ||
-  ImageProvider.CLOUDINARY;
+  ImageProvider.IMAGEKIT;
 
 /**
  * Unified image service to manage uploads and deletions across multiple providers.
@@ -21,45 +21,47 @@ export const imageService = {
    */
   async upload(
     file: string | Buffer,
-    options: cloudinary.UploadOptions = {},
-  ): Promise<cloudinary.UploadResult> {
-    switch (ACTIVE_PROVIDER) {
-      case ImageProvider.IMAGEKIT:
-        // Future implementation for ImageKit
-        throw new Error(
-          "ImageKit service is not yet enabled in the application.",
-        );
-
-      case ImageProvider.CLOUDINARY:
-      default:
-        return cloudinary.uploadImage(file, options);
-    }
+    options: imagekit.UploadOptions = {},
+  ): Promise<imagekit.UploadResult> {
+    return imagekit.uploadImage(file, options);
   },
 
   /**
-   * Delete an image by its URL or public ID
+   * Delete an image by its URL or public/file ID
    */
   async delete(urlOrId: string): Promise<void> {
     if (!urlOrId) return;
 
-    switch (ACTIVE_PROVIDER) {
-      case ImageProvider.IMAGEKIT:
-        // Future implementation for ImageKit
-        throw new Error(
-          "ImageKit service is not yet enabled in the application.",
-        );
+    // ImageKit deletion requires fileId. If urlOrId is a URL, we attempt to handle it.
+    if (urlOrId.includes("http")) {
+      // If we only have URL, we can't easily delete from ImageKit without fileId.
+      // We can try to extract ID from URL if it's an ImageKit URL
+      const id = this.extractId(urlOrId);
+      if (id) {
+        return imagekit.deleteImage(id);
+      }
+      console.warn("Attempting to delete image from ImageKit with a URL. ImageKit requires fileId for deletion.");
+      return;
+    }
+    return imagekit.deleteImage(urlOrId);
+  },
 
-      case ImageProvider.CLOUDINARY:
-      default:
-        // If it's a URL, extract the public_id
-        const publicId = urlOrId.includes("http")
-          ? cloudinary.extractPublicIdFromUrl(urlOrId)
-          : urlOrId;
+  /**
+   * Delete multiple images by their URLs or IDs
+   */
+  async deleteMultiple(urlsOrIds: string[]): Promise<void> {
+    if (!urlsOrIds || urlsOrIds.length === 0) return;
 
-        if (publicId) {
-          return cloudinary.deleteImage(publicId);
-        }
-        return;
+    // Filter out URLs as ImageKit needs fileId
+    const fileIds = urlsOrIds.map(urlOrId => {
+      if (urlOrId.includes("http")) {
+        return this.extractId(urlOrId);
+      }
+      return urlOrId;
+    }).filter((id): id is string => id !== null);
+
+    if (fileIds.length > 0) {
+      return imagekit.deleteMultipleImages(fileIds);
     }
   },
 
@@ -69,14 +71,10 @@ export const imageService = {
   extractId(url: string | null): string | null {
     if (!url) return null;
 
-    switch (ACTIVE_PROVIDER) {
-      case ImageProvider.IMAGEKIT:
-        // Future implementation for ImageKit
-        return null;
-
-      case ImageProvider.CLOUDINARY:
-      default:
-        return cloudinary.extractPublicIdFromUrl(url);
+    if (url.includes("ik.imagekit.io")) {
+      return imagekit.extractFileIdFromUrl(url);
     }
+
+    return null;
   },
 };

@@ -1,7 +1,9 @@
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React from "react";
+import { getOptimizedImage } from "@/lib/utils/imageUtils";
 
 const HeroBanner2 = () => {
-  const heroImage = "/assets/img/hero/hero2.webp";
+  const heroImage = getOptimizedImage(`${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero2.webp`, 1920);
 
   return (
     <section className="hero-section-2">

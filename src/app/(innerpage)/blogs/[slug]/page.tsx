@@ -1,3 +1,4 @@
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React from "react";
 import BreadCrumb from "../../../Components/Common/BreadCrumb";
 import BlogDetails from "../../../Components/BlogDetails/BlogDetails";
@@ -24,7 +25,7 @@ const page = async ({ params }: Props) => {
   return (
     <div>
       <BreadCrumb
-        bgImg="/assets/img/blogs/BlogsPage.webp"
+        bgImg={`${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`}
         Title="Blog Details"
       ></BreadCrumb>
       <BlogDetails slug={slug}></BlogDetails>

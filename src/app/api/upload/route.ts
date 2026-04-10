@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  uploadMultipleImages,
-  deleteImage,
-  extractPublicIdFromUrl,
-} from "@/lib/services/cloudinaryService";
+import { imageService } from "@/lib/services/imageService";
 
 /**
- * POST /api/upload - Upload single or multiple images to Cloudinary
+ * POST /api/upload - Upload single or multiple images to active provider (Cloudinary or ImageKit)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -21,36 +17,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Convert files to base64 data URLs
+    // Convert files to Buffers
     const filePromises = Array.from(files).map(async (file) => {
       const arrayBuffer = await file.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const base64 = buffer.toString("base64");
-      const mimeType = file.type || "image/jpeg";
-      return `data:${mimeType};base64,${base64}`;
+      return Buffer.from(arrayBuffer);
     });
 
-    const base64Files = await Promise.all(filePromises);
+    const fileBuffers = await Promise.all(filePromises);
 
-    // Upload to Cloudinary
+    // Upload using unified service
     const uploadOptions = {
       folder: folder || "dazzling-tours",
-      overwrite: false,
     };
 
-    const results = await uploadMultipleImages(base64Files, uploadOptions);
+    const results = await Promise.all(
+      fileBuffers.map((buffer) => imageService.upload(buffer, uploadOptions)),
+    );
 
     return NextResponse.json({
       success: true,
       data: results.map((result) => ({
-        url: result.secure_url,
-        publicId: result.public_id,
+        url: result.url || result.secure_url,
+        publicId: result.fileId || result.public_id, // Normalize to publicId for frontend
+        fileId: result.fileId,
         width: result.width,
         height: result.height,
         format: result.format,
-        bytes: result.bytes,
+        bytes: result.size || result.bytes,
       })),
       count: results.length,
+      provider: imageService.getProvider(),
     });
   } catch (error) {
     console.error("Upload error:", error);
@@ -66,28 +62,28 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * DELETE /api/upload - Delete an image from Cloudinary
+ * DELETE /api/upload - Delete an image
  */
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const url = searchParams.get("url");
-    const publicId = searchParams.get("publicId");
+    const id = searchParams.get("publicId") || searchParams.get("id") || searchParams.get("fileId");
 
-    let targetPublicId = publicId;
+    let targetId = id;
 
-    if (!targetPublicId && url) {
-      targetPublicId = extractPublicIdFromUrl(url);
+    if (!targetId && url) {
+      targetId = imageService.extractId(url);
     }
 
-    if (!targetPublicId) {
+    if (!targetId) {
       return NextResponse.json(
-        { success: false, error: "No publicId or url provided" },
+        { success: false, error: "No ID or url provided" },
         { status: 400 },
       );
     }
 
-    await deleteImage(targetPublicId);
+    await imageService.delete(targetId);
 
     return NextResponse.json({
       success: true,

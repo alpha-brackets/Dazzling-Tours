@@ -1,3 +1,4 @@
+import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import React from "react";
 import type { Metadata } from "next";
 import BreadCrumb from "../../Components/Common/BreadCrumb";
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/assets/img/tours/tourspage.png",
+        url: `${IMAGEKIT_URL_ENDPOINT}/assets/img/tours/tourspage.png`,
         alt: "Dazzling Tours - Explore the nature",
         width: 1200,
         height: 630,
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Tours | Dazzling Tours - Explore the nature",
     description: "Explore the nature",
-    images: ["/assets/img/tours/tourspage.png"],
+    images: [`${IMAGEKIT_URL_ENDPOINT}/assets/img/tours/tourspage.png`],
   },
   alternates: {
     canonical: "/tours",
@@ -100,7 +101,7 @@ const ToursPage = () => {
           __html: JSON.stringify(breadcrumbSchema),
         }}
       />
-      <BreadCrumb bgImg="/assets/img/tours/tourspage.png" Title="Tours" />
+      <BreadCrumb bgImg={`${IMAGEKIT_URL_ENDPOINT}/assets/img/tours/tourspage.png`} Title="Tours" />
       <Tour />
     </>
   );

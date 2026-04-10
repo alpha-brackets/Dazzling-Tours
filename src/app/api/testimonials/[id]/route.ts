@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Testimonial } from "@/models";
-import { deleteImage } from "@/lib/services/cloudinaryService";
-import { extractPublicId } from "@/lib/utils/imageUtils";
+import { imageService } from "@/lib/services/imageService";
+import { extractImageId } from "@/lib/utils/imageUtils";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -70,11 +70,11 @@ export async function PUT(request: NextRequest) {
       body.image !== undefined &&
       existingTestimonial.image !== body.image
     ) {
-      const publicId = extractPublicId(existingTestimonial.image || "");
-      if (publicId) {
-        await deleteImage(publicId).catch((err) =>
+      const imageId = extractImageId(existingTestimonial.image || "");
+      if (imageId) {
+        await imageService.delete(imageId).catch((err) =>
           console.error(
-            "Failed to delete old testimonial image from Cloudinary:",
+            "Failed to delete old testimonial image from provider:",
             err,
           ),
         );
@@ -118,11 +118,11 @@ export async function DELETE(request: NextRequest) {
 
     // Delete image from Cloudinary
     if (testimonial.image) {
-      const publicId = extractPublicId(testimonial.image);
-      if (publicId) {
-        await deleteImage(publicId).catch((err) =>
+      const imageId = extractImageId(testimonial.image);
+      if (imageId) {
+        await imageService.delete(imageId).catch((err) =>
           console.error(
-            "Failed to delete testimonial image from Cloudinary:",
+            "Failed to delete testimonial image from provider:",
             err,
           ),
         );

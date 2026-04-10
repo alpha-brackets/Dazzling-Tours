@@ -7,6 +7,7 @@ import "./globals.css";
 import ConditionalLayout from "./Components/Common/ConditionalLayout";
 import { QueryProvider } from "./Components/Common/QueryProvider";
 import { NotificationProvider } from "@/lib/contexts/NotificationContext";
+import { ImageKitProvider } from "./Components/Common/ImageKitProvider";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -63,11 +64,13 @@ export default function RootLayout({
         className={`${manrope.variable} ${work_sans.variable} ${kalam.variable}`}
         suppressHydrationWarning
       >
-        <NotificationProvider>
-          <QueryProvider>
-            <ConditionalLayout>{children}</ConditionalLayout>
-          </QueryProvider>
-        </NotificationProvider>
+        <ImageKitProvider>
+          <NotificationProvider>
+            <QueryProvider>
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </QueryProvider>
+          </NotificationProvider>
+        </ImageKitProvider>
       </body>
     </html>
   );
