@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { User, OTP } from "@/models";
 import { z } from "zod";
+import { sendEmail } from "@/lib/services/emailService";
+import { genericHtmlTemplate } from "@/lib/templates/emailTemplates";
+import { UserRole } from "@/lib/enums";
 
 const forgotPasswordSchema = z.object({
-  email: z.email("Invalid email format"),
+  email: z.string().email("Invalid email format"),
 });
 
 export async function POST(request: NextRequest) {
   try {
+    console.log("[AUTH] Forgot password request received");
     await connectDB();
 
     const body = await request.json();
@@ -20,6 +24,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!user) {
+      console.log(`[AUTH] Forgot password attempt for non-existent email: ${email}`);
       // Don't reveal if user exists or not for security on the frontend
       return NextResponse.json({
         success: true,
@@ -29,6 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user is active
     if (!user.isActive) {
+      console.log(`[AUTH] Forgot password attempt for deactivated account: ${email}`);
       return NextResponse.json(
         { success: false, message: "Account is deactivated" },
         { status: 401 },
@@ -36,7 +42,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Role check - ensure it's super_admin
-    if (user.role !== "super_admin") {
+    if (user.role !== UserRole.SUPER_ADMIN) {
+      console.log(`[AUTH] Forgot password bypassed for non-admin role (${user.role}): ${email}`);
       return NextResponse.json({
         success: true,
         message: "If the email exists, a password reset OTP has been sent",
@@ -59,11 +66,6 @@ export async function POST(request: NextRequest) {
       type: "password_reset",
       expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
     });
-
-    // Import email service and template
-    const { sendEmail } = await import("@/lib/services/emailService");
-    const { genericHtmlTemplate } =
-      await import("@/lib/templates/emailTemplates");
 
     try {
       const html = genericHtmlTemplate(

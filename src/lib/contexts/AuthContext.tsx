@@ -123,7 +123,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await api.post<{ token?: string; user?: User }>(
         "/auth/login",
-        { email, password }
+        { email, password },
       );
       const data = response.data;
       if (data?.token && data?.user) {
@@ -181,11 +181,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const forgotPassword = async (email: string) => {
     try {
+      console.log("Forgot password request is being sent");
       const response = await api.post<{ success: boolean; message: string }>(
         "/auth/forgot-password",
-        { email }
+        { email },
       );
       const data = response.data;
+      console.log("Forgot password response:", data);
       return data;
     } catch (error) {
       console.error("Forgot password error:", error);
@@ -208,7 +210,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           email,
           otp,
           newPassword,
-        }
+        },
       );
       const data = response.data;
       return data;

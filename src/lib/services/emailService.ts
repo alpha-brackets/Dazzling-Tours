@@ -1,61 +1,33 @@
 import nodemailer from "nodemailer";
-// Email configuration interface
-interface EmailConfig {
-  host: string;
-  port: number;
-  secure: boolean;
-  auth: {
-    user: string;
-    pass: string;
-  };
-}
 
-// Create transporter based on environment variables
-const createTransporter = () => {
-  // 1. Check for Mailtrap Token (API Transport - snippet preference)
-  if (process.env.MAILTRAP_TOKEN) {
-    return nodemailer.createTransport({
-      host: "smtp.mailtrap.io",
-      port: 2525,
+let transportInstance: nodemailer.Transporter | null = null;
+
+const getTransport = () => {
+  if (!transportInstance) {
+    const token = process.env.MAILTRAP_TOKEN;
+    const user = process.env.MAILTRAP_USER || "api"; // Default to 'api' for Mailtrap Email API
+    const pass = process.env.MAILTRAP_PASS || token; // Use token if pass not specified (for Email API)
+    const host = process.env.MAILTRAP_HOST || "send.smtp.mailtrap.io"; // Use 'send.smtp.mailtrap.io' for live API
+    const port = parseInt(process.env.MAILTRAP_PORT || "587");
+
+    if (!pass) {
+      console.warn("[EMAIL] No Mailtrap password or token provided.");
+    }
+
+    console.log(
+      `[EMAIL] Initializing transporter with host: ${host}, user: ${user}`,
+    );
+
+    transportInstance = nodemailer.createTransport({
+      host,
+      port,
       auth: {
-        user: "api",
-        pass: process.env.MAILTRAP_TOKEN,
+        user,
+        pass: pass || "",
       },
     });
   }
-
-  // 2. Check if Mailtrap SMTP is configured
-  const useMailtrapSMTP =
-    process.env.MAILTRAP_HOST &&
-    process.env.MAILTRAP_USER &&
-    process.env.MAILTRAP_PASS;
-
-  if (useMailtrapSMTP) {
-    // Mailtrap configuration
-    const config: EmailConfig = {
-      host: process.env.MAILTRAP_HOST || "sandbox.smtp.mailtrap.io",
-      port: parseInt(process.env.MAILTRAP_PORT || "2525"),
-      secure: false, // Mailtrap uses TLS on port 2525
-      auth: {
-        user: process.env.MAILTRAP_USER || "",
-        pass: process.env.MAILTRAP_PASS || "",
-      },
-    };
-    return nodemailer.createTransport(config);
-  }
-
-  // Fallback to SMTP configuration
-  const config: EmailConfig = {
-    host: process.env.SMTP_HOST || "smtp.gmail.com",
-    port: parseInt(process.env.SMTP_PORT || "587"),
-    secure: process.env.SMTP_PORT === "465", // true for 465, false for other ports
-    auth: {
-      user: process.env.SMTP_USER || "",
-      pass: process.env.SMTP_PASS || "",
-    },
-  };
-
-  return nodemailer.createTransport(config);
+  return transportInstance;
 };
 
 // Email options interface
@@ -89,20 +61,9 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     const fromEmail = options.from || defaultFromEmail;
     const formattedFrom = `${fromName} <${fromEmail}>`;
 
-    const hasMailtrapToken = !!process.env.MAILTRAP_TOKEN;
-    const hasMailtrapSMTP =
-      !!process.env.MAILTRAP_HOST &&
-      !!process.env.MAILTRAP_USER &&
-      !!process.env.MAILTRAP_PASS;
-    const hasSMTP = !!process.env.SMTP_USER && !!process.env.SMTP_PASS;
+    console.log(`[EMAIL] Attempting to send email to: ${options.to}`);
+    console.log(`[EMAIL] From: ${formattedFrom}`);
 
-    if (!hasMailtrapToken && !hasMailtrapSMTP && !hasSMTP) {
-      throw new Error(
-        "No mail service configured. Please set MAILTRAP_TOKEN or SMTP credentials.",
-      );
-    }
-
-    const transporter = createTransporter();
     const mailOptions: MailOptions = {
       from: formattedFrom,
       to: Array.isArray(options.to) ? options.to.join(", ") : options.to,
@@ -113,17 +74,27 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       attachments: options.attachments,
     };
 
-    // Mailtrap specific properties if using Transport
-    if (hasMailtrapToken) {
+    // Mailtrap specific properties
+    if (process.env.MAILTRAP_TOKEN) {
       mailOptions.category = options.subject.includes("Password")
         ? "Password Reset"
         : "Notification";
     }
 
-    await transporter.sendMail(mailOptions);
+    const transporter = getTransport();
+    const info = await transporter.sendMail(mailOptions);
+
+    console.log("[EMAIL] Email sent successfully:", info.messageId);
     return true;
   } catch (error) {
-    console.error("Email sending fatal error:", error);
+    console.error("[EMAIL] Fatal error sending email:", error);
+    // Log more specific error info if available
+    if (typeof error === "object" && error !== null && "response" in error) {
+      console.error(
+        "[EMAIL] Provider response:",
+        (error as { response: string }).response,
+      );
+    }
     throw error;
   }
 }
@@ -177,11 +148,13 @@ export async function sendBulkEmails(
 // Verify email configuration
 export async function verifyEmailConfig(): Promise<boolean> {
   try {
-    const transporter = createTransporter();
+    console.log("[EMAIL] Verifying email configuration...");
+    const transporter = getTransport();
     await transporter.verify();
+    console.log("[EMAIL] Configuration verified successfully.");
     return true;
   } catch (error) {
-    console.error("Email config verification failed:", error);
+    console.error("[EMAIL] Config verification failed:", error);
     return false;
   }
 }
