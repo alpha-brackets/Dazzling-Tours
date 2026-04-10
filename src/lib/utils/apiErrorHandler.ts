@@ -4,14 +4,15 @@ import { z } from "zod";
 export function handleApiError(error: unknown, context: string = "API error") {
   console.error(`${context}:`, error);
 
-  const err = error as any;
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorName = error instanceof Error ? error.name : "";
 
   // Handle database connection errors specifically
   if (
-    err.message?.includes("Database connection failed") ||
-    err.message?.includes("MONGODB_URI") ||
-    err.message?.includes("ECONNREFUSED") ||
-    err.name === "MongooseServerSelectionError"
+    errorMessage.includes("Database connection failed") ||
+    errorMessage.includes("MONGODB_URI") ||
+    errorMessage.includes("ECONNREFUSED") ||
+    errorName === "MongooseServerSelectionError"
   ) {
     return NextResponse.json(
       {
@@ -39,7 +40,7 @@ export function handleApiError(error: unknown, context: string = "API error") {
   return NextResponse.json(
     {
       success: false,
-      message: err.message || "Internal server error",
+      message: errorMessage || "Internal server error",
     },
     { status: 500 },
   );

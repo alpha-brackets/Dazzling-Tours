@@ -12,6 +12,7 @@ import {
 } from "@/lib/hooks";
 import { Loading, Icon } from "@/app/Components/Common";
 import { BlogStatus } from "@/lib/enums/blog";
+import { Comment } from "@/lib/types/comment";
 
 const BlogDetails = ({ slug }: { slug: string }) => {
   const [commentForm, setCommentForm] = useState({
@@ -213,8 +214,7 @@ const BlogDetails = ({ slug }: { slug: string }) => {
                     </h3>
                   </div>
                   <div className="comments-list">
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {comments.map((comment: any) => (
+                    {comments.map((comment: Comment) => (
                       <div key={comment._id} className="comment-thread mb-4">
                         <div className="blog-single-comment d-flex gap-4 pt-4 pb-4">
                           <div className="image flex-shrink-0">
@@ -270,8 +270,7 @@ const BlogDetails = ({ slug }: { slug: string }) => {
                             className="comment-replies-list"
                             style={{ marginLeft: "60px" }}
                           >
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {comment.replies.map((reply: any) => (
+                            {comment.replies.map((reply: Comment) => (
                               <div
                                 className="blog-single-comment d-flex gap-4 pt-3 pb-3 border-top border-light"
                                 key={reply._id}
