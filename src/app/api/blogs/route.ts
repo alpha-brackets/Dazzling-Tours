@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { Blog } from "@/models";
+import { handleApiError } from "@/lib/utils/apiErrorHandler";
+
 import { MongoQuery } from "@/lib/types";
 import { cleanBlogData } from "@/lib/utils/dataCleaning";
 import { UNCATEGORIZED_CATEGORY_NAME } from "@/lib/constants/categories";
@@ -81,11 +83,8 @@ export async function GET(request: NextRequest) {
         pages: Math.ceil(total / limit),
       },
     });
-  } catch {
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch blogs" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "Failed to fetch blogs");
   }
 }
 
@@ -162,10 +161,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 },
     );
-  } catch {
-    return NextResponse.json(
-      { success: false, error: "Failed to create blog" },
-      { status: 500 },
-    );
+  } catch (error) {
+    return handleApiError(error, "Failed to create blog");
   }
 }
