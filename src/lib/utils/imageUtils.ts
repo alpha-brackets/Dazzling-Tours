@@ -10,7 +10,6 @@ export const IMAGEKIT_URL_ENDPOINT =
 
 /**
  * Check if a string is a data URL (base64 encoded image)
- * Data URLs start with "data:" and should NOT be stored in MongoDB
  */
 export function isDataUrl(url: string): boolean {
   return typeof url === "string" && url.startsWith("data:");
@@ -35,7 +34,6 @@ export function isValidImageUrl(url: string): boolean {
     const urlObj = new URL(url);
     return urlObj.protocol === "http:" || urlObj.protocol === "https:";
   } catch {
-    // If it's a relative path, we consider it valid (local assets)
     return url.startsWith("/");
   }
 }
@@ -54,7 +52,6 @@ export function filterValidImageUrls(urls: unknown[]): string[] {
 
 /**
  * Filter out data URLs from a single image URL
- * Returns the URL if valid, or empty string if not
  */
 export function filterValidImageUrl(url: string | undefined | null): string {
   if (!url || typeof url !== "string") return "";
@@ -64,25 +61,17 @@ export function filterValidImageUrl(url: string | undefined | null): string {
 
 /**
  * Extract an ID from an image URL for deletion purposes
- * Focused on ImageKit file IDs.
  */
 export function extractImageId(url: string): string | null {
   if (!url || typeof url !== "string") return null;
-
   if (isImageKitUrl(url)) {
-    // Attempt to extract the last part of the path
-    // Note: Official ImageKit deletion requires fileId which isn't ALWAYS the filename.
-    // However, if the user didn't store the fileId, this is our best guess.
     return url.split("/").pop() || null;
   }
-
   return null;
 }
 
 /**
  * Helper to get an optimized image URL
- * If the image is local (/assets/...), it can be proxied through ImageKit ifconfigured.
- * If it's already an ImageKit URL, it applies transformations.
  */
 export function getOptimizedImage(
   url: string,
@@ -91,25 +80,13 @@ export function getOptimizedImage(
   quality: number = 80,
 ): string {
   if (!url) return "";
-
-  const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
-
-  // If ImageKit is not configured, return the Original URL
-  if (!urlEndpoint) return url;
-
-  // Handle local images by proxying them through ImageKit
   if (url.startsWith("/assets/")) {
     const proxiedUrl = `${IMAGEKIT_URL_ENDPOINT}${url}`;
     return transformImageKit(proxiedUrl, width, height, quality);
   }
-
-  // If it's already an ImageKit URL, just transform it
   if (isImageKitUrl(url)) {
     return transformImageKit(url, width, height, quality);
   }
-
-  // For other URLs (like external ones), we return as is
-  // (Unless they are also proxied via ImageKit)
   return url;
 }
 
@@ -128,10 +105,8 @@ export function transformImageKit(
   if (width) transformations.push(`w-${width}`);
   if (height) transformations.push(`h-${height}`);
   transformations.push(`q-${quality}`);
-  transformations.push("f-auto"); // Auto format
+  transformations.push("f-auto");
 
   const trString = `tr=${transformations.join(",")}`;
-
-  // If URL already has queries, append with &, else with ?
   return url.includes("?") ? `${url}&${trString}` : `${url}?${trString}`;
 }

@@ -1,10 +1,28 @@
 import ImageKit from "imagekit";
 
-const imagekit = new ImageKit({
-  publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "",
-  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
-  urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || "",
-});
+let imagekitInstance: ImageKit | null = null;
+
+function getImageKit() {
+  if (!imagekitInstance) {
+    const publicKey = process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY;
+    const privateKey = process.env.IMAGEKIT_PRIVATE_KEY;
+    const urlEndpoint = process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT;
+
+    if (!publicKey || !privateKey || !urlEndpoint) {
+      // Return a dummy object during build time to avoid crashes if possible,
+      // but the real fix is ensuring we don't call these during build.
+      // If we are here, we are actually trying to use ImageKit.
+      throw new Error("Missing ImageKit environment variables.");
+    }
+
+    imagekitInstance = new ImageKit({
+      publicKey,
+      privateKey,
+      urlEndpoint,
+    });
+  }
+  return imagekitInstance;
+}
 
 export interface UploadOptions {
   folder?: string;
@@ -14,9 +32,9 @@ export interface UploadOptions {
 
 export interface UploadResult {
   url: string;
-  secure_url: string; // Add for compatibility with Cloudinary logic
+  secure_url: string;
   fileId: string;
-  publicId?: string; // Add for compatibility
+  publicId?: string;
   name: string;
   [key: string]: unknown;
 }
@@ -29,8 +47,9 @@ export async function uploadImage(
   options: UploadOptions = {},
 ): Promise<UploadResult> {
   try {
-    const response = await imagekit.upload({
-      file: file, // can be a string (base64) or a Buffer
+    const ik = getImageKit();
+    const response = await ik.upload({
+      file: file,
       fileName: `upload-${Date.now()}`,
       folder: options.folder || "/uploads",
       useUniqueFileName: options.useUniqueFileName ?? true,
@@ -43,7 +62,10 @@ export async function uploadImage(
       publicId: response.fileId,
     };
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to upload image to ImageKit";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to upload image to ImageKit";
     console.error("ImageKit upload error:", error);
     throw new Error(message);
   }
@@ -56,9 +78,7 @@ export async function uploadMultipleImages(
   files: (string | Buffer)[],
   options: UploadOptions = {},
 ): Promise<UploadResult[]> {
-  const uploadPromises = files.map((file) =>
-    uploadImage(file, options),
-  );
+  const uploadPromises = files.map((file) => uploadImage(file, options));
 
   return Promise.all(uploadPromises);
 }
@@ -68,9 +88,13 @@ export async function uploadMultipleImages(
  */
 export async function deleteImage(fileId: string): Promise<void> {
   try {
-    await imagekit.deleteFile(fileId);
+    const ik = getImageKit();
+    await ik.deleteFile(fileId);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to delete image from ImageKit";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to delete image from ImageKit";
     console.error("ImageKit delete error:", error);
     throw new Error(message);
   }
@@ -82,24 +106,22 @@ export async function deleteImage(fileId: string): Promise<void> {
 export async function deleteMultipleImages(fileIds: string[]): Promise<void> {
   if (!fileIds || fileIds.length === 0) return;
   try {
-    await imagekit.bulkDeleteFiles(fileIds);
+    const ik = getImageKit();
+    await ik.bulkDeleteFiles(fileIds);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to delete multiple images from ImageKit";
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Failed to delete multiple images from ImageKit";
     console.error("ImageKit bulk delete error:", error);
     throw new Error(message);
   }
 }
 
 /**
- * Extract file ID from ImageKit URL (if stored as URL)
- * ImageKit URLs usually look like: https://ik.imagekit.io/yhtvshsh/folder/filename.jpg
- * Unfortunately, ImageKit URLs don't contain the fileId needed for deletion.
- * Typically, we should store the fileId in the database along with the URL for deletion.
- * If we only have the URL, we might need to search using the listFiles API.
+ * Extract file ID from ImageKit URL
  */
 export function extractFileIdFromUrl(url: string): string | null {
   if (!url || !url.includes("ik.imagekit.io")) return null;
-  // This is a placeholder as fileId isn't in the URL.
-  // In a real app, you should store fileId alongside the URL.
   return null;
 }
