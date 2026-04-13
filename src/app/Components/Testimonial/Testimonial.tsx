@@ -91,20 +91,13 @@ const Testimonial = () => {
   }
 
   if (testimonials.length === 0) {
-    return (
-      <section className="testimonial-section section-padding fix section-bg">
-        <div className="container">
-          <div className="text-center">
-            <p>No testimonials available at the moment.</p>
-          </div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   // Get the current testimonial's image for the left side, or use fallback
   const currentTestimonialImage =
-    testimonials[currentSlide]?.image || `${IMAGEKIT_URL_ENDPOINT}/assets/img/testimonial/default-avatar.png`;
+    testimonials[currentSlide]?.image ||
+    `${IMAGEKIT_URL_ENDPOINT}/assets/img/testimonial/default-avatar.png`;
 
   return (
     <section className="testimonial-section section-padding fix section-bg">
