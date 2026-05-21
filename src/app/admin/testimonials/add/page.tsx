@@ -15,6 +15,7 @@ import {
   TESTIMONIAL_STATUS_OPTIONS,
   TESTIMONIAL_SOURCE_OPTIONS,
 } from "@/lib/enums/testimonial";
+import Icon from "@/app/Components/Common/Icon";
 import {
   TextInput,
   Textarea,
@@ -23,6 +24,7 @@ import {
   ImageUpload,
   StarRating,
 } from "@/app/Components/Form";
+import { ImageVariant } from "@/lib/constants/imageDimensions";
 
 const AddTestimonial = () => {
   const router = useRouter();
@@ -94,7 +96,7 @@ const AddTestimonial = () => {
         <Button
           color="secondary"
           variant="outline"
-          leftIcon={<i className="bi bi-arrow-left"></i>}
+          leftIcon={<Icon name="arrow-left" />}
           onClick={() => router.back()}
         >
           Back
@@ -111,7 +113,7 @@ const AddTestimonial = () => {
           <Card padding="lg" variant="bordered" className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-person-circle"></i> Basic Information
+                <Icon name="person-circle" /> Basic Information
               </h3>
               <p className="section-description">
                 Essential details about the person giving the testimonial
@@ -156,7 +158,7 @@ const AddTestimonial = () => {
           <Card padding="lg" variant="bordered" className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-image"></i> Profile Image
+                <Icon name="image" /> Profile Image
               </h3>
               <p className="section-description">
                 Upload a profile image for the testimonial
@@ -173,13 +175,14 @@ const AddTestimonial = () => {
               maxSize={5}
               multiple={false}
               acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
+              variant={ImageVariant.AVATAR}
             />
           </Card>
 
           <Card padding="lg" variant="bordered" className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-chat-quote"></i> Testimonial Content
+                <Icon name="chat-quote" /> Testimonial Content
               </h3>
               <p className="section-description">
                 The testimonial content and rating
@@ -217,7 +220,7 @@ const AddTestimonial = () => {
           <Card padding="lg" variant="bordered" className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-map"></i> Tour Association
+                <Icon name="map" /> Tour Association
               </h3>
               <p className="section-description">
                 Link this testimonial to a specific tour (optional)
@@ -236,7 +239,7 @@ const AddTestimonial = () => {
           <Card padding="lg" variant="bordered" className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-gear"></i> Settings
+                <Icon name="gear" /> Settings
               </h3>
               <p className="section-description">
                 Configure testimonial visibility and status
@@ -273,7 +276,7 @@ const AddTestimonial = () => {
           <div className="actions-container">
             <Button
               color="secondary"
-              leftIcon={<i className="bi bi-arrow-left"></i>}
+              leftIcon={<Icon name="arrow-left" />}
               onClick={() => router.back()}
             >
               Cancel
@@ -284,7 +287,7 @@ const AddTestimonial = () => {
               loading={createTestimonialMutation.isPending}
               leftIcon={
                 !createTestimonialMutation.isPending ? (
-                  <i className="bi bi-check-lg"></i>
+                  <Icon name="check-lg" />
                 ) : undefined
               }
               disabled={createTestimonialMutation.isPending}

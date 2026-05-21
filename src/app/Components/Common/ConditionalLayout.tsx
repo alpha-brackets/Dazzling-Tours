@@ -2,6 +2,7 @@
 import { usePathname } from "next/navigation";
 import Header1 from "../Header/Header1";
 import Footer from "../Footer/Footer";
+import WhatsAppAffix from "./WhatsAppAffix";
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ const ConditionalLayout = ({ children }: ConditionalLayoutProps) => {
       <Header1 />
       {children}
       <Footer />
+      <WhatsAppAffix />
     </div>
   );
 };

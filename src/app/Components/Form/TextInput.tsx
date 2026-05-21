@@ -1,5 +1,9 @@
 "use client";
 import React, { forwardRef, useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
 
 export interface TextInputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -103,47 +107,49 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
     const currentLength = currentValue ? String(currentValue).length : 0;
 
     const sizeClasses = {
-      xs: "form-input-xs",
-      sm: "form-input-sm",
-      md: "form-input-md",
-      lg: "form-input-lg",
-      xl: "form-input-xl",
+      xs: "h-7 text-xs px-2",
+      sm: "h-8 text-sm px-3",
+      md: "h-10 text-base px-3",
+      lg: "h-11 text-lg px-4",
+      xl: "h-12 text-xl px-4",
     };
 
     const variantClasses = {
-      default: "form-input-default",
-      filled: "form-input-filled",
-      unstyled: "form-input-unstyled",
+      default: "",
+      filled: "bg-gray-100 focus:bg-white",
+      unstyled: "border-none shadow-none focus:ring-0 px-0",
     };
 
-    const baseClasses = `
-      form-input-base
-      ${sizeClasses[size]}
-      ${variantClasses[variant]}
-      ${internalError ? "form-input-error" : ""}
-      ${className}
-    `.trim();
-
     return (
-      <div className="form-group">
+      <div className="flex flex-col gap-1.5 w-full">
         {label && (
-          <label className="form-label">
+          <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
             {label}
-            {required && <span className="form-required">*</span>}
-          </label>
+            {required && <span className="text-red-500">*</span>}
+          </Label>
         )}
 
-        {description && <p className="form-description">{description}</p>}
+        {description && <p className="text-xs text-gray-500">{description}</p>}
 
-        <div className="form-input-container">
-          {leftIcon && <div className="form-input-icon-left">{leftIcon}</div>}
+        <div className="relative w-full">
+          {leftIcon && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 flex items-center justify-center pointer-events-none">
+              {leftIcon}
+            </div>
+          )}
 
-          <input
+          <Input
             ref={ref}
-            className={`${baseClasses} ${
-              leftIcon ? "form-input-with-left-icon" : ""
-            } ${rightIcon ? "form-input-with-right-icon" : ""}`}
+            className={cn(
+              sizeClasses[size],
+              variantClasses[variant],
+              leftIcon && "pl-10",
+              rightIcon && "pr-10",
+              internalError && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
+              className
+            )}
             disabled={disabled}
+            required={required}
             value={currentValue}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -153,30 +159,28 @@ const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           />
 
           {rightIcon && (
-            <div className="form-input-icon-right">{rightIcon}</div>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 flex items-center justify-center pointer-events-none">
+              {rightIcon}
+            </div>
           )}
         </div>
 
-        {(showCharCount || maxLength) && (
-          <div className="form-flex form-justify-between form-items-center form-mt-1">
-            {internalError && (
-              <p className="form-error">
-                <i className="bi bi-exclamation-circle form-error-icon"></i>
+        {(showCharCount || maxLength || internalError) && (
+          <div className="flex justify-between items-center text-xs mt-0.5">
+            {internalError ? (
+              <p className="text-red-500 flex items-center gap-1">
+                <AlertCircle className="h-3.5 w-3.5" />
                 {internalError}
               </p>
+            ) : <div></div>}
+            
+            {(showCharCount || maxLength) && (
+              <div className="text-gray-500 ml-auto">
+                {currentLength}
+                {maxLength ? `/${maxLength}` : ""} characters
+              </div>
             )}
-            <div className="form-text-xs form-text-gray-500 form-ml-auto">
-              {currentLength}
-              {maxLength ? `/${maxLength}` : ""} characters
-            </div>
           </div>
-        )}
-
-        {internalError && !showCharCount && !maxLength && (
-          <p className="form-error">
-            <i className="bi bi-exclamation-circle form-error-icon"></i>
-            {internalError}
-          </p>
         )}
       </div>
     );

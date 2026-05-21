@@ -21,6 +21,7 @@ import {
   ImageUpload,
   SEOFields,
 } from "@/app/Components/Form";
+import { ImageVariant } from "@/lib/constants/imageDimensions";
 import { Button, Page, Title, Text, Icon } from "@/app/Components/Common";
 
 const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
@@ -81,8 +82,8 @@ const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
           title: blog.title || "",
           content: blog.content || "",
           excerpt: blog.excerpt || "",
-          author: blog.author || "",
-          category: blog.category || "",
+          author: typeof blog.author === 'string' ? blog.author : (blog.author?._id || ""),
+          category: typeof blog.category === 'string' ? blog.category : (blog.category?._id || ""),
           tags: blog.tags || [],
           featuredImage: blog.featuredImage || "",
           status: blog.status,
@@ -106,7 +107,7 @@ const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
     if (user && !form.values.author && initializedRef.current) {
       const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
       if (fullName) {
-        form.setFieldValue("author", fullName);
+        form.setFieldValue("author", fullName, { shouldMarkDirty: false });
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -159,7 +160,7 @@ const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
         slug: "",
         focusKeyword: "",
         ogImage: form.values.featuredImage || "",
-      });
+      }, { shouldMarkDirty: false });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -319,7 +320,7 @@ const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
                 onChange={(value) => setTagInput(value)}
                 onKeyDown={handleTagKeyDown}
               />
-              <div className="d-flex gap-2 mt-2">
+              <div className="flex gap-2 mt-2">
                 <Button
                   type="button"
                   variant="outline"
@@ -334,11 +335,11 @@ const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
             {form.values.tags && form.values.tags.length > 0 && (
               <div className="form-group">
                 <label className="form-label" style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>Current Tags</label>
-                <div className="d-flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2">
                   {form.values.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="badge bg-primary d-flex align-items-center gap-2"
+                      className="badge bg-primary flex items-center gap-2"
                       style={{
                         fontSize: "0.85rem",
                         padding: "6px 12px",
@@ -396,6 +397,7 @@ const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
               maxSize={5}
               multiple={false}
               acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
+              variant={ImageVariant.HERO}
             />
           </div>
 

@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { cn } from "@/lib/utils";
 
 export interface TextProps extends React.HTMLAttributes<HTMLElement> {
   /** Size variant */
@@ -57,61 +58,76 @@ const Text: React.FC<TextProps> = ({
   const Component = component;
 
   // Size mapping
-  const sizeMap = {
-    xs: { fontSize: "0.75rem", lineHeight: "1.4" },
-    sm: { fontSize: "0.875rem", lineHeight: "1.5" },
-    md: { fontSize: "1rem", lineHeight: "1.6" },
-    lg: { fontSize: "1.125rem", lineHeight: "1.6" },
-    xl: { fontSize: "1.25rem", lineHeight: "1.5" },
+  const sizeClasses = {
+    xs: "text-xs",
+    sm: "text-sm",
+    md: "text-base",
+    lg: "text-lg",
+    xl: "text-xl",
   };
 
-  const sizeStyles = sizeMap[size];
+  // Weight mapping
+  const weightClasses = {
+    100: "font-thin",
+    200: "font-extralight",
+    300: "font-light",
+    400: "font-normal",
+    500: "font-medium",
+    600: "font-semibold",
+    700: "font-bold",
+    800: "font-extrabold",
+    900: "font-black",
+  };
 
   // Color mapping
-  const colorMap = {
-    default: "#2c3e50",
-    dimmed: "#6c757d",
-    muted: "#9ca3af",
-    primary: "#fd7d02", // Orange theme color
-    secondary: "#6c757d",
-    success: "#28a745",
-    warning: "#ffc107",
-    error: "#dc3545",
+  const colorClasses = {
+    default: "text-[#2c3e50]",
+    dimmed: "text-gray-500",
+    muted: "text-gray-400",
+    primary: "text-[var(--theme)]",
+    secondary: "text-gray-600",
+    success: "text-green-600",
+    warning: "text-yellow-500",
+    error: "text-red-600",
   };
 
-  const mergedStyle: React.CSSProperties = {
-    margin: 0,
-    fontFamily: '"Manrope", Arial, sans-serif',
-    fontWeight: weight,
-    fontSize: sizeStyles.fontSize,
-    lineHeight: lineHeight || sizeStyles.lineHeight,
-    color: colorMap[color],
-    textAlign: align,
-    textTransform: transform,
-    textDecoration: underline
-      ? "underline"
-      : strikethrough
-        ? "line-through"
-        : "none",
-    fontStyle: italic ? "italic" : "normal",
-    overflow: truncate ? "hidden" : undefined,
-    textOverflow: truncate ? "ellipsis" : undefined,
-    whiteSpace: truncate ? "nowrap" : undefined,
-    ...style,
+  // Align mapping
+  const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+    justify: "text-justify",
   };
 
-  const classes = [
-    `ui-text`,
-    `ui-text-${size}`,
-    truncate && "ui-text-truncate",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  // Transform mapping
+  const transformClasses = {
+    none: "normal-case",
+    uppercase: "uppercase",
+    lowercase: "lowercase",
+    capitalize: "capitalize",
+  };
 
   return (
-    <Component className={classes} style={mergedStyle} {...rest}>
+    <Component
+      className={cn(
+        "m-0 font-sans",
+        sizeClasses[size],
+        weightClasses[weight],
+        colorClasses[color],
+        align && alignClasses[align],
+        transform && transformClasses[transform],
+        underline && "underline",
+        strikethrough && "line-through",
+        italic && "italic",
+        truncate && "truncate",
+        className
+      )}
+      style={{
+        lineHeight: lineHeight,
+        ...style,
+      }}
+      {...rest}
+    >
       {children}
     </Component>
   );

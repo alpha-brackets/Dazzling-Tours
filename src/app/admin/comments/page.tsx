@@ -189,13 +189,13 @@ const CommentsManagement = () => {
               gap: "1rem",
             }}
           >
-            <div className="d-flex align-items-center gap-2">
+            <div className="flex items-center gap-2">
               <Icon name="check2-circle" color="#fd7e14" />
               <Text weight={600} color="primary">
                 {selectedComments.length} comments selected
               </Text>
             </div>
-            <div className="d-flex align-items-center gap-2">
+            <div className="flex items-center gap-2">
               <Button
                 size="sm"
                 color="success"

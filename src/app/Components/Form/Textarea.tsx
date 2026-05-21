@@ -1,5 +1,9 @@
 "use client";
 import React, { forwardRef, useEffect, useState } from "react";
+import { Textarea as ShadcnTextarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { AlertCircle } from "lucide-react";
 
 export interface TextareaProps extends Omit<
   React.TextareaHTMLAttributes<HTMLTextAreaElement>,
@@ -56,33 +60,24 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     }, [error]);
 
     const sizeClasses = {
-      xs: "form-input-xs",
-      sm: "form-input-sm",
-      md: "form-input-md",
-      lg: "form-input-lg",
+      xs: "min-h-[60px] text-xs",
+      sm: "min-h-[80px] text-sm",
+      md: "min-h-[100px] text-base",
+      lg: "min-h-[120px] text-lg",
     };
 
     const variantClasses = {
-      default: "form-input-default",
-      filled: "form-input-filled",
-      unstyled: "form-input-unstyled",
+      default: "",
+      filled: "bg-gray-100 focus:bg-white",
+      unstyled: "border-none shadow-none focus:ring-0 px-0",
     };
 
     const resizeClasses = {
-      none: "form-resize-none",
-      vertical: "form-resize-y",
-      horizontal: "form-resize-x",
-      both: "form-resize",
+      none: "resize-none",
+      vertical: "resize-y",
+      horizontal: "resize-x",
+      both: "resize",
     };
-
-    const baseClasses = `
-      form-input-base
-      ${sizeClasses[size]}
-      ${variantClasses[variant]}
-      ${resizeClasses[resize]}
-      ${internalError ? "form-input-error" : ""}
-      ${className}
-    `.trim();
 
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const value = e.target.value;
@@ -111,21 +106,28 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     const currentLength = currentValue ? String(currentValue).length : 0;
 
     return (
-      <div className="form-group">
+      <div className="flex flex-col gap-1.5 w-full">
         {label && (
-          <label className="form-label">
+          <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
             {label}
-            {required && <span className="form-required">*</span>}
-          </label>
+            {required && <span className="text-red-500">*</span>}
+          </Label>
         )}
 
-        {description && <p className="form-description">{description}</p>}
+        {description && <p className="text-xs text-gray-500">{description}</p>}
 
-        <div className="form-input-container">
-          <textarea
+        <div className="relative w-full">
+          <ShadcnTextarea
             ref={ref}
-            className={baseClasses}
+            className={cn(
+              sizeClasses[size],
+              variantClasses[variant],
+              resizeClasses[resize],
+              internalError && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
+              className
+            )}
             disabled={disabled}
+            required={required}
             maxLength={maxLength}
             value={currentValue}
             onChange={handleChange}
@@ -135,26 +137,22 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           />
         </div>
 
-        {(showCharCount || maxLength) && (
-          <div className="form-flex form-justify-between form-items-center form-mt-1">
-            {internalError && (
-              <p className="form-error">
-                <i className="bi bi-exclamation-circle form-error-icon"></i>
+        {(showCharCount || maxLength || internalError) && (
+          <div className="flex justify-between items-center text-xs mt-0.5">
+            {internalError ? (
+              <p className="text-red-500 flex items-center gap-1">
+                <AlertCircle className="h-3.5 w-3.5" />
                 {internalError}
               </p>
+            ) : <div></div>}
+            
+            {(showCharCount || maxLength) && (
+              <div className="text-gray-500 ml-auto">
+                {currentLength}
+                {maxLength ? `/${maxLength}` : ""} characters
+              </div>
             )}
-            <div className="form-text-xs form-text-gray-500 form-ml-auto">
-              {currentLength}
-              {maxLength ? `/${maxLength}` : ""} characters
-            </div>
           </div>
-        )}
-
-        {error && !showCharCount && !maxLength && (
-          <p className="form-error">
-            <i className="bi bi-exclamation-circle form-error-icon"></i>
-            {error}
-          </p>
         )}
       </div>
     );

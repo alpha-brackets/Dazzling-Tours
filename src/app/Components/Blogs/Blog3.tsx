@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import { useGetBlogs } from "@/lib/hooks";
+import { Section, Container, Grid, Loading } from "@/app/Components/Common";
+import { ArrowRight, Tag, User } from "lucide-react";
 
 const Blog3 = () => {
   const {
@@ -18,7 +20,6 @@ const Blog3 = () => {
 
   const blogs = blogsData?.data || [];
 
-  // Format date to "26Nov" format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const day = date.getDate();
@@ -26,71 +27,62 @@ const Blog3 = () => {
     return { day, month };
   };
 
+  const renderHeader = () => (
+    <div className="flex flex-col items-center justify-center text-center mb-12">
+      <span className="inline-block text-[#EF7C00] font-bold tracking-widest uppercase mb-3 text-sm md:text-base animate-in fade-in slide-in-from-bottom-4 duration-500">
+        News &amp; Updates
+      </span>
+      <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
+        Recent Blog Posts
+      </h2>
+    </div>
+  );
+
   if (loading) {
     return (
-      <section className="news-section-3 section-padding fix">
-        <div className="container">
-          <div className="section-title text-center">
-            <span className="sub-title wow fadeInUp">News & Updates</span>
-            <h2 className="wow fadeInUp" data-wow-delay=".2s">
-              Recent Blog Posts
-            </h2>
+      <Section padding="lg" className="news-section-3 fix">
+        <Container>
+          {renderHeader()}
+          <div className="flex justify-center items-center py-12">
+            <Loading variant="spinner" size="lg" text="Loading featured blogs..." />
           </div>
-          <div className="text-center" style={{ padding: "3rem" }}>
-            <p>Loading featured blogs...</p>
-          </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
     );
   }
 
   if (error) {
     return (
-      <section className="news-section-3 section-padding fix">
-        <div className="container">
-          <div className="section-title text-center">
-            <span className="sub-title wow fadeInUp">News & Updates</span>
-            <h2 className="wow fadeInUp" data-wow-delay=".2s">
-              Recent Blog Posts
-            </h2>
+      <Section padding="lg" className="news-section-3 fix">
+        <Container>
+          {renderHeader()}
+          <div className="text-center py-12">
+            <p className="text-red-500">Unable to load featured blogs. Please try again later.</p>
           </div>
-          <div className="text-center" style={{ padding: "3rem" }}>
-            <p>Unable to load featured blogs. Please try again later.</p>
-          </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
     );
   }
 
   if (blogs.length === 0) {
     return (
-      <section className="news-section-3 section-padding fix">
-        <div className="container">
-          <div className="section-title text-center">
-            <span className="sub-title wow fadeInUp">News & Updates</span>
-            <h2 className="wow fadeInUp" data-wow-delay=".2s">
-              Recent Blog Posts
-            </h2>
+      <Section padding="lg" className="news-section-3 fix">
+        <Container>
+          {renderHeader()}
+          <div className="text-center py-12">
+            <p className="text-gray-500">No featured blogs available at the moment.</p>
           </div>
-          <div className="text-center" style={{ padding: "3rem" }}>
-            <p>No featured blogs available at the moment.</p>
-          </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
     );
   }
 
   return (
-    <section className="news-section-3 section-padding pb-0 fix">
-      <div className="container">
-        <div className="section-title text-center">
-          <span className="sub-title wow fadeInUp">News & Updates</span>
-          <h2 className="wow fadeInUp" data-wow-delay=".2s">
-            Recent Blog Posts
-          </h2>
-        </div>
-        <div className="row">
-          {blogs.map((blog) => {
+    <Section padding="lg" className="news-section-3 pb-0 fix bg-gray-50">
+      <Container>
+        {renderHeader()}
+        <Grid cols={1} className="md:grid-cols-2 lg:grid-cols-3" gap="md">
+          {blogs.map((blog, index) => {
             const { day, month } = formatDate(
               blog.publishedAt || blog.createdAt,
             );
@@ -100,47 +92,56 @@ const Blog3 = () => {
             return (
               <div
                 key={blog._id}
-                className="col-xl-4 col-md-6 col-lg-6 wow fadeInUp"
-                data-wow-delay=".3s"
+                className="animate-in fade-in slide-in-from-bottom-8 duration-700 fill-mode-both"
+                style={{ animationDelay: `${index * 150}ms` }}
               >
-                <div className="news-card-items-3 style-4">
-                  <div className="news-image">
+                <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col h-full border border-gray-100 group">
+                  <div className="relative h-56 overflow-hidden">
                     <Image
                       src={blog.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`}
                       alt={blog.title}
-                      width={416}
-                      height={347}
+                      fill
+                      className="object-cover transition-transform duration-500 hover:scale-105"
                     />
                   </div>
-                  <div className="news-content">
-                    <ul className="post-meta">
-                      <li className="post">
-                        {day}
-                        <span>{month}</span>
+                  <div className="p-6 flex flex-col flex-1">
+                    <ul className="flex items-center gap-4 mb-4 text-xs text-gray-500">
+                      <li className="flex flex-col items-center justify-center bg-[var(--theme)]/10 text-[var(--theme)] font-bold rounded-lg w-12 h-12">
+                        <span className="text-lg leading-none">{day}</span>
+                        <span className="text-xs uppercase">{month}</span>
                       </li>
-                      <li>
-                        <i className="bi bi-person"></i>
-                        By {blog.author || "Admin"}
+                      <li className="flex items-center gap-1">
+                        <User className="h-3.5 w-3.5 text-amber-500" />
+                        By {typeof blog.author === 'string' ? blog.author : (blog.author?.name || "Admin")}
                       </li>
-                      <li>
-                        <i className="bi bi-tag-fill"></i>
-                        {blog.category || "Travel"}
+                      <li className="flex items-center gap-1">
+                        <Tag className="h-3.5 w-3.5 text-amber-500" />
+                        {typeof blog.category === 'string' ? blog.category : (blog.category?.name || "Travel")}
                       </li>
                     </ul>
-                    <h4>
-                      <Link href={blogUrl}>{blog.title}</Link>
+                    
+                    <h4 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 flex-1">
+                      <Link href={blogUrl} className="hover:text-[var(--theme)] transition-colors">
+                        {blog.title}
+                      </Link>
                     </h4>
-                    <Link href={blogUrl} className="link-btn">
-                      Read More <i className="bi bi-arrow-right"></i>
-                    </Link>
+                    
+                    <div className="pt-3 border-t border-gray-100 mt-auto">
+                      <Link 
+                        href={blogUrl} 
+                        className="text-sm font-bold text-[var(--header)] hover:text-[var(--theme)] transition-colors inline-flex items-center gap-2"
+                      >
+                        Read More <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </div>
             );
           })}
-        </div>
-      </div>
-    </section>
+        </Grid>
+      </Container>
+    </Section>
   );
 };
 

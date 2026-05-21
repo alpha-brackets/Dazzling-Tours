@@ -1,10 +1,15 @@
 "use client";
 import React from "react";
-import { Modal } from "react-bootstrap";
-import Button from "./Button";
-import Text from "./Text";
-import Title from "./Title";
-import Group from "./Group";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export interface ConfirmModalProps {
   opened: boolean;
@@ -29,37 +34,33 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   loading = false,
   color = "primary",
 }) => {
+  // Map color to Shadcn button variants
+  const variant = color === "error" ? "destructive" : "default";
+
   return (
-    <Modal
-      show={opened}
-      onHide={onClose}
-      centered
-      className="confirm-modal"
-      backdrop="static"
-      keyboard={false}
-    >
-      <Modal.Body style={{ padding: "1.5rem" }}>
-        <Title order={4} style={{ marginBottom: "0.75rem" }}>
-          {title}
-        </Title>
-        <Text size="sm" color="dimmed" style={{ marginBottom: "1.5rem" }}>
-          {children}
-        </Text>
-        <Group position="right" spacing={12}>
-          <Button
-            variant="outline"
-            color="secondary"
-            onClick={onClose}
-            disabled={loading}
-          >
+    <AlertDialog open={opened} onOpenChange={(open) => !open && onClose()}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-xl font-bold text-[#2c3e50]">{title}</AlertDialogTitle>
+          <AlertDialogDescription className="text-gray-600 text-sm mt-2">
+            {children}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="mt-6">
+          <AlertDialogCancel onClick={onClose} disabled={loading} variant="outline">
             {cancelLabel}
-          </Button>
-          <Button color={color} onClick={onConfirm} loading={loading}>
+          </AlertDialogCancel>
+          <AlertDialogAction 
+            onClick={onConfirm} 
+            disabled={loading}
+            variant={variant}
+            className={color === "primary" ? "bg-[var(--theme)] hover:bg-[var(--theme)]/90 text-white" : ""}
+          >
             {confirmLabel}
-          </Button>
-        </Group>
-      </Modal.Body>
-    </Modal>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

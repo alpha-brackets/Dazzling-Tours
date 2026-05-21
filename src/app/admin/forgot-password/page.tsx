@@ -2,12 +2,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useAuth, useNotification, useForm } from "@/lib/hooks";
+import { LoginCard, CardHeader } from "../login/components/LoginComponents";
 import {
-  LoginCard,
-  CardHeader,
-  LockIcon,
-  CheckIcon,
-} from "../login/components/LoginComponents";
+  IconLock,
+  IconCheck,
+  IconArrowLeft,
+} from "@/app/Components/Common/icons";
 import { TextInput } from "@/app/Components/Form";
 import { Button, Stack } from "@/app/Components/Common";
 
@@ -59,7 +59,7 @@ const ForgotPasswordPage = () => {
               <span className="font-bold text-gray-900">{submittedEmail}</span>
             </>
           }
-          icon={<CheckIcon size="md" />}
+          icon={<IconCheck size={24} color="var(--success-color)" />}
         />
 
         <div className="space-y-4">
@@ -93,7 +93,7 @@ const ForgotPasswordPage = () => {
       <CardHeader
         title="Forgot Password?"
         subtitle="Enter your email to receive a password reset code"
-        icon={<LockIcon size="md" />}
+        icon={<IconLock size={24} color="var(--primary)" />}
       />
 
       <form onSubmit={handleSubmit()}>
@@ -125,19 +125,10 @@ const ForgotPasswordPage = () => {
               href="/admin/login"
               className="text-xs font-bold text-gray-500 hover:text-gray-800 transition-colors flex items-center justify-center group"
             >
-              <svg
-                className="w-4 h-4 mr-1.5 transition-transform group-hover:-translate-x-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
+              <IconArrowLeft
+                className="mr-1.5 transition-transform group-hover:-translate-x-1"
+                size={16}
+              />
               Back to Login
             </Link>
           </div>

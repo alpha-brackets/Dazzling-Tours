@@ -11,7 +11,6 @@ import {
 import PaginationComponent from "@/app/Components/Common/PaginationComponent";
 import { TextInput, Select, Checkbox } from "@/app/Components/Form";
 import {
-  Group,
   Stack,
   Page,
   Button,
@@ -212,18 +211,14 @@ const ContactQueriesList = () => {
     >
       <Stack>
         {/* Statistics Cards */}
-        <div className="stats-grid" style={{ marginBottom: "1.5rem" }}>
+        <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-icon" style={{ background: "#e3f2fd" }}>
               <Icon name="envelope" color="#1976d2" />
             </div>
             <div className="stat-content">
-              <Title order={4} size="h5">
-                Total Queries
-              </Title>
-              <Text weight={700} size="lg">
-                {stats.total}
-              </Text>
+              <Title order={4} size="h5">Total Queries</Title>
+              <Text weight={700} size="lg">{stats.total}</Text>
             </div>
           </div>
           <div className="stat-card">
@@ -231,12 +226,8 @@ const ContactQueriesList = () => {
               <Icon name="circle-fill" color="#0288d1" />
             </div>
             <div className="stat-content">
-              <Title order={4} size="h5">
-                New
-              </Title>
-              <Text weight={700} size="lg">
-                {stats.new}
-              </Text>
+              <Title order={4} size="h5">New</Title>
+              <Text weight={700} size="lg">{stats.new}</Text>
             </div>
           </div>
           <div className="stat-card">
@@ -244,12 +235,8 @@ const ContactQueriesList = () => {
               <Icon name="eye" color="#f57c00" />
             </div>
             <div className="stat-content">
-              <Title order={4} size="h5">
-                Read
-              </Title>
-              <Text weight={700} size="lg">
-                {stats.read}
-              </Text>
+              <Title order={4} size="h5">Read</Title>
+              <Text weight={700} size="lg">{stats.read}</Text>
             </div>
           </div>
           <div className="stat-card">
@@ -257,12 +244,8 @@ const ContactQueriesList = () => {
               <Icon name="reply" color="#388e3c" />
             </div>
             <div className="stat-content">
-              <Title order={4} size="h5">
-                Replied
-              </Title>
-              <Text weight={700} size="lg">
-                {stats.replied}
-              </Text>
+              <Title order={4} size="h5">Replied</Title>
+              <Text weight={700} size="lg">{stats.replied}</Text>
             </div>
           </div>
           <div className="stat-card">
@@ -270,43 +253,22 @@ const ContactQueriesList = () => {
               <Icon name="check-circle" color="#7b1fa2" />
             </div>
             <div className="stat-content">
-              <Title order={4} size="h5">
-                Closed
-              </Title>
-              <Text weight={700} size="lg">
-                {stats.closed}
-              </Text>
+              <Title order={4} size="h5">Closed</Title>
+              <Text weight={700} size="lg">{stats.closed}</Text>
             </div>
           </div>
         </div>
 
         {/* Bulk Actions */}
         {selectedQueries.length > 0 && (
-          <div
-            className="bulk-actions"
-            style={{
-              background: "#fff3cd",
-              border: "1px solid #ffc107",
-              borderRadius: "8px",
-              padding: "1rem",
-              marginBottom: "1.5rem",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              flexWrap: "wrap",
-              gap: "1rem",
-            }}
-          >
-            <div className="bulk-info">
-              <Icon name="check-circle" className="me-2" />
+          <div className="bulk-actions">
+            <div className="flex items-center gap-2">
+              <Icon name="check-circle" />
               <Text weight={600} component="span">
                 {selectedQueries.length} query/queries selected
               </Text>
             </div>
-            <div
-              className="bulk-buttons"
-              style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}
-            >
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 size="sm"
                 color="primary"
@@ -343,27 +305,29 @@ const ContactQueriesList = () => {
           </div>
         )}
 
+
         {/* Filters */}
-        <Group>
-          <TextInput
-            placeholder="Search queries by name, email, or subject..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            leftIcon={<Icon name="search" />}
-            style={{ flex: 1, minWidth: "400px" }}
-          />
+        <div className="flex flex-col md:flex-row gap-3 items-center">
+          <div className="flex-1 w-full">
+            <TextInput
+              placeholder="Search queries by name, email, or subject..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
+          <div className="w-full md:w-48">
+            <Select
+              value={filterStatus}
+              onChange={handleStatusChange}
+              data={[
+                { value: "all", label: "All Status" },
+                ...getContactStatuses(),
+              ]}
+            />
+          </div>
+        </div>
 
-          <Select
-            value={filterStatus}
-            onChange={handleStatusChange}
-            data={[
-              { value: "all", label: "All Status" },
-              ...getContactStatuses(),
-            ]}
-            style={{ minWidth: "150px" }}
-          />
-        </Group>
-
+        <div className="border border-gray-200 rounded-lg overflow-hidden bg-white overflow-x-auto">
         <Table verticalSpacing="sm" horizontalSpacing="md">
             <thead>
               <tr>
@@ -460,7 +424,7 @@ const ContactQueriesList = () => {
                     </div>
                   </td>
                   <td>
-                    <Group spacing={12}>
+                    <div className="flex items-center gap-3">
                       <Link href={`/admin/contact/${query._id}`} passHref>
                         <ActionIcon
                           variant="light"
@@ -482,27 +446,18 @@ const ContactQueriesList = () => {
                       >
                         <Icon name="trash" />
                       </ActionIcon>
-                    </Group>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </Table>
+        </div>
 
         {queries.length === 0 && !loading && (
-          <div
-            className="no-data"
-            style={{ textAlign: "center", padding: "3rem" }}
-          >
-            <Icon
-              name="inbox"
-              size={48}
-              color="dimmed"
-              style={{ marginBottom: "1rem" }}
-            />
-            <Text color="dimmed" weight={500} size="lg">
-              No contact queries found
-            </Text>
+          <div className="no-data">
+            <Icon name="inbox" size={48} color="dimmed" style={{ marginBottom: "1rem" }} />
+            <Text color="dimmed" weight={500} size="lg">No contact queries found</Text>
           </div>
         )}
 

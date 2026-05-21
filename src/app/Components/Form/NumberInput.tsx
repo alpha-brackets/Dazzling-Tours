@@ -1,5 +1,10 @@
 "use client";
 import React, { forwardRef, useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { AlertCircle, Minus, Plus } from "lucide-react";
 
 export interface NumberInputProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -68,27 +73,6 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       setInternalError(error);
     }, [error]);
 
-    const sizeClasses = {
-      xs: "form-input-xs",
-      sm: "form-input-sm",
-      md: "form-input-md",
-      lg: "form-input-lg",
-    };
-
-    const variantClasses = {
-      default: "form-input-default",
-      filled: "form-input-filled",
-      unstyled: "form-input-unstyled",
-    };
-
-    const baseClasses = `
-      form-input-base
-      ${sizeClasses[size]}
-      ${variantClasses[variant]}
-      ${internalError ? "form-input-error" : ""}
-      ${className}
-    `.trim();
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       let value = e.target.value;
 
@@ -100,7 +84,6 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         }
       }
 
-      e.target.value = value;
       const numericValue = parseFloat(value) || 0;
 
       // Run validation if enabled and validator is provided
@@ -138,30 +121,76 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       }
     };
 
+    const handleIncrement = () => {
+      const current = formValue !== undefined ? formValue : 0;
+      const next = current + step;
+      if (max !== undefined && next > max) return;
+      if (formOnChange) formOnChange(next);
+    };
+
+    const handleDecrement = () => {
+      const current = formValue !== undefined ? formValue : 0;
+      const next = current - step;
+      if (min !== undefined && next < min) return;
+      if (formOnChange) formOnChange(next);
+    };
+
+    const sizeClasses = {
+      xs: "h-7 text-xs px-2",
+      sm: "h-8 text-sm px-3",
+      md: "h-10 text-base px-3",
+      lg: "h-11 text-lg px-4",
+    };
+
+    const variantClasses = {
+      default: "",
+      filled: "bg-gray-100 focus:bg-white",
+      unstyled: "border-none shadow-none focus:ring-0 px-0",
+    };
+
+    const buttonSizeClasses = {
+      xs: "h-5 w-5",
+      sm: "h-6 w-6",
+      md: "h-8 w-8",
+      lg: "h-9 w-9",
+    };
+
     return (
-      <div className="form-group">
+      <div className="flex flex-col gap-1.5 w-full">
         {label && (
-          <label className="form-label">
+          <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
             {label}
-            {required && <span className="form-required">*</span>}
-          </label>
+            {required && <span className="text-red-500">*</span>}
+          </Label>
         )}
 
-        {description && <p className="form-description">{description}</p>}
+        {description && <p className="text-xs text-gray-500">{description}</p>}
 
-        <div className="form-input-container">
-          {currency && <div className="form-input-currency">{currency}</div>}
-
-          {leftIcon && !currency && (
-            <div className="form-input-icon-left">{leftIcon}</div>
+        <div className="relative flex items-center w-full">
+          {currency && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">
+              {currency}
+            </div>
           )}
 
-          <input
+          {leftIcon && !currency && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 flex items-center justify-center pointer-events-none">
+              {leftIcon}
+            </div>
+          )}
+
+          <Input
             ref={ref}
             type="number"
-            className={`${baseClasses} ${
-              currency || leftIcon ? "form-input-with-left-icon" : ""
-            } ${rightIcon ? "form-input-with-right-icon" : ""}`}
+            className={cn(
+              sizeClasses[size],
+              variantClasses[variant],
+              (currency || leftIcon) && "pl-10",
+              "pr-24", // Make space for custom buttons
+              internalError && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
+              "appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none", // Hide native arrows
+              className
+            )}
             disabled={disabled}
             min={min}
             max={max}
@@ -173,14 +202,41 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             {...props}
           />
 
-          {rightIcon && (
-            <div className="form-input-icon-right">{rightIcon}</div>
+          {rightIcon && !currency && (
+            <div className="absolute right-24 top-1/2 -translate-y-1/2 text-gray-400 flex items-center justify-center pointer-events-none">
+              {rightIcon}
+            </div>
           )}
+
+          {/* Custom Buttons */}
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-white border border-gray-100 rounded-md shadow-sm">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={cn(buttonSizeClasses[size], "text-gray-500 hover:text-gray-700")}
+              onClick={handleDecrement}
+              disabled={disabled || (min !== undefined && (formValue || 0) <= min)}
+            >
+              <Minus className="h-3 w-3" />
+            </Button>
+            <div className="w-px h-4 bg-gray-200" />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={cn(buttonSizeClasses[size], "text-gray-500 hover:text-gray-700")}
+              onClick={handleIncrement}
+              disabled={disabled || (max !== undefined && (formValue || 0) >= max)}
+            >
+              <Plus className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
 
         {internalError && (
-          <p className="form-error">
-            <i className="bi bi-exclamation-circle form-error-icon"></i>
+          <p className="text-sm text-red-500 flex items-center gap-1 mt-0.5">
+            <AlertCircle className="h-3.5 w-3.5" />
             {internalError}
           </p>
         )}

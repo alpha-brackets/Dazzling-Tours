@@ -9,6 +9,7 @@ import {
 } from "@/lib/enums";
 import { useForm } from "@/lib/hooks";
 import { UpdateTourData } from "@/lib/types/tour";
+import { Info } from "lucide-react";
 
 interface BasicInfoSectionProps {
   form: ReturnType<typeof useForm<UpdateTourData>>;
@@ -22,20 +23,17 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
   setCategorySearchTerm,
 }) => {
   return (
-    <div className="form-section">
-      <div className="section-header">
-        <h3 style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <i
-            className="bi bi-info-circle"
-            style={{ color: "#fd7d02", fontSize: "1.2rem" }}
-          />
+    <div className="form-section bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+      <div className="section-header mb-4">
+        <h3 className="flex items-center gap-3 font-semibold text-gray-900 text-lg">
+          <Info className="h-5 w-5 text-[#fd7d02]" />
           Basic Information
         </h3>
-        <p style={{ marginTop: "0.5rem", color: "#6c757d" }}>
+        <p className="mt-1 text-sm text-gray-500">
           Essential details about your tour package
         </p>
       </div>
-      <div className="form-grid">
+      <div className="form-grid grid grid-cols-1 md:grid-cols-2 gap-4">
         <TextInput
           label="Tour Title"
           placeholder="e.g., Amazing 3-Day Cultural Heritage Tour"

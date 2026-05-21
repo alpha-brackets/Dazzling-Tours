@@ -1,5 +1,7 @@
 "use client";
 import React from "react";
+import { Star, StarHalf } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface StarRatingProps {
   rating: number;
@@ -19,9 +21,9 @@ const StarRating: React.FC<StarRatingProps> = ({
   className = "",
 }) => {
   const sizeClasses = {
-    sm: "text-sm",
-    md: "text-base",
-    lg: "text-lg",
+    sm: "h-4 w-4",
+    md: "h-5 w-5",
+    lg: "h-6 w-6",
   };
 
   const handleStarClick = (starIndex: number) => {
@@ -31,7 +33,7 @@ const StarRating: React.FC<StarRatingProps> = ({
   };
 
   return (
-    <div className={`star-rating ${sizeClasses[size]} ${className}`}>
+    <div className={cn("flex items-center gap-1", className)}>
       {Array.from({ length: maxStars }, (_, index) => {
         const isFilled = index < Math.floor(rating);
         const isHalfFilled = index < rating && index >= Math.floor(rating);
@@ -40,21 +42,38 @@ const StarRating: React.FC<StarRatingProps> = ({
           <button
             key={index}
             type="button"
-            className={`star-btn ${isFilled ? "filled" : "empty"} ${
-              readonly ? "readonly" : "clickable"
-            }`}
+            className={cn(
+              "focus:outline-none transition-transform",
+              readonly
+                ? "cursor-default"
+                : "cursor-pointer hover:scale-110 focus-visible:scale-110",
+              readonly
+                ? ""
+                : "focus-visible:ring-2 focus-visible:ring-[var(--theme)] focus-visible:ring-offset-2 rounded-sm",
+            )}
             onClick={() => handleStarClick(index)}
             disabled={readonly}
             aria-label={`Rate ${index + 1} out of ${maxStars} stars`}
             aria-pressed={isFilled}
           >
             {isHalfFilled ? (
-              <i className="bi bi-star-half" aria-hidden="true"></i>
-            ) : (
-              <i
-                className={`bi bi-star${isFilled ? "-fill" : ""}`}
+              <StarHalf
+                className={cn(
+                  sizeClasses[size],
+                  "text-yellow-400 fill-yellow-400",
+                )}
                 aria-hidden="true"
-              ></i>
+              />
+            ) : (
+              <Star
+                className={cn(
+                  sizeClasses[size],
+                  isFilled
+                    ? "text-yellow-400 fill-yellow-400"
+                    : "text-gray-300 fill-none",
+                )}
+                aria-hidden="true"
+              />
             )}
           </button>
         );

@@ -1,13 +1,15 @@
 import { PaginatedResponse, SingleResponse } from "./common";
 import { SEOFields } from "./seo";
+import { Category } from "./category";
 
 export interface Blog {
   _id: string;
+  slug: string;
   title: string;
   content: string;
   excerpt: string;
-  author: string;
-  category: string;
+  author: string | { _id: string; name: string };
+  category: Category | string;
   tags: string[];
   featuredImage?: string;
   status: string;

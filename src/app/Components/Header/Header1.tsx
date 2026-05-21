@@ -4,82 +4,128 @@ import { useEffect, useState } from "react";
 import Nav from "./Nav";
 import Link from "next/link";
 import Image from "next/image";
+import { Container } from "@/app/Components/Common";
+import { ArrowRight, Menu, X } from "lucide-react";
 
 export default function Header1() {
   const [mobileToggle, setMobileToggle] = useState(false);
-  const [isSticky, setIsSticky] = useState<string>("");
-  const [prevScrollPos, setPrevScrollPos] = useState<number>(0);
+  const [isSticky, setIsSticky] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      const currentScrollPos = window.scrollY;
-      if (currentScrollPos > prevScrollPos) {
-        setIsSticky("cs-gescout_sticky"); // Scrolling down
-      } else if (currentScrollPos !== 0) {
-        setIsSticky("cs-gescout_show cs-gescout_sticky"); // Scrolling up
+      if (window.scrollY > 50) {
+        setIsSticky(true);
       } else {
-        setIsSticky("");
+        setIsSticky(false);
       }
-      setPrevScrollPos(currentScrollPos); // Update previous scroll position
     };
 
     window.addEventListener("scroll", handleScroll);
-
     return () => {
-      window.removeEventListener("scroll", handleScroll); // Cleanup the event listener
+      window.removeEventListener("scroll", handleScroll);
     };
-  }, [prevScrollPos]);
+  }, []);
 
   return (
-    <div>
+    <>
       <header
-        className={`cs_site_header header_style_2 header_style_2_0 cs_style_1 header_sticky_style1  cs_sticky_header cs_site_header_full_width ${
-          mobileToggle ? "cs_mobile_toggle_active" : ""
-        } ${isSticky ? isSticky : ""}`}
+        className={`w-full transition-all duration-300 z-40 ${
+          isSticky
+            ? "fixed top-0 left-0 right-0 bg-[#EF7C00] shadow-lg py-3 animate-in fade-in slide-in-from-top-4 duration-300"
+            : "absolute top-0 left-0 right-0 bg-transparent py-5"
+        }`}
       >
-        <div className="cs_main_header">
-          <div className="container-fluid">
-            <div className="cs_main_header_in">
-              <div className="cs_main_header_left">
-                <Link className="cs_site_branding" href="/">
-                  <Image
-                    src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`}
-                    alt="Dazzling Tours"
-                    width={110}
-                    height={40}
-                  />
-                </Link>
-              </div>
-              <div className="cs_main_header_center">
-                <div className="cs_nav cs_primary_font fw-medium">
-                  <span
-                    className={
-                      mobileToggle
-                        ? "cs-munu_toggle cs_teggle_active"
-                        : "cs-munu_toggle"
-                    }
-                    onClick={() => setMobileToggle(!mobileToggle)}
-                  >
-                    <span></span>
-                  </span>
-                  <Nav setMobileToggle={setMobileToggle} />
-                </div>
-              </div>
-              <div className="cs_main_header_right">
-                <div className="header-btn d-flex align-items-center">
-                  <div className="main-button header-btn-1">
-                    <Link href="/contact" className="theme-btn">
-                      <span>
-                        Request A Quote <i className="bi bi-arrow-right"></i>
-                      </span>
-                    </Link>
-                  </div>
-                </div>
-              </div>
+        <Container fluid>
+          <div className="flex items-center justify-between px-4 lg:px-8">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              <Link href="/">
+                <Image
+                  src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`}
+                  alt="Dazzling Tours"
+                  width={110}
+                  height={40}
+                  className="h-10 w-auto object-contain brightness-0 invert"
+                  priority
+                />
+              </Link>
             </div>
+
+            {/* Desktop Navigation */}
+            <div className="hidden lg:block">
+              <Nav setMobileToggle={setMobileToggle} isSticky={isSticky} />
+            </div>
+
+            {/* Request A Quote button (Desktop) */}
+            <div className="hidden lg:block">
+              <Link
+                href="/contact"
+                className={`inline-flex items-center gap-2 py-2.5 px-6 font-bold text-white rounded-full border transition-all hover:scale-[1.02] active:scale-95 ${
+                  isSticky
+                    ? "border-white bg-white/10 hover:bg-white hover:text-[#EF7C00]"
+                    : "border-white/30 bg-white/5 hover:bg-white hover:text-gray-900"
+                }`}
+              >
+                Request A Quote <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {/* Hamburger Button (Mobile) */}
+            <button
+              onClick={() => setMobileToggle(!mobileToggle)}
+              className="lg:hidden p-2 rounded-lg text-white hover:bg-white/10 transition-colors cursor-pointer"
+              aria-label="Toggle Menu"
+            >
+              {mobileToggle ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
+        </Container>
+      </header>
+
+      {/* Mobile Navigation Drawer */}
+      <div
+        className={`fixed inset-0 z-50 lg:hidden transition-opacity duration-300 ${
+          mobileToggle ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      >
+        {/* Backdrop overlay */}
+        <div
+          onClick={() => setMobileToggle(false)}
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+        />
+
+        {/* Drawer content */}
+        <div
+          className={`absolute inset-y-0 right-0 w-80 max-w-full bg-white shadow-2xl p-6 flex flex-col gap-6 transform transition-transform duration-300 ease-out ${
+            mobileToggle ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
+          {/* Header of Mobile Menu */}
+          <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+            <Link href="/" onClick={() => setMobileToggle(false)}>
+              <Image
+                src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`}
+                alt="Dazzling Tours"
+                width={100}
+                height={36}
+                className="h-8 w-auto object-contain"
+              />
+            </Link>
+            <button
+              onClick={() => setMobileToggle(false)}
+              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 focus:outline-none cursor-pointer"
+              aria-label="Close Menu"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Navigation Links inside Drawer */}
+          <div className="flex-grow overflow-y-auto">
+            <Nav setMobileToggle={setMobileToggle} isMobile={true} />
           </div>
         </div>
-      </header>
-    </div>
+      </div>
+    </>
   );
 }

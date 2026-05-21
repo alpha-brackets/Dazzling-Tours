@@ -1,9 +1,9 @@
 "use client";
 import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
-import React, { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import Slider from "react-slick";
-import { Modal } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { AppImage } from "@/app/Components/Common";
+import { ImageVariant } from "@/lib/constants/imageDimensions";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
 import { Tour, ItineraryItem } from "@/lib/types/tour";
 import {
   useGetTestimonials,
@@ -15,6 +15,8 @@ import {
 import { TestimonialStatus } from "@/lib/enums";
 import { ContactGroupType } from "@/lib/types/enums";
 import { Accordion } from "@/app/Components/Common";
+import Icon from "@/app/Components/Common/Icon";
+import { TextInput, Textarea } from "@/app/Components/Form";
 import { ErrorResponse } from "@/lib/types";
 
 interface TourDetailsProps {
@@ -30,34 +32,15 @@ const TourInfoBox = ({
   label: string;
   value: string | number;
 }) => (
-  <div className="d-flex align-items-center gap-3 py-1">
-    <div
-      className="d-flex justify-content-center align-items-center flex-shrink-0"
-      style={{
-        width: "48px",
-        height: "48px",
-        backgroundColor: "white",
-        borderRadius: "12px",
-        border: "1px solid #eef2f6",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-      }}
-    >
-      <i
-        className={`bi ${icon} text-primary`}
-        style={{ fontSize: "1.25rem" }}
-      ></i>
+  <div className="flex items-center gap-4 py-3">
+    <div className="flex justify-center items-center shrink-0 w-14 h-14 bg-[#EF7C00]/10 rounded-2xl shadow-sm border border-[#EF7C00]/20">
+      <Icon name={icon} className="text-[#EF7C00]" size={24} />
     </div>
-    <div className="d-flex flex-column align-items-start" style={{ gap: "0" }}>
-      <span
-        className="text-muted"
-        style={{ fontSize: "0.85rem", fontWeight: 500 }}
-      >
+    <div className="flex flex-col items-start gap-1">
+      <span className="text-gray-500 text-sm font-medium uppercase tracking-wider">
         {label}
       </span>
-      <h6
-        className="fw-bold m-0"
-        style={{ fontSize: "1rem", color: "#2c3e50" }}
-      >
+      <h6 className="font-extrabold m-0 text-base md:text-lg text-gray-900 leading-none">
         {value}
       </h6>
     </div>
@@ -65,10 +48,24 @@ const TourInfoBox = ({
 );
 
 const TourDetails = ({ tour }: TourDetailsProps) => {
-  const [nav1, setNav1] = useState<Slider | null>(null);
-  const [nav2, setNav2] = useState<Slider | null>(null);
-  const slider1 = useRef<Slider | null>(null);
-  const slider2 = useRef<Slider | null>(null);
+  const [mainApi, setMainApi] = useState<CarouselApi>();
+  const [thumbApi, setThumbApi] = useState<CarouselApi>();
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (!mainApi || !thumbApi) return;
+
+    const onSelect = () => {
+      const index = mainApi.selectedScrollSnap();
+      setCurrentSlide(index);
+      thumbApi.scrollTo(index);
+    };
+
+    mainApi.on('select', onSelect);
+    return () => {
+      mainApi.off('select', onSelect);
+    };
+  }, [mainApi, thumbApi]);
 
   const [showLightbox, setShowLightbox] = useState(false);
   const [photoIndex, setPhotoIndex] = useState(0);
@@ -104,9 +101,9 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
           onError: (error: ErrorResponse) => {
             showError(
               "Failed to submit review: " +
-                (error.response?.data?.error ||
-                  error.message ||
-                  "Unknown error"),
+              (error.response?.data?.error ||
+                error.message ||
+                "Unknown error"),
             );
           },
         },
@@ -114,7 +111,7 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
     },
   });
 
-  // Dynamic Testimonials (TanStack Query)
+  // Dynamic Testimonials
   const { data: testimonialsData, isLoading: isLoadingTestimonials } =
     useGetTestimonials({
       tourId: tour._id,
@@ -122,12 +119,7 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
     });
   const testimonials = testimonialsData?.data || [];
 
-  useEffect(() => {
-    setNav1(slider1.current);
-    setNav2(slider2.current);
-  }, []);
-
-  // Booking Form with useForm
+  // Booking Form
   const bookingForm = useForm({
     initialValues: {
       name: "",
@@ -167,9 +159,9 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
           onError: (error: ErrorResponse) => {
             showError(
               "Failed to send enquiry: " +
-                (error.response?.data?.error ||
-                  error.message ||
-                  "Unknown error"),
+              (error.response?.data?.error ||
+                error.message ||
+                "Unknown error"),
             );
           },
         },
@@ -182,938 +174,279 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
     setShowLightbox(true);
   };
 
-  const mainSettings = {
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    arrows: false,
-    fade: true,
-    asNavFor: nav2 ?? undefined,
-  };
-
-  const thumbSettings = {
-    slidesToShow: Math.min(tour.images?.length || 0, 5),
-    slidesToScroll: 1,
-    asNavFor: nav1 ?? undefined,
-    dots: false,
-    centerMode: false,
-    focusOnSelect: true,
-    infinite: (tour.images?.length || 0) > 5,
-    arrows: false,
-    swipeToSlide: true,
-    variableWidth: false,
-    responsive: [
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 4,
-        },
-      },
-      {
-        breakpoint: 480,
-        settings: {
-          slidesToShow: 3,
-        },
-      },
-    ],
-  };
-
   return (
     <>
-      <section className="activities-details-section fix section-padding">
-        <div className="container">
-          <div className="activities-details-wrapper">
-            <div className="row g-4 justify-content-center">
-              <div className="col-12 col-lg-8">
-                <div className="tour-gallery-container mb-5">
-                  <div className="main-slider-wrap position-relative">
-                    <Slider
-                      {...mainSettings}
-                      ref={(slider) => {
-                        slider1.current = slider;
-                      }}
-                      className="main-slider"
-                    >
+      <section className="py-16 lg:py-24 bg-gray-50 min-h-screen">
+        <div className="container max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div className="lg:col-span-8 flex flex-col gap-8">
+              <div className="mb-2">
+                <div className="relative rounded-3xl overflow-hidden shadow-sm">
+                  <Carousel setApi={setMainApi} className="w-full" opts={{ loop: true }}>
+                    <CarouselContent>
                       {tour.images?.map((img, idx) => (
-                        <div key={idx} className="main-slider-item">
-                          <div
-                            className="image-overlay-trigger"
-                            onClick={() => handleOpenLightbox(idx)}
-                          >
-                            <i className="bi bi-arrows-fullscreen"></i>
-                            <span>View Gallery</span>
-                          </div>
-                          <Image
-                            src={img || `${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero1.webp`}
-                            alt={`${tour.title} - ${idx + 1}`}
-                            fill
-                            priority={idx === 0}
-                            className="rounded-4 shadow-sm"
-                            style={{ objectFit: "cover" }}
-                          />
-                        </div>
-                      ))}
-                    </Slider>
-                  </div>
-
-                  {tour.images && tour.images.length > 1 && (
-                    <div className="thumb-slider-wrap mt-3">
-                      <Slider
-                        {...thumbSettings}
-                        ref={(slider) => {
-                          slider2.current = slider;
-                        }}
-                        className="thumb-slider"
-                      >
-                        {tour.images.map((img, idx) => (
-                          <div key={idx} className="thumb-slider-item">
-                            <Image
-                              src={img}
-                              alt={`${tour.title} thumb - ${idx + 1}`}
-                              fill
-                              className="rounded-3 shadow-sm"
-                              style={{
-                                objectFit: "cover",
-                              }}
-                            />
-                          </div>
-                        ))}
-                      </Slider>
-                    </div>
-                  )}
-                </div>
-                <div className="activities-details-content">
-                  <h2 className="mb-3">{tour.title}</h2>
-                  {tour.shortDescription && <p>{tour.shortDescription}</p>}
-                  {tour.description && tour.description.trim() && (
-                    <div
-                      className="mt-3 tour-description"
-                      dangerouslySetInnerHTML={{ __html: tour.description }}
-                      suppressHydrationWarning
-                    />
-                  )}
-                  {tour.highlights && tour.highlights.length > 0 && (
-                    <div className="activities-list-item">
-                      <h3>Tour Highlights</h3>
-                      <div className="activities-item">
-                        <div className="row g-3">
-                          {tour.highlights.map((highlight, index) => (
-                            <div key={index} className="col-md-6 h-100">
-                              <div className="d-flex align-items-center gap-3 p-3 rounded-3 bg-light-subtle h-100 border border-light shadow-sm">
-                                <span
-                                  className="flex-shrink-0 d-flex justify-content-center align-items-center"
-                                  style={{
-                                    width: "45px",
-                                    height: "45px",
-                                    backgroundColor: "#eef8fb",
-                                    borderRadius: "10px",
-                                  }}
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="32"
-                                    height="32"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    style={{ width: "32px", height: "32px" }}
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      clipRule="evenodd"
-                                      d="M12.6916 5.22013L12.1877 4.5967C12.0188 4.38782 11.7004 4.38782 11.5315 4.5967L11.0275 5.22013C10.7366 5.5801 10.3473 5.84785 9.90712 5.99089C9.46691 6.13393 8.99465 6.14609 8.54766 6.02591L7.77347 5.81779C7.51411 5.74804 7.25644 5.93521 7.24261 6.20348L7.20136 7.00406C7.17753 7.46631 7.02002 7.91171 6.74795 8.28617C6.47588 8.66064 6.10096 8.94807 5.66869 9.11357L4.92005 9.40021C4.66922 9.49626 4.57083 9.79917 4.71727 10.0243L5.15447 10.6963C5.40689 11.0842 5.54126 11.5371 5.54126 12C5.54126 12.4629 5.40689 12.9158 5.15447 13.3037L4.71727 13.9757C4.57078 14.2008 4.66922 14.5037 4.92005 14.5998L5.66869 14.8864C6.10096 15.0519 6.47588 15.3393 6.74795 15.7138C7.02002 16.0883 7.17753 16.5337 7.20136 16.9959L7.24261 17.7965C7.25644 18.0648 7.51411 18.2519 7.77347 18.1822L8.54766 17.9741C8.99464 17.8539 9.46691 17.866 9.90712 18.0091C10.3473 18.1521 10.7365 18.4198 11.0275 18.7798L11.5315 19.4033C11.7004 19.6122 11.7004 19.6122 11.5315 19.4033L11.0275 18.7798C10.7365 18.4198 10.3473 18.1521 9.90712 18.0091C9.46691 17.866 8.99464 17.8539 8.54766 17.9741L7.77347 18.1822C7.51411 18.2519 7.25644 18.0648 7.24261 17.7965L7.20136 16.9959C7.17753 16.5337 7.02002 16.0883 6.74795 15.7138C6.47588 15.3393 6.10096 15.0519 5.66869 14.8864L4.92005 14.5998C4.66922 14.5037 4.57083 14.2008 4.71727 13.9757L5.15447 13.3037C5.40689 12.9158 5.54126 12.4629 5.54126 12C5.54126 11.5371 5.40689 11.0842 5.15447 10.6963L4.71727 10.0243C4.57083 9.79917 4.66922 9.49626 4.92005 9.40021L5.66869 9.11357C6.10096 8.94807 6.47588 8.66064 6.74795 8.28617C7.02002 7.91171 7.17753 7.46631 7.20136 7.00406L7.24261 6.20348C7.25644 5.93521 7.51411 5.74804 7.77347 5.81779L8.54766 6.02591C8.99464 6.13393 9.46691 6.14609 9.90712 5.99089C10.3473 5.84785 10.7365 5.5801 11.0275 5.22013ZM12.9532 3.9779C12.3904 3.28162 11.3288 3.28162 10.766 3.9779L10.262 4.60134C10.0908 4.81308 9.86188 4.97058 9.60293 5.05472C9.34397 5.13885 9.06616 5.146 8.80322 5.07529L8.02908 4.86717C7.16447 4.63467 6.30563 5.25866 6.25955 6.15281L6.2183 6.95338C6.20428 7.2253 6.11163 7.4873 5.95158 7.70757C5.79154 7.92784 5.57098 8.09692 5.3167 8.19426L4.56806 8.48095C3.73191 8.80106 3.40388 9.81065 3.89213 10.5611L4.32938 11.2331C4.47787 11.4613 4.55691 11.7277 4.55691 12C4.55691 12.2723 4.47787 12.5387 4.32938 12.7669L3.89217 13.4389C3.40388 14.1893 3.73191 15.1989 4.56806 15.519L5.3167 15.8057C5.57098 15.903 5.79153 16.0721 5.95157 16.2924C6.11162 16.5127 6.20427 16.7747 6.2183 17.0466L6.25955 17.8472C6.30563 18.7413 7.16447 19.3653 8.02908 19.1328L8.80322 18.9247C9.06616 18.854 9.34397 18.8611 9.60293 18.9453C9.86188 19.0294 10.0908 19.1869 10.262 19.3987L10.766 20.0221C11.3288 20.7184 12.3904 20.7184 12.9532 20.0221L13.4572 19.3987C13.6283 19.1869 13.8573 19.0294 14.1162 18.9453C14.3752 18.8611 14.653 18.854 14.916 18.9247L15.6901 19.1328C16.5547 19.3653 17.4135 18.7413 17.4596 17.8472L17.5009 17.0466C17.5149 16.7747 17.6076 16.5127 17.7676 16.2924C17.9276 16.0721 18.1482 15.903 18.4025 15.8057L19.1511 15.519C19.9873 15.1989 20.3153 14.1893 19.827 13.4389L19.3898 12.7669C19.2413 12.5387 19.1623 12.2723 19.1623 12C19.1623 11.7277 19.2413 11.4613 19.3898 11.2331L19.827 10.5611C20.3153 9.81065 19.9873 8.80106 19.1511 8.48095L18.4025 8.19426C18.1482 8.09692 17.9276 7.92784 17.7676 7.70757C17.6075 7.4873 17.5149 7.2253 17.5009 6.95338L17.4596 6.15281C17.4135 5.25866 16.5547 4.63467 15.6901 4.86717L14.916 5.07529C14.653 5.146 14.3752 5.13885 14.1162 5.05472C13.8573 4.97058 13.6283 4.81308 13.4572 4.60134L12.9532 3.9779Z"
-                                    />
-                                    <path
-                                      fillRule="evenodd"
-                                      clipRule="evenodd"
-                                      d="M15.4446 9.45177C15.6353 9.64555 15.6327 9.95717 15.4388 10.1478L11.6863 13.8382C11.1163 14.3987 10.1975 14.383 9.64705 13.8033L8.31496 12.4004C8.12779 12.2033 8.13585 11.8918 8.33296 11.7045C8.53007 11.5174 8.8416 11.5254 9.02877 11.7226L10.3609 13.1255C10.5324 13.306 10.8186 13.3109 10.9961 13.1363L14.7486 9.44596C14.9424 9.25536 15.2541 9.25794 15.4446 9.45177Z"
-                                      fill="#1CA8CB"
-                                    />
-                                  </svg>
-                                </span>
-                                <strong>{highlight}</strong>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="row mt-4">
-                    {tour.includes && tour.includes.length > 0 && (
-                      <div className="col-md-6 mb-4">
-                        <div className="activities-list-item">
-                          <h3>What&apos;s Included</h3>
-                          <ul className="activities-list w-100">
-                            {tour.includes.map((incl, index) => (
-                              <li
-                                key={index}
-                                className="d-flex align-items-center mb-2"
-                              >
-                                <i className="bi bi-check-circle-fill text-success me-2"></i>
-                                {incl}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                    {tour.excludes && tour.excludes.length > 0 && (
-                      <div className="col-md-6 mb-4">
-                        <div className="activities-list-item">
-                          <h3>What&apos;s Excluded</h3>
-                          <ul className="activities-list w-100">
-                            {tour.excludes.map((excl, index) => (
-                              <li
-                                key={index}
-                                className="d-flex align-items-center mb-2"
-                              >
-                                <i className="bi bi-x-circle-fill text-danger me-2"></i>
-                                {excl}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="activities-box-wrap mb-4">
-                    <div className="bg-light-subtle rounded-4 p-3 border border-light shadow-sm">
-                      <div className="row g-4">
-                        <div className="col-12 col-md-4">
-                          <TourInfoBox
-                            icon="bi-geo-alt"
-                            label="Location"
-                            value={tour.location || "N/A"}
-                          />
-                        </div>
-                        {tour.duration && (
-                          <div className="col-12 col-md-4">
-                            <TourInfoBox
-                              icon="bi-clock"
-                              label="Duration"
-                              value={tour.duration}
-                            />
-                          </div>
-                        )}
-                        {tour.difficulty && (
-                          <div className="col-12 col-md-4">
-                            <TourInfoBox
-                              icon="bi-speedometer2"
-                              label="Difficulty"
-                              value={tour.difficulty}
-                            />
-                          </div>
-                        )}
-                        {typeof tour.groupSize === "number" && (
-                          <div className="col-12 col-md-4">
-                            <TourInfoBox
-                              icon="bi-people"
-                              label="Group Size"
-                              value={`${tour.groupSize} People`}
-                            />
-                          </div>
-                        )}
-                        {typeof tour.price === "number" && (
-                          <div className="col-12 col-md-4">
-                            <TourInfoBox
-                              icon="bi-tags"
-                              label="Price"
-                              value={`PKR ${tour.price} / ${tour.priceType}`}
-                            />
-                          </div>
-                        )}
-                        {tour.rating > 0 && (
-                          <div className="col-12 col-md-4">
-                            <TourInfoBox
-                              icon="bi-star"
-                              label="Rating"
-                              value={`${tour.rating.toFixed(1)} (${tour.reviews} reviews)`}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  {tour.itinerary && tour.itinerary.length > 0 && (
-                    <div className="faq-items">
-                      <h3 className="mb-4">Tour Plan</h3>
-                      <Accordion
-                        items={tour.itinerary.map((item: ItineraryItem) => ({
-                          title: `Day ${item.day}: ${item.title}`,
-                          content: item.description ? (
+                        <CarouselItem key={idx}>
+                          <div className="relative">
                             <div
-                              className="accordion-content-text"
-                              style={{
-                                color: "#333",
-                                fontSize: "16px",
-                                lineHeight: "1.6",
-                              }}
-                              dangerouslySetInnerHTML={{
-                                __html: item.description,
-                              }}
-                              suppressHydrationWarning
-                            />
-                          ) : (
-                            <p className="text-muted">
-                              No details provided for this day.
-                            </p>
-                          ),
-                        }))}
-                        defaultOpenIndex={0}
-                      />
-                    </div>
-                  )}
-
-                  {tour.rating > 0 && (
-                    <>
-                      <h3>Customer Reviews</h3>
-                      <div className="courses-reviews-box-items mb-4 d-flex justify-content-center">
-                        <div className="courses-reviews-box justify-content-center">
-                          <div className="reviews-box text-center">
-                            <h2>
-                              <span className="count">
-                                {tour.rating.toFixed(1)}
-                              </span>
-                            </h2>
-                            <div className="star">
-                              {Array.from({ length: 5 }, (_, i) => {
-                                const ratingValue = i + 1;
-                                if (tour.rating >= ratingValue) {
-                                  return (
-                                    <i key={i} className="bi bi-star-fill"></i>
-                                  );
-                                } else if (tour.rating >= ratingValue - 0.5) {
-                                  return (
-                                    <i key={i} className="bi bi-star-half"></i>
-                                  );
-                                } else {
-                                  return <i key={i} className="bi bi-star"></i>;
-                                }
-                              })}
+                              className="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 transition p-3 rounded-full cursor-pointer backdrop-blur-sm"
+                              onClick={() => handleOpenLightbox(idx)}
+                            >
+                              <Icon name="expand" className="text-white" />
                             </div>
-                            <p>{tour.reviews} Reviews</p>
+                            <AppImage
+                              variant={ImageVariant.HERO}
+                              src={img || `${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero1.webp`}
+                              alt={`${tour.title} - ${idx + 1}`}
+                              priority={idx === 0}
+                            />
                           </div>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  <div className="client-review-area">
-                    <h3>Reviews ({testimonials.length})</h3>
-                    {isLoadingTestimonials ? (
-                      <div className="text-center p-4">Loading reviews...</div>
-                    ) : testimonials.length > 0 ? (
-                      <ul className="review-items">
-                        {testimonials.map((testimonial, index) => (
-                          <li key={testimonial._id || index}>
-                            <div className="thumb">
-                              <Image
-                                src={
-                                  testimonial.image ||
-                                  `${IMAGEKIT_URL_ENDPOINT}/assets/img/testimonial/default-avatar.png`
-                                }
-                                alt={testimonial.name}
-                                width={110}
-                                height={110}
-                                className="rounded-circle"
-                                style={{ objectFit: "cover" }}
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src =
-                                    `${IMAGEKIT_URL_ENDPOINT}/assets/img/testimonial/default-avatar.png`;
-                                }}
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                  </Carousel>
+                </div>
+
+                {tour.images && tour.images.length > 1 && (
+                  <div className="mt-4">
+                    <Carousel
+                      setApi={setThumbApi}
+                      className="w-full"
+                      opts={{
+                        containScroll: "keepSnaps",
+                        dragFree: true,
+                      }}
+                    >
+                      <CarouselContent className="-ml-3">
+                        {tour.images.map((img, idx) => (
+                          <CarouselItem key={idx} className="pl-3 basis-1/4 sm:basis-1/5" onClick={() => mainApi?.scrollTo(idx)}>
+                            <div className={`relative cursor-pointer rounded-xl overflow-hidden transition-all duration-300 ${currentSlide === idx ? 'ring-4 ring-[#EF7C00] shadow-md scale-95' : 'opacity-70 hover:opacity-100'}`}>
+                              <AppImage
+                                variant={ImageVariant.THUMBNAIL}
+                                src={img}
+                                alt={`${tour.title} thumb - ${idx + 1}`}
                               />
                             </div>
-                            <div className="content border-0">
-                              <div className="star">
-                                {Array.from({ length: 5 }, (_, i) => (
-                                  <i
-                                    key={i}
-                                    className={`bi bi-star${i < (testimonial.rating || 5) ? "-fill" : ""}`}
-                                  ></i>
-                                ))}
-                              </div>
-                              <h5>{testimonial.name}</h5>
-                              <div className="d-flex align-items-center gap-2 mb-2">
-                                {testimonial.designation && (
-                                  <span className="badge bg-light text-dark border">
-                                    {testimonial.designation}
-                                  </span>
-                                )}
-                                {testimonial.location && (
-                                  <span className="text-muted small">
-                                    <i className="bi bi-geo-alt me-1"></i>
-                                    {testimonial.location}
-                                  </span>
-                                )}
-                                {testimonial.status ===
-                                  TestimonialStatus.ACTIVE && (
-                                  <span className="text-success small fw-bold">
-                                    <i className="bi bi-patch-check-fill me-1"></i>
-                                    Verified Traveler
-                                  </span>
-                                )}
-                              </div>
-                              <p>{testimonial.content}</p>
-                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                    </Carousel>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white p-6 md:p-10 rounded-3xl shadow-sm border border-gray-100">
+                <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">{tour.title}</h1>
+                {tour.shortDescription && <p className="text-xl text-[#EF7C00] font-medium mb-6">{tour.shortDescription}</p>}
+                {tour.description && tour.description.trim() && (
+                  <div
+                    className="prose prose-lg max-w-none text-gray-600 mb-8"
+                    dangerouslySetInnerHTML={{ __html: tour.description }}
+                    suppressHydrationWarning
+                  />
+                )}
+
+                <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 mb-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <TourInfoBox icon="map-pin" label="Location" value={tour.location || "N/A"} />
+                    {tour.duration && <TourInfoBox icon="clock" label="Duration" value={tour.duration} />}
+                    {tour.difficulty && <TourInfoBox icon="activity" label="Difficulty" value={tour.difficulty} />}
+                    {typeof tour.groupSize === "number" && <TourInfoBox icon="users" label="Group Size" value={`${tour.groupSize} People`} />}
+                    {typeof tour.price === "number" && <TourInfoBox icon="tag" label="Price" value={`PKR ${tour.price} / ${tour.priceType}`} />}
+                    {tour.rating > 0 && <TourInfoBox icon="star" label="Rating" value={`${tour.rating.toFixed(1)} (${tour.reviews} reviews)`} />}
+                  </div>
+                </div>
+
+                {tour.highlights && tour.highlights.length > 0 && (
+                  <div className="mb-10">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6">Tour Highlights</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {tour.highlights.map((highlight, index) => (
+                        <div key={index} className="flex items-start gap-4 p-5 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                          <span className="flex-shrink-0 flex justify-center items-center w-12 h-12 bg-[#EF7C00]/10 text-[#EF7C00] rounded-xl">
+                            <Icon name="star-fill" size={20} />
+                          </span>
+                          <span className="font-semibold text-gray-800 pt-1 text-lg">{highlight}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                  {tour.includes && tour.includes.length > 0 && (
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-4">What&apos;s Included</h3>
+                      <ul className="flex flex-col gap-3">
+                        {tour.includes.map((incl, index) => (
+                          <li key={index} className="flex items-center text-gray-700 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                            <Icon name="check-circle" className="text-green-500 mr-3 flex-shrink-0" size={20} />
+                            {incl}
                           </li>
                         ))}
                       </ul>
-                    ) : (
-                      <div className="text-muted p-4">
-                        No reviews yet for this tour.
-                      </div>
-                    )}
+                    </div>
+                  )}
+                  {tour.excludes && tour.excludes.length > 0 && (
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-4">What&apos;s Excluded</h3>
+                      <ul className="flex flex-col gap-3">
+                        {tour.excludes.map((excl, index) => (
+                          <li key={index} className="flex items-center text-gray-700 bg-gray-50 px-4 py-3 rounded-xl border border-gray-100">
+                            <Icon name="x-circle" className="text-red-500 mr-3 flex-shrink-0" size={20} />
+                            {excl}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {tour.itinerary && tour.itinerary.length > 0 && (
+                  <div className="mb-10">
+                    <h3 className="text-2xl font-bold text-gray-900 mb-6">Tour Plan</h3>
+                    <Accordion
+                      items={tour.itinerary.map((item: ItineraryItem) => ({
+                        title: `Day ${item.day}: ${item.title}`,
+                        content: item.description ? (
+                          <div
+                            className="prose text-gray-600 max-w-none"
+                            dangerouslySetInnerHTML={{ __html: item.description }}
+                            suppressHydrationWarning
+                          />
+                        ) : (
+                          <p className="text-gray-500">No details provided for this day.</p>
+                        ),
+                      }))}
+                      defaultOpenIndex={0}
+                    />
                   </div>
-                  <div className="client-ratting-items">
-                    <h3>Add Your Reviews</h3>
-                    <form onSubmit={form.handleSubmit()} id="review-form">
-                      <div className="row g-4">
-                        <div className="col-12 mb-2">
-                          <div className="d-flex align-items-center gap-2">
-                            <span>Your Rating:</span>
-                            <div className="star" style={{ cursor: "pointer" }}>
-                              {[1, 2, 3, 4, 5].map((s) => (
-                                <i
-                                  key={s}
-                                  className={`bi bi-star${s <= form.values.rating ? "-fill" : ""} text-warning`}
-                                  onClick={() =>
-                                    form.setFieldValue("rating", s)
-                                  }
-                                ></i>
-                              ))}
+                )}
+
+                <div className="mt-12 pt-10 border-t border-gray-100">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-8">Reviews ({testimonials.length})</h3>
+                  {isLoadingTestimonials ? (
+                    <div className="text-center p-8 text-gray-500">Loading reviews...</div>
+                  ) : testimonials.length > 0 ? (
+                    <div className="flex flex-col gap-6">
+                      {testimonials.map((testimonial, index) => (
+                        <div key={testimonial._id || index} className="flex flex-col sm:flex-row gap-6 p-6 rounded-2xl bg-gray-50 border border-gray-100">
+                          <div className="flex-shrink-0 w-16 md:w-20">
+                            <AppImage
+                              variant={ImageVariant.AVATAR}
+                              src={testimonial.image || `${IMAGEKIT_URL_ENDPOINT}/assets/img/testimonial/default-avatar.png`}
+                              alt={testimonial.name}
+                            />
+                          </div>
+                          <div className="flex-grow">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                              <h5 className="font-bold text-lg text-gray-900 m-0">{testimonial.name}</h5>
+                              <div className="flex gap-1">
+                                {Array.from({ length: 5 }, (_, i) => (
+                                  <Icon key={i} name={`star${i < (testimonial.rating || 5) ? "-fill" : ""}`} className="text-yellow-400" size={16} />
+                                ))}
+                              </div>
                             </div>
+                            <div className="flex flex-wrap gap-3 mb-4">
+                              {testimonial.designation && <span className="px-3 py-1 bg-white border border-gray-200 text-xs font-bold rounded-full text-gray-600">{testimonial.designation}</span>}
+                              {testimonial.location && <span className="px-3 py-1 bg-white border border-gray-200 text-xs font-bold rounded-full text-gray-600 flex items-center gap-1"><Icon name="map-pin" size={12} />{testimonial.location}</span>}
+                              {testimonial.status === TestimonialStatus.ACTIVE && <span className="px-3 py-1 bg-green-50 border border-green-200 text-xs font-bold rounded-full text-green-700 flex items-center gap-1"><Icon name="shield-check" size={12} />Verified</span>}
+                            </div>
+                            <p className="text-gray-700 italic leading-relaxed">&quot;{testimonial.content}&quot;</p>
                           </div>
                         </div>
-                        <div className="col-lg-6 col-md-6">
-                          <div className="form-clt">
-                            <input
-                              type="text"
-                              name="name"
-                              value={form.values.name || ""}
-                              onChange={(e) =>
-                                form.setFieldValue("name", e.target.value)
-                              }
-                              placeholder="Your Name"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6 col-md-6">
-                          <div className="form-clt">
-                            <input
-                              type="email"
-                              name="email"
-                              value={form.values.email || ""}
-                              onChange={(e) =>
-                                form.setFieldValue("email", e.target.value)
-                              }
-                              placeholder="Your Email"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6 col-md-6">
-                          <div className="form-clt">
-                            <input
-                              type="text"
-                              name="designation"
-                              value={form.values.designation || ""}
-                              onChange={(e) =>
-                                form.setFieldValue(
-                                  "designation",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Traveler Type (e.g. Family Trip)"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6 col-md-6">
-                          <div className="form-clt">
-                            <input
-                              type="text"
-                              name="location"
-                              value={form.values.location || ""}
-                              onChange={(e) =>
-                                form.setFieldValue("location", e.target.value)
-                              }
-                              placeholder="Your Location (e.g. London)"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-6 col-md-12">
-                          <div className="form-clt">
-                            <input
-                              type="tel"
-                              name="phone"
-                              value={form.values.phone || ""}
-                              onChange={(e) =>
-                                form.setFieldValue("phone", e.target.value)
-                              }
-                              placeholder="Your Phone Number"
-                            />
-                          </div>
-                        </div>
-                        <div className="col-lg-12">
-                          <div className="form-clt">
-                            <textarea
-                              name="message"
-                              value={form.values.message || ""}
-                              onChange={(e) =>
-                                form.setFieldValue("message", e.target.value)
-                              }
-                              placeholder="Your comments..."
-                              required
-                            ></textarea>
-                          </div>
-                        </div>
-                        <div className="col-lg-6">
-                          <button
-                            type="submit"
-                            className="theme-btn text-center"
-                            disabled={createTestimonial.isPending}
-                          >
-                            {createTestimonial.isPending
-                              ? "Submitting..."
-                              : "Submit Reviews"}{" "}
-                            <i className="bi bi-arrow-right"></i>
-                          </button>
-                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center p-8 bg-gray-50 rounded-2xl border border-gray-100 text-gray-500">
+                      No reviews yet for this tour. Be the first to share your experience!
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-12 p-8 bg-gray-50 rounded-3xl border border-gray-100">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Write a Review</h3>
+                  <form onSubmit={form.handleSubmit()} className="flex flex-col gap-5">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="font-semibold text-gray-700">Your Rating:</span>
+                      <div className="flex gap-1 cursor-pointer">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Icon key={s} name={`star${s <= form.values.rating ? "-fill" : ""}`} className="text-yellow-400 hover:scale-110 transition-transform" size={24} onClick={() => form.setFieldValue("rating", s)} />
+                        ))}
                       </div>
-                    </form>
-                  </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <TextInput label="Your Name" name="name" placeholder="John Doe" value={form.values.name} onChange={(val) => form.setFieldValue("name", val)} required />
+                      <TextInput label="Your Email" name="email" type="email" placeholder="john@example.com" value={form.values.email} onChange={(val) => form.setFieldValue("email", val)} required />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <TextInput label="Traveler Type" name="designation" placeholder="Family Trip, Solo..." value={form.values.designation} onChange={(val) => form.setFieldValue("designation", val)} />
+                      <TextInput label="Location" name="location" placeholder="City, Country" value={form.values.location} onChange={(val) => form.setFieldValue("location", val)} />
+                    </div>
+                    <Textarea label="Your Review" name="message" placeholder="Tell us about your experience..." rows={4} value={form.values.message} onChange={(val) => form.setFieldValue("message", val)} required />
+                    <button type="submit" className="mt-2 w-full md:w-auto bg-[#EF7C00] hover:bg-[#D96E00] text-white font-bold px-8 py-4 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-70" disabled={createTestimonial.isPending}>
+                      {createTestimonial.isPending ? "Submitting..." : "Submit Review"} <Icon name="arrow-right" size={18} />
+                    </button>
+                  </form>
                 </div>
               </div>
-              <div className="col-12 col-lg-4">
-                <div className="main-bar">
-                  <div className="main-sidebar">
-                    <div className="single-sidebar-widget">
-                      <div className="wid-title">
-                        <h4>Make My Trip</h4>
+            </div>
+
+            <div className="lg:col-span-4 sticky top-24">
+              <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden mb-8 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+                <div className="bg-[#EF7C00] p-6 text-center">
+                  <h4 className="text-white font-bold text-2xl m-0 tracking-wide uppercase">Book This Tour</h4>
+                </div>
+                <div className="p-6 md:p-8">
+                  <form onSubmit={bookingForm.handleSubmit()} className="flex flex-col gap-4">
+                    <div className="relative">
+                      <Icon name="user" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      <input type="text" className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7C00] focus:border-transparent outline-none transition-all" value={bookingForm.values.name} onChange={(e) => bookingForm.setFieldValue("name", e.target.value)} placeholder="Full Name" required />
+                    </div>
+                    <div className="relative">
+                      <Icon name="mail" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      <input type="email" className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7C00] focus:border-transparent outline-none transition-all" value={bookingForm.values.email} onChange={(e) => bookingForm.setFieldValue("email", e.target.value)} placeholder="Email Address" required />
+                    </div>
+                    <div className="relative">
+                      <Icon name="phone" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      <input type="tel" className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7C00] focus:border-transparent outline-none transition-all" value={bookingForm.values.phone} onChange={(e) => bookingForm.setFieldValue("phone", e.target.value)} placeholder="Phone Number" required />
+                    </div>
+                    <div className="relative">
+                      <Icon name="calendar" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      <input type="date" className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7C00] focus:border-transparent outline-none transition-all text-gray-600" value={bookingForm.values.travelDate} onChange={(e) => bookingForm.setFieldValue("travelDate", e.target.value)} />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2 block ml-1">Persons</label>
+                        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl h-12">
+                          <button type="button" className="px-4 text-gray-500 hover:text-[#EF7C00]" onClick={() => bookingForm.setFieldValue("participants", Math.max(1, (Number(bookingForm.values.participants) || 0) - 1))}><Icon name="minus" size={16} /></button>
+                          <input type="number" className="w-full bg-transparent text-center font-bold outline-none border-0" value={bookingForm.values.participants} readOnly />
+                          <button type="button" className="px-4 text-gray-500 hover:text-[#EF7C00]" onClick={() => bookingForm.setFieldValue("participants", (Number(bookingForm.values.participants) || 0) + 1)}><Icon name="plus" size={16} /></button>
+                        </div>
                       </div>
-                      <div className="destination-booking-form">
-                        <form
-                          onSubmit={bookingForm.handleSubmit()}
-                          id="booking-form"
-                        >
-                          <div className="row g-3">
-                            <div className="col-lg-12">
-                              <div className="form-clt position-relative">
-                                <i className="bi bi-person position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
-                                <input
-                                  type="text"
-                                  name="name"
-                                  className="ps-5"
-                                  value={bookingForm.values.name || ""}
-                                  onChange={(e) =>
-                                    bookingForm.setFieldValue(
-                                      "name",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Your Name"
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-12">
-                              <div className="form-clt position-relative">
-                                <i className="bi bi-envelope position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
-                                <input
-                                  type="email"
-                                  name="email"
-                                  className="ps-5"
-                                  value={bookingForm.values.email || ""}
-                                  onChange={(e) =>
-                                    bookingForm.setFieldValue(
-                                      "email",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Enter Your Email"
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-12">
-                              <div className="form-clt position-relative">
-                                <i className="bi bi-telephone position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
-                                <input
-                                  type="tel"
-                                  name="phone"
-                                  className="ps-5"
-                                  value={bookingForm.values.phone || ""}
-                                  onChange={(e) =>
-                                    bookingForm.setFieldValue(
-                                      "phone",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Phone Number"
-                                  required
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-12">
-                              <div className="form-clt position-relative">
-                                <i className="bi bi-calendar position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
-                                <input
-                                  type="date"
-                                  name="travelDate"
-                                  className="ps-5"
-                                  value={bookingForm.values.travelDate || ""}
-                                  onChange={(e) =>
-                                    bookingForm.setFieldValue(
-                                      "travelDate",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Travel Dates"
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-12">
-                              <div className="form-clt position-relative">
-                                <i className="bi bi-geo-alt position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
-                                <input
-                                  type="text"
-                                  name="placesToVisit"
-                                  className="ps-5"
-                                  value={bookingForm.values.placesToVisit || ""}
-                                  onChange={(e) =>
-                                    bookingForm.setFieldValue(
-                                      "placesToVisit",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Places to Visit"
-                                />
-                              </div>
-                            </div>
-                            <div className="col-lg-12">
-                              <div className="form-clt position-relative">
-                                <i className="bi bi-building position-absolute start-0 top-50 translate-middle-y ms-3 text-muted"></i>
-                                <input
-                                  type="text"
-                                  name="departureCity"
-                                  className="ps-5"
-                                  value={bookingForm.values.departureCity || ""}
-                                  onChange={(e) =>
-                                    bookingForm.setFieldValue(
-                                      "departureCity",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Your Departure City"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Persons Control */}
-                            <div className="col-lg-12 mb-2">
-                              <label className="text-muted small mb-1">
-                                *Number of Persons
-                              </label>
-                              <div
-                                className="d-flex align-items-center bg-light rounded overflow-hidden"
-                                style={{ height: "50px" }}
-                              >
-                                <button
-                                  type="button"
-                                  className="btn p-0 border-0 px-3 h-100 border-end"
-                                  style={{ color: "var(--theme)" }}
-                                  onClick={() =>
-                                    bookingForm.setFieldValue(
-                                      "participants",
-                                      Math.max(
-                                        1,
-                                        (Number(
-                                          bookingForm.values.participants,
-                                        ) || 0) - 1,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  <i className="bi bi-dash"></i>
-                                </button>
-                                <input
-                                  type="number"
-                                  className="form-control border-0 bg-transparent text-center shadow-none"
-                                  value={bookingForm.values.participants || 0}
-                                  readOnly
-                                />
-                                <button
-                                  type="button"
-                                  className="btn p-0 border-0 px-3 h-100 border-start"
-                                  style={{ color: "var(--theme)" }}
-                                  onClick={() =>
-                                    bookingForm.setFieldValue(
-                                      "participants",
-                                      (Number(
-                                        bookingForm.values.participants,
-                                      ) || 0) + 1,
-                                    )
-                                  }
-                                >
-                                  <i className="bi bi-plus"></i>
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Days Control */}
-                            <div className="col-lg-12 mb-2">
-                              <label className="text-muted small mb-1">
-                                Number of Days
-                              </label>
-                              <div
-                                className="d-flex align-items-center bg-light rounded overflow-hidden"
-                                style={{ height: "50px" }}
-                              >
-                                <button
-                                  type="button"
-                                  className="btn p-0 border-0 px-3 h-100 border-end"
-                                  style={{ color: "var(--theme)" }}
-                                  onClick={() =>
-                                    bookingForm.setFieldValue(
-                                      "numberOfDays",
-                                      Math.max(
-                                        1,
-                                        (Number(
-                                          bookingForm.values.numberOfDays,
-                                        ) || 0) - 1,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  <i className="bi bi-dash"></i>
-                                </button>
-                                <input
-                                  type="number"
-                                  className="form-control border-0 bg-transparent text-center shadow-none"
-                                  value={bookingForm.values.numberOfDays || 0}
-                                  readOnly
-                                />
-                                <button
-                                  type="button"
-                                  className="btn p-0 border-0 px-3 h-100 border-start"
-                                  style={{ color: "var(--theme)" }}
-                                  onClick={() =>
-                                    bookingForm.setFieldValue(
-                                      "numberOfDays",
-                                      (Number(
-                                        bookingForm.values.numberOfDays,
-                                      ) || 0) + 1,
-                                    )
-                                  }
-                                >
-                                  <i className="bi bi-plus"></i>
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Rooms Control */}
-                            <div className="col-lg-12 mb-2">
-                              <label className="text-muted small mb-1">
-                                Number of Rooms
-                              </label>
-                              <div
-                                className="d-flex align-items-center bg-light rounded overflow-hidden"
-                                style={{ height: "50px" }}
-                              >
-                                <button
-                                  type="button"
-                                  className="btn p-0 border-0 px-3 h-100 border-end"
-                                  style={{ color: "var(--theme)" }}
-                                  onClick={() =>
-                                    bookingForm.setFieldValue(
-                                      "numberOfRooms",
-                                      Math.max(
-                                        1,
-                                        (Number(
-                                          bookingForm.values.numberOfRooms,
-                                        ) || 0) - 1,
-                                      ),
-                                    )
-                                  }
-                                >
-                                  <i className="bi bi-dash"></i>
-                                </button>
-                                <input
-                                  type="number"
-                                  className="form-control border-0 bg-transparent text-center shadow-none"
-                                  value={bookingForm.values.numberOfRooms || 0}
-                                  readOnly
-                                />
-                                <button
-                                  type="button"
-                                  className="btn p-0 border-0 px-3 h-100 border-start"
-                                  style={{ color: "var(--theme)" }}
-                                  onClick={() =>
-                                    bookingForm.setFieldValue(
-                                      "numberOfRooms",
-                                      (Number(
-                                        bookingForm.values.numberOfRooms,
-                                      ) || 0) + 1,
-                                    )
-                                  }
-                                >
-                                  <i className="bi bi-plus"></i>
-                                </button>
-                              </div>
-                            </div>
-
-                            <div className="col-lg-12">
-                              <div className="form-clt position-relative">
-                                <i className="bi bi-chat-left-text position-absolute start-0 top-0 mt-3 ms-3 text-muted"></i>
-                                <textarea
-                                  name="comment"
-                                  className="ps-5"
-                                  value={bookingForm.values.comment || ""}
-                                  onChange={(e) =>
-                                    bookingForm.setFieldValue(
-                                      "comment",
-                                      e.target.value,
-                                    )
-                                  }
-                                  placeholder="Special Requests (Optional)"
-                                  style={{ minHeight: "100px" }}
-                                ></textarea>
-                              </div>
-                            </div>
-
-                            <div className="col-lg-12 mt-3">
-                              <button
-                                type="submit"
-                                className="theme-btn text-center w-100 fw-bold border-0 text-white py-3 shadow-sm"
-                                style={{
-                                  borderRadius: "5px",
-                                  fontSize: "18px",
-                                }}
-                                disabled={createContact.isPending}
-                              >
-                                {createContact.isPending
-                                  ? "SENDING..."
-                                  : "SEND ENQUIRY"}
-                              </button>
-                            </div>
-
-                            <div className="col-lg-12 mt-3 ps-2">
-                              <p className="small text-muted mb-1">
-                                <i className="bi bi-check text-success"></i> We
-                                assure the privacy of your contact data.
-                              </p>
-                              <p className="small text-muted">
-                                <i className="bi bi-check text-success"></i>{" "}
-                                This data will only be used by our team to
-                                contact you and no other purposes.
-                              </p>
-                            </div>
-                          </div>
-                        </form>
+                      <div>
+                        <label className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2 block ml-1">Days</label>
+                        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl h-12">
+                          <button type="button" className="px-4 text-gray-500 hover:text-[#EF7C00]" onClick={() => bookingForm.setFieldValue("numberOfDays", Math.max(1, (Number(bookingForm.values.numberOfDays) || 0) - 1))}><Icon name="minus" size={16} /></button>
+                          <input type="number" className="w-full bg-transparent text-center font-bold outline-none border-0" value={bookingForm.values.numberOfDays} readOnly />
+                          <button type="button" className="px-4 text-gray-500 hover:text-[#EF7C00]" onClick={() => bookingForm.setFieldValue("numberOfDays", (Number(bookingForm.values.numberOfDays) || 0) + 1)}><Icon name="plus" size={16} /></button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div
-                    className="booking-cta-banner rounded-4 overflow-hidden position-relative p-4 p-md-5 text-center mt-5 shadow-lg"
-                    style={{
-                      minHeight: "320px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {/* Background with overlay */}
-                    <div
-                      className="position-absolute top-0 start-0 w-100 h-100"
-                      style={{
-                        backgroundImage:
-                          `url('${IMAGEKIT_URL_ENDPOINT}/assets/img/tours/scenic_footer.png')`,
-                        backgroundSize: "cover",
-                        backgroundPosition: "center",
-                        zIndex: 0,
-                      }}
-                    />
-                    <div
-                      className="position-absolute top-0 start-0 w-100 h-100"
-                      style={{
-                        background:
-                          "linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6))",
-                        zIndex: 1,
-                      }}
-                    />
 
-                    {/* Content */}
-                    <div className="position-relative" style={{ zIndex: 2 }}>
-                      <span
-                        className="badge mb-3 px-3 py-2 rounded-pill text-uppercase fw-bold"
-                        style={{
-                          backgroundColor: "var(--theme)",
-                          color: "white",
-                          fontSize: "0.75rem",
-                          letterSpacing: "1px",
-                        }}
-                      >
-                        Limited Time Offer
-                      </span>
-                      <h2
-                        className="text-white fw-bold mb-3"
-                        style={{
-                          fontSize: "clamp(1.75rem, 6vw, 2.75rem)",
-                          textShadow: "0 4px 15px rgba(0,0,0,0.6)",
-                        }}
-                      >
-                        Book Now And Enjoy <br />
-                        <span
-                          style={{
-                            color: "var(--theme)",
-                            textShadow: "0 0 25px rgba(253, 125, 2, 0.4)",
-                          }}
-                        >
-                          Amazing Savings!
-                        </span>
-                      </h2>
-                      <p
-                        className="text-white mb-4 mx-auto"
-                        style={{
-                          maxWidth: "550px",
-                          fontSize: "1.2rem",
-                          fontWeight: 500,
-                          lineHeight: "1.6",
-                          textShadow: "0 2px 10px rgba(0,0,0,0.5)",
-                        }}
-                      >
-                        Unforgettable experiences await. Secure your journey
-                        today and get exclusive early bird discounts.
-                      </p>
-                      <a
-                        href="#booking-form"
-                        className="theme-btn border-0 shadow-lg text-decoration-none d-inline-flex align-items-center justify-content-center"
-                        style={{
-                          padding: "18px 48px",
-                          borderRadius: "50px",
-                          fontSize: "1.15rem",
-                          fontWeight: 600,
-                          backgroundColor: "#fd7d02",
-                          color: "white",
-                          transition:
-                            "all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                          boxShadow: "0 15px 35px rgba(253, 125, 2, 0.3)",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform =
-                            "translateY(-8px) scale(1.02)";
-                          e.currentTarget.style.backgroundColor = "#e66e00";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform =
-                            "translateY(0) scale(1)";
-                          e.currentTarget.style.backgroundColor = "#fd7d02";
-                        }}
-                      >
-                        Reserve Your Spot{" "}
-                        <i className="bi bi-arrow-right ms-2"></i>
-                      </a>
+                    <div className="relative mt-2">
+                      <Icon name="message-square" className="absolute left-4 top-5 text-gray-400" size={20} />
+                      <textarea className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7C00] focus:border-transparent outline-none transition-all" value={bookingForm.values.comment} onChange={(e) => bookingForm.setFieldValue("comment", e.target.value)} placeholder="Special Requests" rows={3}></textarea>
                     </div>
-                  </div>
+
+                    <button type="submit" className="w-full bg-[#EF7C00] hover:bg-[#D96E00] text-white font-bold py-4 rounded-xl mt-4 transition-colors shadow-lg shadow-[#EF7C00]/30 flex items-center justify-center gap-2" disabled={createContact.isPending}>
+                      {createContact.isPending ? "Sending..." : "Send Booking Enquiry"} <Icon name="arrow-right" size={18} />
+                    </button>
+
+                    <p className="text-xs text-gray-400 text-center mt-2 flex items-center justify-center gap-1">
+                      <Icon name="shield-lock" size={14} /> Your information is secure
+                    </p>
+                  </form>
                 </div>
               </div>
             </div>
@@ -1122,75 +455,34 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
       </section>
 
       {/* Lightbox Modal */}
-      <Modal
-        show={showLightbox}
-        onHide={() => setShowLightbox(false)}
-        centered
-        size="xl"
-        className="tour-lightbox-modal"
-        contentClassName="bg-transparent border-0"
-      >
-        <Modal.Header closeButton closeVariant="white" className="border-0 p-4">
-          <Modal.Title className="text-white fs-4">{tour.title}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="p-0 text-center position-relative">
-          <button
-            className="lightbox-nav prev"
-            onClick={() =>
-              setPhotoIndex(
-                (photoIndex + (tour.images?.length || 0) - 1) %
-                  (tour.images?.length || 1),
-              )
-            }
-          >
-            <i className="bi bi-chevron-left"></i>
-          </button>
-
-          <div className="lightbox-image-container">
-            <Image
-              src={tour.images?.[photoIndex] || ""}
-              alt={tour.title}
-              width={1600}
-              height={1000}
-              className="img-fluid"
-              priority
-            />
+      {showLightbox && (
+        <div className="fixed inset-0 bg-black/95 z-[9999] flex flex-col backdrop-blur-sm">
+          <div className="p-6 flex justify-between items-center w-full z-10">
+            <h4 className="text-white font-bold m-0 text-xl md:text-2xl">{tour.title}</h4>
+            <button onClick={() => setShowLightbox(false)} className="text-white/70 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full">
+              <Icon name="x" size={32} />
+            </button>
           </div>
+          <div className="relative grow flex items-center justify-center w-full h-full p-4 md:p-12">
+            <button onClick={() => setPhotoIndex((photoIndex + (tour.images?.length || 0) - 1) % (tour.images?.length || 1))} className="absolute left-4 md:left-8 z-10 bg-white/10 hover:bg-white/30 text-white w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center backdrop-blur-md transition-all">
+              <Icon name="chevron-left" size={32} />
+            </button>
 
-          <button
-            className="lightbox-nav next"
-            onClick={() =>
-              setPhotoIndex((photoIndex + 1) % (tour.images?.length || 1))
-            }
-          >
-            <i className="bi bi-chevron-right"></i>
-          </button>
-
-          <div className="lightbox-counter">
-            {photoIndex + 1} / {tour.images?.length}
-          </div>
-
-          {tour.images && tour.images.length > 0 && (
-            <div className="lightbox-thumbs-container">
-              {tour.images.map((img, idx) => (
-                <div
-                  key={idx}
-                  className={`lightbox-thumb-item ${photoIndex === idx ? "active" : ""}`}
-                  onClick={() => setPhotoIndex(idx)}
-                >
-                  <Image
-                    src={img}
-                    alt={`${tour.title} thumb ${idx + 1}`}
-                    fill
-                    sizes="80px"
-                    style={{ objectFit: "cover" }}
-                  />
-                </div>
-              ))}
+            <div className="relative w-full max-w-6xl h-full flex items-center justify-center">
+              {tour.images?.[photoIndex] && (
+                <AppImage variant={ImageVariant.HERO} src={tour.images[photoIndex]} alt={tour.title} imageClassName="object-contain" />
+              )}
             </div>
-          )}
-        </Modal.Body>
-      </Modal>
+
+            <button onClick={() => setPhotoIndex((photoIndex + 1) % (tour.images?.length || 1))} className="absolute right-4 md:right-8 z-10 bg-white/10 hover:bg-white/30 text-white w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center backdrop-blur-md transition-all">
+              <Icon name="chevron-right" size={32} />
+            </button>
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full font-bold tracking-widest text-sm">
+              {photoIndex + 1} / {tour.images?.length}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

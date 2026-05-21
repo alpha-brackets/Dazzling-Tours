@@ -1,5 +1,10 @@
 "use client";
 import React, { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { AlertCircle, List, Plus, X } from "lucide-react";
 
 export interface ListManagerProps {
   label?: string;
@@ -78,19 +83,19 @@ const ListManager: React.FC<ListManagerProps> = ({
   const canAdd = newItem.trim() && (!maxItems || items.length < maxItems);
 
   return (
-    <div className={`form-group ${className}`}>
+    <div className={cn("flex flex-col gap-1.5 w-full", className)}>
       {label && (
-        <label className="form-label">
+        <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
           {label}
-          {required && <span className="form-required">*</span>}
-        </label>
+          {required && <span className="text-red-500">*</span>}
+        </Label>
       )}
 
-      {description && <p className="form-description">{description}</p>}
+      {description && <p className="text-xs text-gray-500">{description}</p>}
 
-      <div className="list-manager">
-        <div className="add-item">
-          <input
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
+          <Input
             type="text"
             value={newItem}
             onChange={(e) => {
@@ -101,23 +106,23 @@ const ListManager: React.FC<ListManagerProps> = ({
             placeholder={placeholder}
             disabled={maxItems ? items.length >= maxItems : false}
             maxLength={maxLength}
-            className="form-flex-1"
+            className="flex-1"
           />
-          <button
+          <Button
             type="button"
             onClick={handleAdd}
             disabled={!canAdd}
-            className={`btn-add ${addButtonClassName}`}
+            className={cn("shrink-0", addButtonClassName)}
           >
-            <i className="bi bi-plus"></i> {addButtonText}
-          </button>
+            <Plus className="h-4 w-4 mr-1" /> {addButtonText}
+          </Button>
         </div>
 
-        <div className="form-flex form-items-center form-justify-between form-mt-1">
-          <div className="form-flex form-gap-3">
+        <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="flex gap-3">
             {maxWords && (
               <div
-                className={`form-text-xs ${getWordCount(newItem) > maxWords ? "form-text-red-500" : "form-text-gray-500"}`}
+                className={cn(getWordCount(newItem) > maxWords && "text-red-500")}
               >
                 {getWordCount(newItem)}/{maxWords} words
               </div>
@@ -125,55 +130,63 @@ const ListManager: React.FC<ListManagerProps> = ({
 
             {(showCharCount || maxLength) && (
               <div
-                className={`form-text-xs ${maxLength && newItem.length >= maxLength ? "form-text-red-500" : "form-text-gray-500"}`}
+                className={cn(maxLength && newItem.length >= maxLength && "text-red-500")}
               >
                 {newItem.length}
                 {maxLength ? `/${maxLength}` : ""} characters
               </div>
             )}
           </div>
-        </div>
-
-        {localError && (
-          <p className="form-error form-mt-1">
-            <i className="bi bi-exclamation-circle form-error-icon"></i>
-            {localError}
-          </p>
-        )}
-
-        <div className="item-list">
-          {items.map((item, index) => (
-            <div key={index} className={`item ${itemClassName}`}>
-              <span>{item}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(index)}
-                className={`btn-remove ${removeButtonClassName}`}
-                title="Remove item"
-              >
-                <i className="bi bi-x"></i>
-              </button>
-            </div>
-          ))}
-
-          {items.length === 0 && (
-            <div className="empty-state">
-              {emptyStateIcon || <i className="bi bi-list"></i>}
-              <p>{emptyStateText}</p>
+          
+          {maxItems && (
+            <div className="ml-auto">
+              {items.length}/{maxItems} items
             </div>
           )}
         </div>
 
-        {maxItems && (
-          <div className="form-text-xs form-text-gray-500 form-mt-1">
-            {items.length}/{maxItems} items
-          </div>
+        {localError && (
+          <p className="text-sm text-red-500 flex items-center gap-1 mt-0.5">
+            <AlertCircle className="h-3.5 w-3.5" />
+            {localError}
+          </p>
         )}
+
+        <div className="flex flex-col gap-2 mt-1">
+          {items.map((item, index) => (
+            <div 
+              key={index} 
+              className={cn(
+                "flex items-center justify-between p-2.5 bg-gray-50 rounded-lg border border-gray-100 text-sm hover:bg-gray-100 transition-colors",
+                itemClassName
+              )}
+            >
+              <span className="truncate mr-4 text-gray-700">{item}</span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => onRemove(index)}
+                className={cn("h-7 w-7 text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0", removeButtonClassName)}
+                title="Remove item"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+
+          {items.length === 0 && (
+            <div className="text-center p-6 border-2 border-dashed border-gray-200 rounded-lg text-gray-500 flex flex-col items-center gap-2">
+              {emptyStateIcon || <List className="h-8 w-8 text-gray-300" />}
+              <p className="text-sm">{emptyStateText}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {propError && (
-        <p className="form-error">
-          <i className="bi bi-exclamation-circle form-error-icon"></i>
+        <p className="text-sm text-red-500 flex items-center gap-1 mt-0.5">
+          <AlertCircle className="h-3.5 w-3.5" />
           {propError}
         </p>
       )}

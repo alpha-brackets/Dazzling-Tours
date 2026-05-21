@@ -212,6 +212,7 @@ const CategoriesList = () => {
         {/* Table */}
         {categories.length > 0 ? (
           <>
+          <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto bg-white">
             <Table verticalSpacing="sm" horizontalSpacing="md">
               <thead>
                 <tr>
@@ -237,56 +238,28 @@ const CategoriesList = () => {
               </thead>
               <tbody>
                 {categories.map((category) => (
-                  <tr
-                    key={category._id}
-                    style={{
-                      borderBottom: "1px solid #e5e7eb",
-                      transition: "background 0.2s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#f9fafb";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                    }}
-                  >
+                  <tr key={category._id}>
                     <td style={{ padding: "0.75rem" }}>
                       <Checkbox
                         checked={selectedCategories.includes(category._id)}
                         onChange={() => toggleSelect(category._id)}
                         disabled={category.name === UNCATEGORIZED_CATEGORY_NAME}
                         style={{
-                          cursor:
-                            category.name === UNCATEGORIZED_CATEGORY_NAME
-                              ? "not-allowed"
-                              : "pointer",
-                          opacity:
-                            category.name === UNCATEGORIZED_CATEGORY_NAME
-                              ? 0.5
-                              : 1,
+                          cursor: category.name === UNCATEGORIZED_CATEGORY_NAME ? "not-allowed" : "pointer",
+                          opacity: category.name === UNCATEGORIZED_CATEGORY_NAME ? 0.5 : 1,
                         }}
                       />
                     </td>
                     <td style={{ padding: "0.75rem", fontWeight: 500 }}>
                       {category.name}
                       {category.name === UNCATEGORIZED_CATEGORY_NAME && (
-                        <Text
-                          color="dimmed"
-                          size="xs"
-                          italic
-                          component="span"
-                          style={{ marginLeft: "0.5rem" }}
-                        >
+                        <Text color="dimmed" size="xs" italic component="span" style={{ marginLeft: "0.5rem" }}>
                           (System)
                         </Text>
                       )}
                     </td>
-                    <td style={{ padding: "0.75rem", color: "#6c757d" }}>
-                      {category.slug}
-                    </td>
-                    <td style={{ padding: "0.75rem", color: "#6c757d" }}>
-                      {category.description || "-"}
-                    </td>
+                    <td style={{ padding: "0.75rem", color: "#6c757d" }}>{category.slug}</td>
+                    <td style={{ padding: "0.75rem", color: "#6c757d" }}>{category.description || "-"}</td>
                     <td style={{ padding: "0.75rem", textAlign: "right" }}>
                       <Group style={{ justifyContent: "flex-end" }}>
                         {category.name !== UNCATEGORIZED_CATEGORY_NAME && (
@@ -297,12 +270,7 @@ const CategoriesList = () => {
                           </Link>
                         )}
                         {category.name !== UNCATEGORIZED_CATEGORY_NAME && (
-                          <Button
-                            variant="filled"
-                            color="error"
-                            size="sm"
-                            onClick={() => deleteCategory(category._id)}
-                          >
+                          <Button variant="filled" color="error" size="sm" onClick={() => deleteCategory(category._id)}>
                             <Icon name="trash" /> Delete
                           </Button>
                         )}
@@ -312,39 +280,26 @@ const CategoriesList = () => {
                 ))}
               </tbody>
             </Table>
+          </div>
 
-            {/* Pagination */}
-            {pagination && pagination.pages > 1 && (
-              <PaginationComponent
-                currentPage={currentPage}
-                pagination={pagination}
-                onPageChange={setCurrentPage}
-              />
-            )}
+          {/* Pagination */}
+          {pagination && pagination.pages > 1 && (
+            <PaginationComponent
+              currentPage={currentPage}
+              pagination={pagination}
+              onPageChange={setCurrentPage}
+            />
+          )}
           </>
         ) : (
-          <div
-            style={{
-              textAlign: "center",
-              padding: "3rem",
-              background: "#fff",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb",
-            }}
-          >
-            <Icon
-              name="folder-x"
-              size={48}
-              color="#9ca3af"
-              style={{ marginBottom: "1rem" }}
-            />
+          <div className="no-data">
+            <Icon name="folder-x" size={48} color="#9ca3af" style={{ marginBottom: "1rem" }} />
             <Text color="dimmed" style={{ margin: 0 }}>
-              {searchTerm
-                ? "No categories found matching your search"
-                : "No categories yet. Create your first category to get started."}
+              {searchTerm ? "No categories found matching your search" : "No categories yet. Create your first category to get started."}
             </Text>
           </div>
         )}
+
       </Stack>
 
       <ConfirmModal

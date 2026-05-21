@@ -2,11 +2,7 @@
  * Focused on ImageKit integration and avoiding base64 data URLs.
  */
 
-export const IMAGEKIT_URL_ENDPOINT =
-  process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT?.endsWith("/")
-    ? process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT.slice(0, -1)
-    : process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT ||
-      "https://ik.imagekit.io/ojifgauic";
+export const IMAGEKIT_URL_ENDPOINT = (process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT || "").replace(/\/$/, "");
 
 /**
  * Check if a string is a data URL (base64 encoded image)

@@ -3,6 +3,10 @@ import React, { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useNotification, useUploadImages, useDeleteImage } from "@/lib/hooks";
 import { Group, ActionIcon } from "../Common";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { AlertCircle, Loader2, UploadCloud, X } from "lucide-react";
+import { ImageVariant, IMAGE_DIMENSIONS } from "@/lib/constants/imageDimensions";
 
 export interface ImageUploadProps {
   label?: string;
@@ -17,6 +21,7 @@ export interface ImageUploadProps {
   onChange?: (urls: string[]) => void;
   className?: string;
   disabled?: boolean;
+  variant?: ImageVariant;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = React.memo(
@@ -33,6 +38,7 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
     onChange,
     className = "",
     disabled = false,
+    variant,
   }) => {
     const { showError, showSuccess } = useNotification();
     const [isDragOver, setIsDragOver] = useState(false);
@@ -78,6 +84,28 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
             );
             continue;
           }
+
+          if (variant) {
+            const expected = IMAGE_DIMENSIONS[variant];
+            const isValidDimensions = await new Promise<boolean>((resolve) => {
+              const img = new window.Image();
+              img.src = URL.createObjectURL(file);
+              img.onload = () => {
+                URL.revokeObjectURL(img.src);
+                resolve(img.width === expected.width && img.height === expected.height);
+              };
+              img.onerror = () => {
+                URL.revokeObjectURL(img.src);
+                resolve(false);
+              };
+            });
+
+            if (!isValidDimensions) {
+              showError(`${file.name} does not match required dimensions of ${expected.width}x${expected.height}px.`);
+              continue;
+            }
+          }
+
           validFiles.push(file);
         }
 
@@ -110,7 +138,7 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
           // Call onChange using ref to avoid dependency issues
           onChangeRef.current?.(updatedUrls);
           showSuccess("Images uploaded successfully");
-          
+
           if (fileInputRef.current) {
             fileInputRef.current.value = "";
           }
@@ -123,7 +151,7 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
           );
         }
       },
-      [value, multiple, maxFiles, maxSize, acceptedTypes, disabled, showError, showSuccess, uploadMutation],
+      [value, multiple, maxFiles, maxSize, acceptedTypes, disabled, showError, showSuccess, uploadMutation, variant],
     );
 
     const handleDrop = useCallback(
@@ -149,12 +177,8 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
       (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
-          // Process files immediately
           handleFileSelect(files);
         }
-
-        // Don't clear the input value immediately - let it stay for re-selection
-        // The input will be cleared when new files are selected
       },
       [handleFileSelect],
     );
@@ -162,12 +186,12 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
     const removeImage = useCallback(
       async (index: number) => {
         if (disabled || deleteMutation.isPending) return;
-        
+
         const imageUrl = value[index];
-        
+
         // Optimistically update UI
         const newUrls = value.filter((_, i) => i !== index);
-        
+
         if (onChangeRef.current) {
           onChangeRef.current(newUrls);
         } else if (onChange) {
@@ -179,7 +203,6 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
           await deleteMutation.mutateAsync({ url: imageUrl });
         } catch (err) {
           console.error("Error calling delete API:", err);
-          // Optional: handle error notification
         }
       },
       [value, disabled, onChange, deleteMutation],
@@ -195,21 +218,24 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
     const isUploading = uploadMutation.isPending;
 
     return (
-      <div className={`form-group ${className}`}>
+      <div className={cn("flex flex-col gap-1.5 w-full", className)}>
         {label && (
-          <label className="form-label">
+          <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
             {label}
-            {required && <span className="form-required">*</span>}
-          </label>
+            {required && <span className="text-red-500">*</span>}
+          </Label>
         )}
 
-        {description && <p className="form-description">{description}</p>}
+        {description && <p className="text-xs text-gray-500">{description}</p>}
 
         {/* Upload Area */}
         <div
-          className={`image-upload-area ${isDragOver ? "drag-over" : ""} ${
-            disabled || isUploading ? "disabled" : ""
-          } ${canAddMore && !isUploading ? "clickable" : ""}`}
+          className={cn(
+            "border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer min-h-[150px]",
+            isDragOver && "border-[var(--theme)] bg-[var(--theme)]/5",
+            (disabled || isUploading) && "opacity-50 cursor-not-allowed bg-gray-50",
+            canAddMore && !isUploading && "hover:border-[var(--theme)] hover:bg-gray-50"
+          )}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
@@ -226,52 +252,68 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
             disabled={disabled || isUploading}
           />
 
-          <div className="upload-content">
-            <i className={`bi ${isUploading ? "bi-arrow-repeat spin" : "bi-cloud-upload"} upload-icon`}></i>
-            <p className="upload-text">
+          <div className="flex flex-col items-center text-center gap-1">
+            {isUploading ? (
+              <Loader2 className="h-8 w-8 text-[var(--theme)] animate-spin" />
+            ) : (
+              <UploadCloud className="h-8 w-8 text-gray-400" />
+            )}
+            <p className="text-sm font-medium text-gray-700">
               {isUploading
                 ? "Uploading..."
                 : value.length > 0
-                  ? `${value.length} image${
-                      value.length === 1 ? "" : "s"
-                    } selected • Click here to add more`
+                  ? `${value.length} image${value.length === 1 ? "" : "s"
+                  } selected • Click here to add more`
                   : canAddMore
                     ? "Drag images here or click to select"
                     : `Maximum ${maxFiles} images reached`}
             </p>
-            <p className="upload-hint">
+            <p className="text-xs text-gray-500">
               {acceptedTypes.join(", ")} • Max {maxSize}MB each
             </p>
+            {variant && (
+              <p className="text-xs font-bold text-[#EF7C00] mt-1">
+                Required Dimensions: {IMAGE_DIMENSIONS[variant].label}
+              </p>
+            )}
           </div>
         </div>
 
         {/* Image Preview Grid */}
         {value.length > 0 && (
-          <Group>
+          <Group className="mt-2 flex-wrap">
             {value.map((url, index) => (
               <div
                 key={index}
-                className="image-preview-item"
-                style={{ position: "relative" }}
+                className="relative group w-24 h-24 rounded-lg overflow-hidden border border-gray-200"
               >
                 <Image
                   src={url}
                   alt={`Preview ${index + 1}`}
-                  width={120}
-                  height={120}
-                  className="preview-image"
+                  fill
+                  className="object-cover"
                 />
                 {!disabled && (
-                  <ActionIcon
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImage(index);
-                    }}
-                    title="Remove image"
-                    disabled={deleteMutation.isPending}
-                  >
-                    <i className={`bi ${deleteMutation.isPending ? "bi-arrow-repeat spin" : "bi-x"}`}></i>
-                  </ActionIcon>
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <ActionIcon
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeImage(index);
+                      }}
+                      title="Remove image"
+                      disabled={deleteMutation.isPending}
+                      variant="subtle"
+                      color="error"
+                      size="sm"
+                      className="text-white hover:text-red-500 bg-white/20 hover:bg-white"
+                    >
+                      {deleteMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                    </ActionIcon>
+                  </div>
                 )}
               </div>
             ))}
@@ -279,8 +321,8 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
         )}
 
         {error && (
-          <p className="form-error">
-            <i className="bi bi-exclamation-circle form-error-icon"></i>
+          <p className="text-sm text-red-500 flex items-center gap-1 mt-0.5">
+            <AlertCircle className="h-3.5 w-3.5" />
             {error}
           </p>
         )}

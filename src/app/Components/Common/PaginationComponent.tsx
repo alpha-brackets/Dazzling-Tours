@@ -1,11 +1,19 @@
 "use client";
 import React from "react";
-import { Pagination } from "@/lib/types/common";
-import Button from "./Button";
 import "./PaginationComponent.css";
+import { Pagination as PaginationType } from "@/lib/types/common";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface PaginationComponentProps {
-  pagination: Pagination;
+  pagination: PaginationType;
   currentPage: number;
   onPageChange: (page: number) => void;
   pageSize?: number;
@@ -51,27 +59,22 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
   const visiblePages = getVisiblePages();
 
   return (
-    <div className={`pagination ${className}`}>
-      <div className="pagination-info">
+    <div className={`flex flex-col sm:flex-row justify-between items-center gap-4 py-4 ${className}`}>
+      <div className="text-sm text-gray-500">
         Showing {(currentPage - 1) * pageSize + 1} to{" "}
         {Math.min(currentPage * pageSize, pagination.total)} of{" "}
         {pagination.total} items
       </div>
 
-      <div className="pagination-controls">
-        <Button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage <= 1 || pagination.pages <= 1}
-          variant="outline"
-          color="secondary"
-          size="sm"
-          leftIcon={<i className="bi bi-chevron-left"></i>}
-          aria-label="Previous page"
-        >
-          Previous
-        </Button>
+      <Pagination className="w-auto mx-0">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              onClick={() => onPageChange(currentPage - 1)}
+              className={`cursor-pointer ${currentPage <= 1 ? "pointer-events-none opacity-50" : ""}`}
+            />
+          </PaginationItem>
 
-        <div className="page-numbers">
           {visiblePages.map((page, index) => {
             const showEllipsis =
               index > 0 && page - visiblePages[index - 1] > 1;
@@ -79,37 +82,31 @@ const PaginationComponent: React.FC<PaginationComponentProps> = ({
             return (
               <React.Fragment key={page}>
                 {showEllipsis && (
-                  <span className="ellipsis" aria-label="More pages">
-                    ...
-                  </span>
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
                 )}
-                <Button
-                  onClick={() => onPageChange(page)}
-                  variant={page === currentPage ? "filled" : "outline"}
-                  color={page === currentPage ? "primary" : "secondary"}
-                  size="sm"
-                  aria-label={`Go to page ${page}`}
-                  aria-current={page === currentPage ? "page" : undefined}
-                >
-                  {page}
-                </Button>
+                <PaginationItem>
+                  <PaginationLink
+                    onClick={() => onPageChange(page)}
+                    isActive={page === currentPage}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                </PaginationItem>
               </React.Fragment>
             );
           })}
-        </div>
 
-        <Button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage >= pagination.pages || pagination.pages <= 1}
-          variant="outline"
-          color="secondary"
-          size="sm"
-          rightIcon={<i className="bi bi-chevron-right"></i>}
-          aria-label="Next page"
-        >
-          Next
-        </Button>
-      </div>
+          <PaginationItem>
+            <PaginationNext
+              onClick={() => onPageChange(currentPage + 1)}
+              className={`cursor-pointer ${currentPage >= pagination.pages ? "pointer-events-none opacity-50" : ""}`}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 };

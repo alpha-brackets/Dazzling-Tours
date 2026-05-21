@@ -17,7 +17,9 @@ import {
   ImageUpload,
   SEOFields,
 } from "@/app/Components/Form";
-import { Button, Page, Title, Text, Icon } from "@/app/Components/Common";
+import { ImageVariant } from "@/lib/constants/imageDimensions";
+import { Page, Title, Text } from "@/app/Components/Common";
+import { Button } from "@/components/ui/button";
 import { updateTourSchema } from "@/lib/validation/tour";
 import {
   filterValidImageUrls,
@@ -26,6 +28,7 @@ import {
 import { BasicInfoSection } from "./components/BasicInfoSection";
 import { DescriptionsSection } from "./components/DescriptionsSection";
 import { ListsSection } from "./components/ListsSection";
+import { ArrowLeft, ImageIcon, CalendarCheck, Settings, Search, Check } from "lucide-react";
 
 const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
@@ -221,11 +224,11 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
       loading={isLoading}
       headerActions={
         <Button
-          color="secondary"
-          leftIcon={<Icon name="arrow-left" />}
+          variant="outline"
+          className="flex items-center gap-2"
           onClick={() => router.back()}
         >
-          Back
+          <ArrowLeft className="h-4 w-4" /> Back
         </Button>
       }
     >
@@ -237,24 +240,16 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
             setCategorySearchTerm={setCategorySearchTerm}
           />
 
-          <div className="form-section">
-            <div className="section-header">
+          <div className="form-section bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+            <div className="section-header mb-4">
               <Title
                 order={3}
-                weight={600}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                }}
+                className="flex items-center gap-3 font-semibold text-gray-900"
               >
-                <Icon
-                  name="images"
-                  style={{ color: "#fd7d02", fontSize: "1.2rem" }}
-                />{" "}
+                <ImageIcon className="h-5 w-5 text-[#fd7d02]" />
                 Tour Images
               </Title>
-              <Text size="md" color="dimmed" style={{ marginTop: "0.5rem" }}>
+              <Text className="text-sm text-gray-500 mt-1">
                 Upload high-quality images showcasing your tour destinations and
                 activities
               </Text>
@@ -266,6 +261,7 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
               maxFiles={5}
               maxSize={5}
               acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
+              variant={ImageVariant.HERO}
             />
           </div>
 
@@ -273,24 +269,16 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
 
           <ListsSection form={form} />
 
-          <div className="form-section">
-            <div className="section-header">
+          <div className="form-section bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+            <div className="section-header mb-4">
               <Title
                 order={3}
-                weight={600}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                }}
+                className="flex items-center gap-3 font-semibold text-gray-900"
               >
-                <Icon
-                  name="calendar-check"
-                  style={{ color: "#fd7d02", fontSize: "1.2rem" }}
-                />{" "}
+                <CalendarCheck className="h-5 w-5 text-[#fd7d02]" />
                 Itinerary
               </Title>
-              <Text size="md" color="dimmed" style={{ marginTop: "0.5rem" }}>
+              <Text className="text-sm text-gray-500 mt-1">
                 Create a detailed day-by-day schedule for your tour
               </Text>
             </div>
@@ -313,24 +301,16 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
             />
           </div>
 
-          <div className="form-section">
-            <div className="section-header">
+          <div className="form-section bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+            <div className="section-header mb-4">
               <Title
                 order={3}
-                weight={600}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                }}
+                className="flex items-center gap-3 font-semibold text-gray-900"
               >
-                <Icon
-                  name="gear"
-                  style={{ color: "#fd7d02", fontSize: "1.2rem" }}
-                />{" "}
+                <Settings className="h-5 w-5 text-[#fd7d02]" />
                 Additional Options
               </Title>
-              <Text size="md" color="dimmed" style={{ marginTop: "0.5rem" }}>
+              <Text className="text-sm text-gray-500 mt-1">
                 Configure additional tour settings
               </Text>
             </div>
@@ -344,24 +324,16 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
             </div>
           </div>
 
-          <div className="form-section">
-            <div className="section-header">
+          <div className="form-section bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+            <div className="section-header mb-4">
               <Title
                 order={3}
-                weight={600}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                }}
+                className="flex items-center gap-3 font-semibold text-gray-900"
               >
-                <Icon
-                  name="search"
-                  style={{ color: "#fd7d02", fontSize: "1.2rem" }}
-                />{" "}
+                <Search className="h-5 w-5 text-[#fd7d02]" />
                 SEO Settings
               </Title>
-              <Text size="md" color="dimmed" style={{ marginTop: "0.5rem" }}>
+              <Text className="text-sm text-gray-500 mt-1">
                 Optimize your tour for search engines and social media sharing
               </Text>
             </div>
@@ -396,25 +368,25 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
             />
           </div>
 
-          <div className="form-actions">
-            <div className="actions-container">
+          <div className="form-actions mt-8">
+            <div className="actions-container flex gap-3 justify-end">
               <Button
-                color="secondary"
-                leftIcon={<Icon name="arrow-left" />}
+                variant="outline"
+                className="flex items-center gap-2"
                 onClick={() => router.back()}
               >
-                Cancel
+                <ArrowLeft className="h-4 w-4" /> Cancel
               </Button>
               <Button
                 type="submit"
-                loading={updateTourMutation.isPending}
-                leftIcon={
-                  !updateTourMutation.isPending ? (
-                    <Icon name="check-lg" />
-                  ) : undefined
-                }
+                className="flex items-center gap-2"
                 disabled={updateTourMutation.isPending}
               >
+                {!updateTourMutation.isPending ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                )}
                 {updateTourMutation.isPending ? "Saving..." : "Update Tour"}
               </Button>
             </div>

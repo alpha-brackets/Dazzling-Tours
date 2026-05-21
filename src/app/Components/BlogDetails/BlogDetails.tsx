@@ -1,9 +1,9 @@
 "use client";
-import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
+import { getOptimizedImage, IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
+import { AppImage } from "@/app/Components/Common";
+import { ImageVariant } from "@/lib/constants/imageDimensions";
 import React, { useEffect, useState } from "react";
-import loadBackgroundImages from "../Common/loadBackgroundImages";
 import Link from "next/link";
-import Image from "next/image";
 import {
   useGetCommentsByBlog,
   useCreateComment,
@@ -11,11 +11,11 @@ import {
   useGetBlogs,
   useNotification,
 } from "@/lib/hooks";
-import { Loading, Icon } from "@/app/Components/Common";
+import { Icon } from "@/app/Components/Common";
+import { TextInput, Textarea } from "@/app/Components/Form";
 import { BlogStatus } from "@/lib/enums/blog";
 import { Comment } from "@/lib/types/comment";
-import { getOptimizedImage } from "@/lib/utils/imageUtils";
-import { Image as IKImage } from "@imagekit/next";
+
 
 const BlogDetails = ({ slug }: { slug: string }) => {
   const [commentForm, setCommentForm] = useState({
@@ -55,10 +55,6 @@ const BlogDetails = ({ slug }: { slug: string }) => {
   }, []);
 
   const encodedTitle = encodeURIComponent(blog?.title || "Dazzling Tours");
-
-  useEffect(() => {
-    loadBackgroundImages();
-  }, [blog]); // Reload background when blog changes
 
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,16 +106,6 @@ const BlogDetails = ({ slug }: { slug: string }) => {
     setReplyToName("");
   };
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setCommentForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return {
@@ -135,36 +121,33 @@ const BlogDetails = ({ slug }: { slug: string }) => {
 
   if (isLoading) {
     return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "800px" }}
-      >
-        <Loading
-          variant="spinner"
-          size="lg"
-          color="primary"
-          text="Loading article details..."
-        />
+      <div className="flex justify-center items-center min-h-[800px] bg-gray-50">
+        <div className="text-center animate-pulse flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-[#EF7C00]/20 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-[#EF7C00] animate-ping"></div>
+          </div>
+          <p className="text-gray-500 font-medium">Loading article details...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !blog) {
     return (
-      <section className="news-details fix section-padding">
-        <div className="container">
-          <div className="text-center" style={{ padding: "5rem 2rem" }}>
-            <i
-              className="bi bi-exclamation-octagon"
-              style={{ fontSize: "4rem", color: "#ccc" }}
-            ></i>
-            <h2 className="mt-3">Article Not Found</h2>
-            <p className="text-muted">
-              The article you are looking for might have been moved or
-              doesn&apos;t exist.
+      <section className="py-24 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center max-w-2xl mx-auto py-16 px-4 bg-white rounded-3xl shadow-sm border border-gray-100">
+            <Icon
+              name="exclamation-octagon"
+              className="mx-auto text-gray-300 mb-6"
+              size={64}
+            />
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Article Not Found</h2>
+            <p className="text-gray-500 mb-8 text-lg">
+              The article you are looking for might have been moved or doesn&apos;t exist.
             </p>
-            <Link href="/blogs" className="theme-btn mt-4">
-              Browse All Articles
+            <Link href="/blogs" className="inline-flex items-center gap-2 bg-[#EF7C00] hover:bg-[#D96E00] text-white font-bold py-4 px-8 rounded-xl transition-all">
+              Browse All Articles <Icon name="arrow-right" size={20} />
             </Link>
           </div>
         </div>
@@ -175,430 +158,281 @@ const BlogDetails = ({ slug }: { slug: string }) => {
   const { day, month } = formatDate(blog.publishedAt || blog.createdAt);
 
   return (
-    <section className="news-details fix section-padding">
-      <div className="container">
-        <div className="news-details-area">
-          <div className="row g-5">
-            <div className="col-12 col-lg-8">
-              <div className="blog-post-details">
-                <div className="single-blog-post">
-                  <div
-                    className="post-featured-thumb bg-cover"
-                    style={{
-                      backgroundImage: `url(${getOptimizedImage(blog.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`, 1200)})`,
-                    }}
-                  >
-                    <div className="post">
-                      <h3>
-                        {day}
-                        <span>{month}</span>
-                      </h3>
-                    </div>
-                  </div>
+    <section className="py-16 lg:py-24 bg-gray-50 min-h-screen">
+      <div className="container max-w-6xl mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+          <div className="lg:col-span-8 flex flex-col gap-10">
 
-                  <div className="post-content">
-                    <h3>{blog.title}</h3>
+            {/* Main Article */}
+            <article className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="relative w-full">
+                <AppImage
+                  variant={ImageVariant.HERO}
+                  src={getOptimizedImage(blog.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`, 1200)}
+                  alt={blog.title}
+                  priority
+                />
+                <div className="absolute top-6 left-6 bg-[#EF7C00] text-white flex flex-col items-center justify-center w-20 h-20 rounded-2xl shadow-lg transform -rotate-3 hover:rotate-0 transition-transform">
+                  <span className="text-3xl font-black leading-none">{day}</span>
+                  <span className="text-sm font-bold uppercase tracking-wider">{month}</span>
+                </div>
+              </div>
 
-                    <div
-                      className="blog-main-content"
-                      dangerouslySetInnerHTML={{ __html: blog.content }}
-                    />
-                  </div>
+              <div className="p-6 md:p-10 lg:p-12">
+                <div className="flex items-center gap-4 text-sm font-semibold text-[#EF7C00] uppercase tracking-wider mb-6">
+                  {blog.category && (
+                    <span className="flex items-center gap-1.5 bg-[#EF7C00]/10 px-3 py-1 rounded-full">
+                      <Icon name="tag" size={14} />
+                      {typeof blog.category === 'string' ? blog.category : blog.category.name}
+                    </span>
+                  )}
+                  {blog.author && (
+                    <span className="flex items-center gap-1.5 text-gray-500">
+                      <Icon name="user" size={16} />
+                      {typeof blog.author === 'string' ? blog.author : blog.author.name}
+                    </span>
+                  )}
                 </div>
 
-                <hr className="my-5 text-muted opacity-25" />
+                <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 mb-8 leading-tight tracking-tight">
+                  {blog.title}
+                </h1>
 
-                <div className="comments-area">
-                  <div className="comments-heading">
-                    <h3>
-                      {commentsData?.total && commentsData.total > 0
-                        ? `${commentsData.total.toString().padStart(2, "0")} Comments`
-                        : "No Comments Yet"}
-                    </h3>
-                  </div>
-                  <div className="comments-list">
-                    {comments.map((comment: Comment) => (
-                      <div key={comment._id} className="comment-thread mb-4">
-                        <div className="blog-single-comment d-flex gap-4 pt-4 pb-4">
-                          <div className="image flex-shrink-0">
-                            <Image
-                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(comment.name || "U")}&background=fd7e14&color=fff&size=80&rounded=true`}
-                              alt={comment.name}
-                              width={80}
-                              height={80}
-                              className="rounded-circle shadow-sm border border-light"
-                            />
+                <div
+                  className="prose prose-lg md:prose-xl max-w-none prose-headings:font-bold prose-headings:text-gray-900 prose-p:text-gray-600 prose-a:text-[#EF7C00] prose-img:rounded-2xl"
+                  dangerouslySetInnerHTML={{ __html: blog.content }}
+                  suppressHydrationWarning
+                />
+              </div>
+            </article>
+
+            {/* Comments Section */}
+            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 lg:p-12">
+              <h3 className="text-2xl font-bold text-gray-900 mb-10 pb-4 border-b border-gray-100 flex items-center gap-3">
+                <Icon name="message-square" className="text-[#EF7C00]" size={28} />
+                {commentsData?.total && commentsData.total > 0
+                  ? `${commentsData.total} ${commentsData.total === 1 ? 'Comment' : 'Comments'}`
+                  : "No Comments Yet"}
+              </h3>
+
+              <div className="flex flex-col gap-8 mb-12">
+                {comments.map((comment: Comment) => (
+                  <div key={comment._id} className="group">
+                    <div className="flex items-start relative">
+                      <div className="flex-shrink-0 w-14 md:w-16 z-10 relative">
+                        <AppImage
+                          variant={ImageVariant.AVATAR}
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(comment.name || "U")}&background=EF7C00&color=fff&size=80&rounded=true`}
+                          alt={comment.name}
+                          imageClassName="ring-4 ring-white shadow-sm"
+                        />
+                      </div>
+                      <div className="flex-grow bg-gray-50 p-6 rounded-2xl border border-gray-100 -ml-4 md:-ml-6 pl-8 md:pl-10">
+                        <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
+                          <div>
+                            <h5 className="font-bold text-lg text-gray-900 m-0">{comment.name}</h5>
+                            <span className="text-gray-500 text-sm font-medium flex items-center gap-1.5 mt-1">
+                              <Icon name="clock" size={14} />
+                              {new Date(comment.createdAt).toLocaleDateString("en-US", {
+                                day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
+                              })}
+                            </span>
                           </div>
-                          <div className="content flex-grow-1">
-                            <div className="head d-flex flex-wrap gap-2 align-items-center justify-content-between mb-2">
-                              <div className="con">
-                                <h5 className="mb-1">{comment.name}</h5>
-                                <span
-                                  className="text-muted"
-                                  style={{ fontSize: "0.85rem" }}
-                                >
-                                  {new Date(
-                                    comment.createdAt,
-                                  ).toLocaleDateString("en-US", {
-                                    day: "numeric",
-                                    month: "long",
-                                    year: "numeric",
-                                    hour: "2-digit",
-                                    minute: "2-digit",
+                          <button
+                            onClick={() => handleReply(comment._id, comment.name)}
+                            className="text-[#EF7C00] font-semibold text-sm hover:underline flex items-center gap-1 bg-[#EF7C00]/10 px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Icon name="corner-up-left" size={14} /> Reply
+                          </button>
+                        </div>
+                        <p className="text-gray-700 leading-relaxed m-0">{comment.content}</p>
+                      </div>
+                    </div>
+
+                    {/* Replies */}
+                    {comment.replies && comment.replies.length > 0 && (
+                      <div className="flex flex-col gap-6 mt-6 ml-12 md:ml-20">
+                        {comment.replies.map((reply: Comment) => (
+                          <div key={reply._id} className="flex items-start relative">
+                            <div className="flex-shrink-0 w-10 md:w-12 z-10 relative">
+                              <AppImage
+                                variant={ImageVariant.AVATAR}
+                                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(reply.name || "U")}&background=e2e8f0&color=475569&size=60&rounded=true`}
+                                alt={reply.name}
+                                imageClassName="ring-4 ring-white shadow-sm"
+                              />
+                            </div>
+                            <div className="flex-grow bg-white p-5 rounded-2xl border border-gray-100 shadow-sm -ml-4 md:-ml-5 pl-7 md:pl-8">
+                              <div className="mb-2">
+                                <h5 className="font-bold text-base text-gray-900 m-0">{reply.name}</h5>
+                                <span className="text-gray-400 text-xs font-medium mt-1 block">
+                                  {new Date(reply.createdAt).toLocaleDateString("en-US", {
+                                    day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
                                   })}
                                 </span>
                               </div>
-                              <button
-                                onClick={() =>
-                                  handleReply(comment._id, comment.name)
-                                }
-                                className="reply-btn border-0 bg-transparent fw-bold"
-                                style={{ color: "#fd7e14", fontSize: "0.9rem" }}
-                              >
-                                <i className="bi bi-reply-fill"></i> Reply
-                              </button>
+                              <p className="text-gray-600 leading-relaxed text-sm m-0">{reply.content}</p>
                             </div>
-                            <p
-                              className="mt-2 mb-0"
-                              style={{ lineHeight: "1.6" }}
-                            >
-                              {comment.content}
-                            </p>
                           </div>
-                        </div>
-
-                        {/* Replies */}
-                        {comment.replies && comment.replies.length > 0 && (
-                          <div
-                            className="comment-replies-list"
-                            style={{ marginLeft: "60px" }}
-                          >
-                            {comment.replies.map((reply: Comment) => (
-                              <div
-                                className="blog-single-comment d-flex gap-4 pt-3 pb-3 border-top border-light"
-                                key={reply._id}
-                              >
-                                <div className="image flex-shrink-0">
-                                  <Image
-                                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(reply.name || "U")}&background=fd7e14&color=fff&size=60&rounded=true`}
-                                    alt={reply.name}
-                                    width={60}
-                                    height={60}
-                                    className="rounded-circle shadow-sm border border-light"
-                                  />
-                                </div>
-                                <div className="content flex-grow-1">
-                                  <div className="head d-flex flex-wrap gap-2 align-items-center justify-content-between mb-1">
-                                    <div className="con">
-                                      <h6 className="mb-0">{reply.name}</h6>
-                                      <span
-                                        className="text-muted"
-                                        style={{ fontSize: "0.75rem" }}
-                                      >
-                                        {new Date(
-                                          reply.createdAt,
-                                        ).toLocaleDateString("en-US", {
-                                          day: "numeric",
-                                          month: "short",
-                                          year: "numeric",
-                                        })}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <p
-                                    className="mt-1 mb-0"
-                                    style={{
-                                      fontSize: "0.9rem",
-                                      lineHeight: "1.5",
-                                    }}
-                                  >
-                                    {reply.content}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="comment-form-wrap pt-5" id="comment-form">
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h3>
-                      {commentForm.parentId
-                        ? `Reply to ${replyToName}`
-                        : "Leave a comments"}
-                    </h3>
-                    {commentForm.parentId && (
-                      <button
-                        onClick={cancelReply}
-                        className="btn btn-sm btn-outline-secondary"
-                        style={{ fontSize: "0.8rem" }}
-                      >
-                        Cancel Reply
-                      </button>
-                    )}
-                  </div>
-
-                  <form onSubmit={handleCommentSubmit}>
-                    <div className="row g-4">
-                      <div className="col-lg-6">
-                        <div className="form-clt">
-                          <span>Your Name*</span>
-                          <input
-                            type="text"
-                            name="name"
-                            id="name"
-                            placeholder="Your Name"
-                            value={commentForm.name}
-                            onChange={handleInputChange}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-lg-6">
-                        <div className="form-clt">
-                          <span>Your Email*</span>
-                          <input
-                            type="email"
-                            name="email"
-                            id="email"
-                            placeholder="Your Email"
-                            value={commentForm.email}
-                            onChange={handleInputChange}
-                            required
-                          />
-                        </div>
-                      </div>
-                      <div className="col-lg-12">
-                        <div className="form-clt">
-                          <span>Message*</span>
-                          <textarea
-                            name="content"
-                            id="message"
-                            placeholder="Write Message"
-                            value={commentForm.content}
-                            onChange={handleInputChange}
-                            required
-                          ></textarea>
-                        </div>
-                      </div>
-                      <div className="col-lg-6">
-                        <button
-                          type="submit"
-                          className="theme-btn"
-                          disabled={createCommentMutation.isPending}
-                        >
-                          {createCommentMutation.isPending
-                            ? "Posting..."
-                            : "Post Comment"}
-                          <i className="bi bi-arrow-right"></i>
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div className="col-12 col-lg-4">
-              <div className="tour-destination-wrapper">
-                <div className="main-sidebar">
-                  {/* Post Information Widget */}
-                  {blog && (
-                    <div className="single-sidebar-widget">
-                      <div className="wid-title">
-                        <h3>Post Details</h3>
-                      </div>
-                      <ul className="post-list list-unstyled mb-0 d-flex flex-column gap-3 px-1 mt-3">
-                        <li className="d-flex justify-content-between align-items-center pb-2 border-bottom border-light">
-                          <span className="text-secondary d-flex align-items-center gap-2 fw-medium">
-                            <Icon name="folder2-open" color="#fd7e14" />{" "}
-                            Category
-                          </span>
-                          <Link
-                            href={`/blogs?category=${blog?.category}`}
-                            className="text-dark fw-semibold text-decoration-none text-capitalize"
-                          >
-                            {blog?.category || "Uncategorized"}
-                          </Link>
-                        </li>
-                        <li className="d-flex justify-content-between align-items-center pb-2 border-bottom border-light">
-                          <span className="text-secondary d-flex align-items-center gap-2 fw-medium">
-                            <Icon name="person" color="#fd7e14" /> Author
-                          </span>
-                          <span className="fw-semibold text-dark text-capitalize">
-                            {blog?.author?.trim() ? blog.author : "Admin"}
-                          </span>
-                        </li>
-                        <li className="d-flex justify-content-between align-items-center">
-                          <span className="text-secondary d-flex align-items-center gap-2 fw-medium">
-                            <Icon name="chat" color="#fd7e14" /> Comments
-                          </span>
-                          <span className="fw-semibold text-dark">
-                            {commentsData?.total || 0}
-                          </span>
-                        </li>
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Share Article Widget */}
-                  <div className="single-sidebar-widget">
-                    <div className="wid-title">
-                      <h3>Share This Article</h3>
-                    </div>
-                    <div className="social-share d-flex gap-4 mt-3">
-                      <a
-                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodedTitle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="fs-5 d-flex align-items-center text-decoration-none"
-                        style={{ transition: "0.3s" }}
-                      >
-                        <Icon name="facebook" color="#1877F2" />
-                      </a>
-                      <a
-                        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodedTitle}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="fs-5 d-flex align-items-center text-decoration-none"
-                        style={{ transition: "0.3s" }}
-                      >
-                        <Icon name="twitter-x" color="#000000" />
-                      </a>
-                      <a
-                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="fs-5 d-flex align-items-center text-decoration-none"
-                        style={{ transition: "0.3s" }}
-                      >
-                        <Icon name="linkedin" color="#0A66C2" />
-                      </a>
-                      <a
-                        href={`https://api.whatsapp.com/send?text=${encodedTitle}%20${encodeURIComponent(shareUrl)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="fs-5 d-flex align-items-center text-decoration-none"
-                        style={{ transition: "0.3s" }}
-                      >
-                        <Icon name="whatsapp" color="#25D366" />
-                      </a>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(shareUrl);
-                          showSuccess("Link copied to clipboard!");
-                        }}
-                        className="fs-5 border-0 bg-transparent p-0 d-flex align-items-center text-decoration-none"
-                        style={{ transition: "0.3s" }}
-                        title="Copy link"
-                      >
-                        <Icon name="link-45deg" color="#fd7e14" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Post Tags Widget */}
-                  {blog?.tags && blog.tags.length > 0 && (
-                    <div className="single-sidebar-widget">
-                      <div className="wid-title">
-                        <h3>Tags</h3>
-                      </div>
-                      <div className="tagcloud">
-                        {blog.tags.map((tag, idx) => (
-                          <Link key={idx} href={`/blogs?tags=${tag.trim()}`}>
-                            {tag.trim()}
-                          </Link>
                         ))}
                       </div>
-                    </div>
-                  )}
-
-                  <div className="single-sidebar-widget">
-                    <div className="wid-title">
-                      <h3>Recent Posts</h3>
-                    </div>
-                    <div className="recent-post-area">
-                      {recentBlogs.length > 0 ? (
-                        recentBlogs.map((recent) => (
-                          <div
-                            className="recent-items d-flex align-items-start gap-3 mb-4"
-                            key={recent._id}
-                          >
-                            <div
-                              className="recent-thumb rounded-3 overflow-hidden bg-light shadow-sm"
-                              style={{
-                                width: "75px",
-                                minWidth: "75px",
-                                height: "75px",
-                              }}
-                            >
-                              <IKImage
-                                src={recent.featuredImage || ""}
-                                alt={recent.title}
-                                width={75}
-                                height={75}
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  objectFit: "cover",
-                                }}
-                              />
-                            </div>
-                            <div className="recent-content pt-1">
-                              <div
-                                className="d-flex align-items-center gap-2 mb-1"
-                                style={{
-                                  color: "#fd7e14",
-                                  fontSize: "0.8rem",
-                                  fontWeight: "600",
-                                  textTransform: "uppercase",
-                                  letterSpacing: "0.5px",
-                                }}
-                              >
-                                <i className="bi bi-calendar3"></i>
-                                <span>
-                                  {
-                                    formatDate(
-                                      recent.publishedAt || recent.createdAt,
-                                    ).full
-                                  }
-                                </span>
-                              </div>
-                              <h6
-                                className="mb-0"
-                                style={{
-                                  fontSize: "0.95rem",
-                                  fontWeight: "700",
-                                  lineHeight: "1.4",
-                                  display: "-webkit-box",
-                                  WebkitLineClamp: 3,
-                                  WebkitBoxOrient: "vertical",
-                                  overflow: "hidden",
-                                }}
-                              >
-                                <Link
-                                  href={`/blogs/${
-                                    recent.seo?.slug || recent._id
-                                  }`}
-                                  className="text-dark text-decoration-none"
-                                >
-                                  {recent.title}
-                                </Link>
-                              </h6>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-muted p-3">No recent posts</p>
-                      )}
-                    </div>
+                    )}
                   </div>
-                </div>
+                ))}
+              </div>
+
+              {/* Comment Form */}
+              <div id="comment-form" className="bg-gray-50 p-6 md:p-10 rounded-3xl border border-gray-200">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">Leave a Comment</h3>
+                <p className="text-gray-500 mb-8">Your email address will not be published. Required fields are marked *</p>
+
+                {commentForm.parentId && (
+                  <div className="flex justify-between items-center bg-[#EF7C00]/10 border border-[#EF7C00]/20 text-[#EF7C00] px-4 py-3 rounded-xl mb-6 font-medium">
+                    <span className="flex items-center gap-2"><Icon name="corner-down-right" size={16} /> Replying to {replyToName}</span>
+                    <button type="button" onClick={cancelReply} className="hover:text-red-500 transition-colors">
+                      <Icon name="x" size={20} />
+                    </button>
+                  </div>
+                )}
+
+                <form onSubmit={handleCommentSubmit} className="flex flex-col gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <TextInput
+                      name="name"
+                      label="Full Name"
+                      placeholder="John Doe"
+                      value={commentForm.name}
+                      onChange={(v) => setCommentForm({ ...commentForm, name: v })}
+                      required
+                    />
+                    <TextInput
+                      name="email"
+                      type="email"
+                      label="Email Address"
+                      placeholder="john@example.com"
+                      value={commentForm.email}
+                      onChange={(v) => setCommentForm({ ...commentForm, email: v })}
+                      required
+                    />
+                  </div>
+                  <Textarea
+                    name="content"
+                    label="Your Comment"
+                    placeholder="Write your thoughts here..."
+                    rows={5}
+                    value={commentForm.content}
+                    onChange={(v) => setCommentForm({ ...commentForm, content: v })}
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="w-full md:w-auto bg-[#EF7C00] hover:bg-[#D96E00] text-white font-bold py-4 px-10 rounded-xl mt-2 transition-colors flex items-center justify-center gap-2 disabled:opacity-70"
+                    disabled={createCommentMutation.isPending}
+                  >
+                    {createCommentMutation.isPending ? "Submitting..." : "Post Comment"} <Icon name="send" size={18} />
+                  </button>
+                </form>
               </div>
             </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-4 sticky top-24 flex flex-col gap-8">
+
+            {/* Search Widget */}
+            <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+              <div className="mb-5 pb-4 border-b border-gray-100">
+                <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
+                  <span className="w-1.5 h-6 bg-[#EF7C00] rounded-full inline-block"></span> Search
+                </h4>
+              </div>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search articles..."
+                  className="w-full pl-5 pr-12 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7C00] focus:border-transparent outline-none transition-all"
+                />
+                <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#EF7C00] p-2 bg-white rounded-lg shadow-sm">
+                  <Icon name="search" size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Recent Posts Widget */}
+            <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+              <div className="mb-5 pb-4 border-b border-gray-100">
+                <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
+                  <span className="w-1.5 h-6 bg-[#EF7C00] rounded-full inline-block"></span> Recent Posts
+                </h4>
+              </div>
+              <div className="flex flex-col gap-6">
+                {recentBlogs.map((recentPost) => (
+                  <div key={recentPost._id} className="flex items-center gap-4 group">
+                    <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
+                      <AppImage
+                        variant={ImageVariant.THUMBNAIL}
+                        src={getOptimizedImage(recentPost.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`, 150)}
+                        alt={recentPost.title}
+                        imageClassName="group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <span className="text-xs font-bold text-[#EF7C00] uppercase tracking-wider mb-1 flex items-center gap-1">
+                        <Icon name="calendar" size={12} />
+                        {new Date(recentPost.publishedAt || recentPost.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                      <Link href={`/blogs/${recentPost.slug}`} className="text-gray-900 font-bold leading-snug hover:text-[#EF7C00] transition-colors line-clamp-2">
+                        {recentPost.title}
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Share Widget */}
+            <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+              <div className="mb-5 pb-4 border-b border-gray-100">
+                <h4 className="text-lg font-bold text-gray-900 flex items-center gap-2.5">
+                  <span className="w-1.5 h-6 bg-[#EF7C00] rounded-full inline-block"></span> Share This Post
+                </h4>
+              </div>
+              <div className="flex gap-3">
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-[#1877F2] hover:text-white transition-colors border border-gray-200 hover:border-transparent"
+                >
+                  <Icon name="facebook" size={20} />
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${shareUrl}&text=${encodedTitle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-[#1DA1F2] hover:text-white transition-colors border border-gray-200 hover:border-transparent"
+                >
+                  <Icon name="twitter" size={20} />
+                </a>
+                <a
+                  href={`https://www.linkedin.com/shareArticle?mini=true&url=${shareUrl}&title=${encodedTitle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-[#0A66C2] hover:text-white transition-colors border border-gray-200 hover:border-transparent"
+                >
+                  <Icon name="linkedin" size={20} />
+                </a>
+                <a
+                  href={`https://wa.me/?text=${encodedTitle} ${shareUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-12 h-12 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600 hover:bg-[#25D366] hover:text-white transition-colors border border-gray-200 hover:border-transparent"
+                >
+                  <Icon name="whatsapp" size={20} />
+                </a>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

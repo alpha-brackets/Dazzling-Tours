@@ -10,6 +10,7 @@ import {
   Notification,
   NotificationContextType,
 } from "@/lib/types/notification";
+import Icon from "@/app/Components/Common/Icon";
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined,
@@ -300,19 +301,19 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
 
     switch (type) {
       case "success":
-        return <i className="bi bi-check-circle-fill" style={{ color }}></i>;
+        return <Icon name="check-circle-fill" style={{ color }} />;
       case "error":
         return (
-          <i className="bi bi-exclamation-triangle-fill" style={{ color }}></i>
+          <Icon name="exclamation-triangle-fill" style={{ color }} />
         );
       case "warning":
         return (
-          <i className="bi bi-exclamation-circle-fill" style={{ color }}></i>
+          <Icon name="exclamation-circle-fill" style={{ color }} />
         );
       case "info":
-        return <i className="bi bi-info-circle-fill" style={{ color }}></i>;
+        return <Icon name="info-circle-fill" style={{ color }} />;
       default:
-        return <i className="bi bi-info-circle-fill" style={{ color }}></i>;
+        return <Icon name="info-circle-fill" style={{ color }} />;
     }
   };
 
@@ -346,7 +347,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
             <div style={{ flexShrink: 0 }}>
               {notification.loading ? (
                 <div className="animate-spin">
-                  <i className="bi bi-arrow-clockwise text-gray-500"></i>
+                  <Icon name="arrow-clockwise" className="text-gray-500" />
                 </div>
               ) : (
                 getIcon(notification.type)
@@ -385,7 +386,7 @@ const NotificationItem: React.FC<NotificationItemProps> = ({
               className="text-gray-400 hover:text-gray-600 transition-colors"
               aria-label="Close notification"
             >
-              <i className="bi bi-x-lg text-sm"></i>
+              <Icon name="x-lg" className="text-sm" />
             </button>
           </div>
         </div>

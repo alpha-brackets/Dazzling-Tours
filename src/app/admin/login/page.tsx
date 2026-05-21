@@ -3,7 +3,8 @@ import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth, useNotification, useAdminSeed, useForm } from "@/lib/hooks";
-import { LoginCard, CardHeader, LockIcon } from "./components/LoginComponents";
+import { LoginCard, CardHeader } from "./components/LoginComponents";
+import { IconLock } from "@/app/Components/Common/icons";
 import { TextInput } from "@/app/Components/Form";
 import { Button } from "@/app/Components/Common";
 import { validationRules } from "./config/theme";
@@ -65,7 +66,7 @@ const LoginPage = () => {
       <CardHeader
         title="Admin Login"
         subtitle="Sign in to your admin account"
-        icon={<LockIcon size="md" />}
+        icon={<IconLock size={24} color="var(--primary)" />}
       />
 
       <form onSubmit={handleSubmit()} className="space-y-4">

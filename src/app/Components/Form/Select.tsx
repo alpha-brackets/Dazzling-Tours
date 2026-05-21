@@ -1,5 +1,16 @@
 "use client";
 import React, { forwardRef, useEffect, useState, useRef } from "react";
+import {
+  Select as ShadcnSelect,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { AlertCircle, Check, ChevronDown, ChevronUp, Search, XCircle } from "lucide-react";
 
 export interface SelectProps extends Omit<
   React.SelectHTMLAttributes<HTMLSelectElement>,
@@ -53,8 +64,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       onFocus: formOnFocus,
       // Backend search support
       onSearchChange,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       ...props
     },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ref,
   ) => {
     const [internalError, setInternalError] = useState<string | undefined>(
@@ -63,6 +76,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const [hasBeenTouched, setHasBeenTouched] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [selectedLabel, setSelectedLabel] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -102,26 +116,27 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       };
     }, []);
 
+    // Calculate the current label synchronously to avoid hydration mismatch and empty renders
+    const currentLabel = React.useMemo(() => {
+      if (formValue !== undefined && data) {
+        const item = data.find((d) => d.value === formValue);
+        if (item) return item.label;
+      }
+      return "";
+    }, [formValue, data]);
+
     const sizeClasses = {
-      xs: "form-input-xs",
-      sm: "form-input-sm",
-      md: "form-input-md",
-      lg: "form-input-lg",
+      xs: "h-7 text-xs",
+      sm: "h-8 text-sm",
+      md: "h-10 text-base",
+      lg: "h-11 text-lg",
     };
 
     const variantClasses = {
-      default: "form-input-default",
-      filled: "form-input-filled",
-      unstyled: "form-input-unstyled",
+      default: "",
+      filled: "bg-gray-100 focus:bg-white",
+      unstyled: "border-none shadow-none focus:ring-0 px-0",
     };
-
-    const baseClasses = `
-      form-input-base
-      ${sizeClasses[size]}
-      ${variantClasses[variant]}
-      ${internalError ? "form-input-error" : ""}
-      ${className}
-    `.trim();
 
     // Filter data based on search term
     const filteredData =
@@ -129,42 +144,21 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         item.label.toLowerCase().includes(searchTerm.toLowerCase()),
       ) || [];
 
-    const handleChange = (value: string) => {
+    const handleChange = (value: string | null) => {
+      const val = value || "";
       // Run validation if enabled and validator is provided
       if (validateOnChange && validator && hasBeenTouched) {
-        const validationError = validator(value);
+        const validationError = validator(val);
         setInternalError(validationError);
       }
 
       // Call form onChange if provided (for form integration)
       if (formOnChange) {
-        formOnChange(value);
+        formOnChange(val);
       }
 
       setIsOpen(false);
       setSearchTerm("");
-    };
-
-    const handleBlur = () => {
-      setHasBeenTouched(true);
-
-      // Run validation on blur if validator is provided
-      if (validator && formValue) {
-        const validationError = validator(formValue);
-        setInternalError(validationError);
-      }
-
-      // Call form onBlur if provided (for form integration)
-      if (formOnBlur) {
-        formOnBlur();
-      }
-    };
-
-    const handleFocus = () => {
-      // Call form onFocus if provided (for form integration)
-      if (formOnFocus) {
-        formOnFocus();
-      }
     };
 
     const handleClear = (e: React.MouseEvent) => {
@@ -175,8 +169,9 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const handleToggleDropdown = () => {
       if (disabled) return;
       setIsOpen(!isOpen);
+      setHasBeenTouched(true);
       if (!isOpen && inputRef.current) {
-        inputRef.current.focus();
+        setTimeout(() => inputRef.current?.focus(), 10);
       }
     };
 
@@ -190,58 +185,64 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       }
     };
 
-    // If not searchable, render as regular select
+    // If not searchable, render as regular Shadcn Select
     if (!searchable) {
       return (
-        <div className="form-group">
+        <div className="flex flex-col gap-1.5 w-full">
           {label && (
-            <label className="form-label">
+            <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
               {label}
-              {required && <span className="form-required">*</span>}
-            </label>
+              {required && <span className="text-red-500">*</span>}
+            </Label>
           )}
 
-          {description && <p className="form-description">{description}</p>}
+          {description && <p className="text-xs text-gray-500">{description}</p>}
 
-          <div className="form-input-container">
-            <select
-              ref={ref}
-              className={`${baseClasses} form-input-with-right-icon`}
-              disabled={disabled}
-              value={formValue !== undefined ? formValue : ""}
-              onChange={(e) => handleChange(e.target.value)}
-              onBlur={handleBlur}
-              onFocus={handleFocus}
-              {...props}
-            >
-              {placeholder && (
-                <option value="" disabled>
-                  {placeholder}
-                </option>
+          <ShadcnSelect
+            value={formValue !== undefined ? formValue : ""}
+            onValueChange={handleChange}
+            disabled={disabled}
+          >
+            <SelectTrigger
+              className={cn(
+                "w-full justify-between rounded-lg border border-input bg-transparent",
+                sizeClasses[size],
+                variantClasses[variant],
+                internalError && "border-red-500 focus:border-red-500 focus:ring-red-500/10",
+                className
               )}
-
-              {data
-                ? data.map((item) => (
-                    <option
+              onBlur={formOnBlur}
+              onFocus={formOnFocus}
+            >
+              <SelectValue placeholder={placeholder || "Select an option..."}>
+                {currentLabel || undefined}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {placeholder && (
+                  <SelectItem value="" disabled>
+                    {placeholder}
+                  </SelectItem>
+                )}
+                {data
+                  ? data.map((item) => (
+                    <SelectItem
                       key={item.value}
                       value={item.value}
                       disabled={item.disabled}
                     >
                       {item.label}
-                    </option>
+                    </SelectItem>
                   ))
-                : children}
-            </select>
-
-            {/* Custom dropdown arrow */}
-            <div className="form-input-icon-right">
-              <i className="bi bi-chevron-down form-text-gray-400"></i>
-            </div>
-          </div>
+                  : children}
+              </SelectGroup>
+            </SelectContent>
+          </ShadcnSelect>
 
           {internalError && (
-            <p className="form-error">
-              <i className="bi bi-exclamation-circle form-error-icon"></i>
+            <p className="text-sm text-red-500 flex items-center gap-1 mt-0.5">
+              <AlertCircle className="h-3.5 w-3.5" />
               {internalError}
             </p>
           )}
@@ -249,65 +250,70 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
       );
     }
 
-    // Searchable select implementation
+    // Searchable select implementation with Tailwind
     return (
-      <div className="form-group">
+      <div className="flex flex-col gap-1.5 w-full" ref={dropdownRef}>
         {label && (
-          <label className="form-label">
+          <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
             {label}
-            {required && <span className="form-required">*</span>}
-          </label>
+            {required && <span className="text-red-500">*</span>}
+          </Label>
         )}
 
-        {description && <p className="form-description">{description}</p>}
+        {description && <p className="text-xs text-gray-500">{description}</p>}
 
-        <div className="form-input-container" ref={dropdownRef}>
+        <div className="relative w-full">
           <div
-            className={`${baseClasses} form-input-with-right-icon searchable-select-trigger`}
+            className={cn(
+              "flex items-center justify-between rounded-lg border border-input bg-transparent cursor-pointer px-3",
+              sizeClasses[size],
+              variantClasses[variant],
+              internalError && "border-red-500",
+              disabled && "opacity-50 cursor-not-allowed bg-gray-50",
+              className
+            )}
             onClick={handleToggleDropdown}
             onKeyDown={handleKeyDown}
             tabIndex={disabled ? -1 : 0}
             role="combobox"
             aria-expanded={isOpen}
             aria-haspopup="listbox"
-            aria-controls={isOpen ? "select-options-list" : undefined}
+            aria-controls="select-options-list"
+            onBlur={formOnBlur}
+            onFocus={formOnFocus}
           >
-            <span className={!selectedLabel ? "text-muted" : ""}>
-              {selectedLabel || placeholder || "Select an option..."}
+            <span className={cn("truncate", !currentLabel && "text-gray-400")}>
+              {currentLabel || placeholder || "Select an option..."}
             </span>
 
-            <div className="form-input-icon-right">
+            <div className="flex items-center gap-1 ml-2 text-gray-400">
               {clearable && formValue && (
                 <button
                   type="button"
-                  className="btn-clear"
+                  className="hover:text-gray-600 focus:outline-none"
                   onClick={handleClear}
                   aria-label="Clear selection"
                 >
-                  <i className="bi bi-x-circle"></i>
+                  <XCircle className="h-4 w-4" />
                 </button>
               )}
-              <i
-                className={`bi bi-chevron-${
-                  isOpen ? "up" : "down"
-                } form-text-gray-400`}
-              ></i>
+              {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </div>
           </div>
 
           {isOpen && (
-            <div className="searchable-select-dropdown">
-              <div className="searchable-select-search">
+            <div id="select-options-list" role="listbox" className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-hidden flex flex-col">
+              <div className="p-2 border-bottom flex items-center gap-2 bg-gray-50">
+                <Search className="h-4 w-4 text-gray-400 shrink-0" />
                 <input
                   ref={inputRef}
                   type="text"
-                  className="form-control"
+                  className="w-full bg-transparent border-none outline-none text-sm placeholder-gray-400 focus:ring-0"
                   placeholder="Search options..."
                   value={searchTerm}
                   onChange={(e) => {
                     const newSearchTerm = e.target.value;
                     setSearchTerm(newSearchTerm);
-                    // Call onSearchChange callback for backend search
                     if (onSearchChange) {
                       onSearchChange(newSearchTerm);
                     }
@@ -322,27 +328,30 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     }
                   }}
                 />
-                <i className="bi bi-search search-icon"></i>
               </div>
 
-              <div className="searchable-select-options">
+              <div className="overflow-y-auto flex-1">
                 {filteredData.length > 0 ? (
                   filteredData.map((item) => (
                     <div
                       key={item.value}
-                      className={`searchable-select-option ${
-                        item.value === formValue ? "selected" : ""
-                      } ${item.disabled ? "disabled" : ""}`}
+                      role="option"
+                      aria-selected={item.value === formValue}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 text-sm cursor-pointer hover:bg-gray-100",
+                        item.value === formValue && "bg-gray-50 font-medium text-[var(--theme)]",
+                        item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent text-gray-400"
+                      )}
                       onClick={() => !item.disabled && handleChange(item.value)}
                     >
-                      {item.label}
+                      <span className="truncate">{item.label}</span>
                       {item.value === formValue && (
-                        <i className="bi bi-check selected-icon"></i>
+                        <Check className="h-4 w-4 text-[var(--theme)] shrink-0 ml-2" />
                       )}
                     </div>
                   ))
                 ) : (
-                  <div className="searchable-select-no-results">
+                  <div className="px-3 py-2 text-sm text-gray-500 text-center">
                     No options found
                   </div>
                 )}
@@ -352,8 +361,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
         </div>
 
         {internalError && (
-          <p className="form-error">
-            <i className="bi bi-exclamation-circle form-error-icon"></i>
+          <p className="text-sm text-red-500 flex items-center gap-1 mt-0.5">
+            <AlertCircle className="h-3.5 w-3.5" />
             {internalError}
           </p>
         )}

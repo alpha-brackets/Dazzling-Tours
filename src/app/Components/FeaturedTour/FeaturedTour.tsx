@@ -1,18 +1,26 @@
 "use client";
-import { IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
-import React, { useRef } from "react";
-import Slider from "react-slick";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import { Image as IKImage } from "@imagekit/next";
 import { useGetTours } from "@/lib/hooks";
 import { TourStatus } from "@/lib/enums";
 import { formatCurrency } from "@/lib/utils/currencyConverter";
+import { Section, Container, Loading } from "@/app/Components/Common";
+import { ArrowLeft, ArrowRight, MapPin } from "lucide-react";
+
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 const FeaturedTour = () => {
   const {
     data: toursData,
     isLoading: loading,
-    error,
   } = useGetTours({
     status: TourStatus.ACTIVE,
     featured: true,
@@ -20,196 +28,157 @@ const FeaturedTour = () => {
   });
 
   const tours = toursData?.data || [];
-  const settings = {
-    dots: false,
-    infinite: true,
-    speed: 2000,
-    slidesToShow: 4,
-    slidesToScroll: 1,
-    arrows: false,
-    swipeToSlide: true,
-    autoplay: true,
-    autoplaySpeed: 4000,
-    responsive: [
-      {
-        breakpoint: 1399,
-        settings: {
-          slidesToShow: 4,
-        },
-      },
-      {
-        breakpoint: 1199,
-        settings: {
-          slidesToShow: 3,
-        },
-      },
-      {
-        breakpoint: 575,
-        settings: {
-          slidesToShow: 1,
-        },
-      },
-    ],
-  };
+  const [api, setApi] = useState<CarouselApi>();
 
-  const sliderRef = useRef<Slider>(null);
+  const renderHeader = () => (
+    <div className="flex flex-col lg:flex-row justify-between items-end mb-12 gap-6">
+      <div className="w-full lg:w-2/3">
+        <div className="mb-4">
+          <span className="inline-block text-[#EF7C00] font-bold tracking-widest uppercase mb-3 text-sm md:text-base animate-in fade-in slide-in-from-bottom-4 duration-500">
+            Featured Tours
+          </span>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight animate-in fade-in slide-in-from-bottom-6 duration-700 delay-150 fill-mode-both">
+            Handpicked Adventures <br className="hidden md:block" />
+            Just For You
+          </h2>
+        </div>
+        <p className="text-gray-600 text-base md:text-lg animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300 fill-mode-both max-w-2xl">
+          Discover our carefully curated selection of extraordinary journeys. From breathtaking landscapes to cultural treasures, find your perfect escape.
+        </p>
+      </div>
+      <div className="w-full lg:w-1/3 flex flex-row items-center justify-start lg:justify-end gap-4 mt-4 lg:mt-0 animate-in fade-in slide-in-from-right-8 duration-700 delay-500 fill-mode-both">
+        <Link
+          href="/tours"
+          className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#EF7C00] text-white rounded-full font-bold text-base hover:bg-[#d66e00] transition-all hover:scale-105 active:scale-95 shadow-md group"
+        >
+          View More <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </Link>
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={() => api?.scrollPrev()}
+            className="bg-white hover:bg-[var(--theme)] hover:text-white text-gray-700 w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 transition-colors shadow-sm cursor-pointer"
+            aria-label="Previous slide"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <button
+            onClick={() => api?.scrollNext()}
+            className="bg-white hover:bg-[var(--theme)] hover:text-white text-gray-700 w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 transition-colors shadow-sm cursor-pointer"
+            aria-label="Next slide"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
-  const next = () => {
-    if (sliderRef.current) {
-      sliderRef.current.slickNext();
-    }
-  };
-
-  const previous = () => {
-    if (sliderRef.current) {
-      sliderRef.current.slickPrev();
-    }
-  };
-
-  // Show loading state
   if (loading) {
     return (
-      <section className="featured-tour-section section-padding section-bg">
-        <div className="container">
-          <div className="section-title">
-            <span className="sub-title">Featured Tours</span>
-            <h2>Handpicked Adventures Just For You</h2>
+      <Section padding="lg" bg="muted" className="featured-tour-section fix">
+        <Container>
+          {renderHeader()}
+          <div className="flex justify-center items-center py-12">
+            <Loading variant="spinner" size="lg" text="Loading tours..." />
           </div>
-          <div className="text-center" style={{ padding: "3rem" }}>
-            <p>Loading featured tours...</p>
-          </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
     );
   }
 
-  // Show error state
-  if (error) {
-    return (
-      <section className="featured-tour-section section-padding section-bg">
-        <div className="container">
-          <div className="section-title">
-            <span className="sub-title">Featured Tours</span>
-            <h2>Handpicked Adventures Just For You</h2>
-          </div>
-          <div className="text-center" style={{ padding: "3rem" }}>
-            <p>Unable to load featured tours. Please try again later.</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // Show empty state
   if (tours.length === 0) {
     return (
-      <section className="featured-tour-section section-padding section-bg">
-        <div className="container">
-          <div className="section-title">
-            <span className="sub-title">Featured Tours</span>
-            <h2>Handpicked Adventures Just For You</h2>
+      <Section padding="lg" bg="muted" className="featured-tour-section fix">
+        <Container>
+          {renderHeader()}
+          <div className="text-center py-12">
+            <p className="text-gray-500">
+              No featured tours available at the moment.
+            </p>
           </div>
-          <div className="text-center" style={{ padding: "3rem" }}>
-            <p>No featured tours available at the moment.</p>
-          </div>
-        </div>
-      </section>
+        </Container>
+      </Section>
     );
   }
 
   return (
-    <section className="featured-tour-section section-padding section-bg">
-      <div className="container">
-        <div className="row align-items-end mb-4">
-          <div className="col-lg-8">
-            <div className="section-title">
-              <span className="sub-title wow fadeInUp">Featured Tours</span>
-              <h2 className="wow fadeInUp wow" data-wow-delay=".5s">
-                Handpicked Adventures <br />
-                Just For You
-              </h2>
-            </div>
-            <p className="wow fadeInUp wow" data-wow-delay=".7s">
-              Discover our carefully curated selection of extraordinary
-              journeys. <br />
-              From breathtaking landscapes to cultural treasures, find your
-              perfect escape.
-            </p>
-          </div>
-          <div className="col-lg-4 text-lg-end">
-            <Link
-              href="/tours"
-              className="theme-btn wow fadeInUp wow"
-              data-wow-delay=".7s"
-            >
-              View More <i className="bi bi-arrow-right"></i>
-            </Link>
-          </div>
-        </div>
-        <div className="swiper tour-slider" style={{ position: "relative" }}>
-          <div className="array-button">
-            <button onClick={previous} className="array-prev">
-              <IKImage
-                src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/offer/chervon-right.png`}
-                alt="img"
-                width={24}
-                height={16}
-              />
-            </button>
-            <button onClick={next} className="array-next">
-              <IKImage
-                src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/icon/39.svg`}
-                alt="img"
-                width={24}
-                height={16}
-              />
-            </button>
-          </div>
-          <div className="swiper-wrapper cs_slider_gap_301">
-            <Slider ref={sliderRef} {...settings}>
+    <Section
+      padding="lg"
+      bg="muted"
+      className="featured-tour-section fix bg-gray-50"
+    >
+      <Container>
+        {renderHeader()}
+
+        <div className="relative">
+          <Carousel
+            setApi={setApi}
+            className="w-full"
+            plugins={[
+              Autoplay({
+                delay: 4000,
+              }),
+            ]}
+            opts={{
+              loop: true,
+            }}
+          >
+            <CarouselContent className="-ml-4">
               {tours.map((tour) => (
-                <div key={tour._id} className="swiper-slide">
-                  <div className="feature-tour-items">
-                    <div className="feature-tour-image">
+                <CarouselItem
+                  key={tour._id}
+                  className="pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4"
+                >
+                  <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col h-full border border-gray-100 relative group">
+                    <div className="relative h-60 overflow-hidden">
                       <IKImage
                         src={tour.images[0]}
                         alt={tour.title}
                         width={308}
                         height={249}
-                        transformation={[{ width: 600, height: 500 }]} // Higher res for better quality
+                        transformation={[{ width: 600, height: 500 }]}
+                        className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
                       />
-                      <ul className="location">
-                        <li>
-                          <i className="bi bi-geo-alt-fill"></i>
-                          {tour.location || "Location"}
-                        </li>
-                      </ul>
+                      <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-gray-700 flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5 text-amber-500" />
+                        {tour.location || "Location"}
+                      </div>
                     </div>
-                    <div className="feature-tour-content">
-                      <h4>
-                        <Link href={`/tours/${tour.seo?.slug}`}>
+                    <div className="p-5 flex flex-col flex-1">
+                      <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+                        <Link
+                          href={`/tours/${tour.seo?.slug}`}
+                          className="hover:text-[var(--theme)] transition-colors"
+                        >
                           {tour.title}
                         </Link>
                       </h4>
-                      <h5>
-                        {formatCurrency(tour.price)}
-                        <span>/{tour.priceType}</span>
-                      </h5>
-                      <Link
-                        href={`/tours/${tour.seo?.slug || tour._id}`}
-                        className="icon"
-                      >
-                        <i className="bi bi-arrow-right"></i>
-                      </Link>
+                      <div className="flex items-center justify-between mt-auto pt-3 border-t border-gray-100">
+                        <div>
+                          <span className="text-lg font-bold text-[var(--theme)]">
+                            {formatCurrency(tour.price)}
+                          </span>
+                          <span className="text-xs text-gray-400 block">
+                            /{tour.priceType}
+                          </span>
+                        </div>
+                        <Link
+                          href={`/tours/${tour.seo?.slug || tour._id}`}
+                          className="bg-gray-50 hover:bg-[var(--theme)] hover:text-white text-[var(--theme)] w-9 h-9 rounded-full flex items-center justify-center transition-colors border border-gray-100"
+                          aria-label="View Details"
+                        >
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </CarouselItem>
               ))}
-            </Slider>
-          </div>
+            </CarouselContent>
+          </Carousel>
         </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
   );
 };
 

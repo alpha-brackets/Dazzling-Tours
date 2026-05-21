@@ -17,17 +17,31 @@ import PaginationComponent from "@/app/Components/Common/PaginationComponent";
 import { TextInput, Select } from "@/app/Components/Form";
 import Image from "next/image";
 import {
-  Group,
   Stack,
   Page,
-  Button,
-  Badge,
   Table,
   ConfirmModal,
   Title,
   Text,
-  Icon,
 } from "@/app/Components/Common";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, MapPin, Star, Pencil, Trash, Image as ImageIcon } from "lucide-react";
+
+const categoryColorMap = {
+  primary: "bg-blue-50 text-blue-700 border-blue-200",
+  secondary: "bg-gray-50 text-gray-700 border-gray-200",
+  success: "bg-green-50 text-green-700 border-green-200",
+  warning: "bg-amber-50 text-amber-700 border-amber-200",
+  error: "bg-red-50 text-red-700 border-red-200",
+  blue: "bg-sky-50 text-sky-700 border-sky-200",
+};
+
+const statusColorMap = {
+  success: "bg-green-50 text-green-700 border-green-200",
+  warning: "bg-amber-50 text-amber-700 border-amber-200",
+  error: "bg-red-50 text-red-700 border-red-200",
+  gray: "bg-gray-50 text-gray-700 border-gray-200",
+};
 
 const ToursList = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -41,7 +55,7 @@ const ToursList = () => {
   const { data: toursData, isLoading: loading } = useGetTours({
     page: currentPage,
     limit: pageSize,
-    status: filterStatus,
+    status: filterStatus === "all" ? undefined : filterStatus,
     category: filterCategory === "all" ? undefined : filterCategory,
     featured:
       filterFeatured === "all"
@@ -116,16 +130,16 @@ const ToursList = () => {
       {
         onSuccess: () => {
           showSuccess(
-            `Tour status updated to ${
-              currentStatus === TourStatus.ACTIVE
-                ? TourStatus.INACTIVE
-                : TourStatus.ACTIVE
+            `Tour status updated to ${currentStatus === TourStatus.ACTIVE
+              ? TourStatus.INACTIVE
+              : TourStatus.ACTIVE
             }!`,
           );
         },
       },
     );
   };
+
   const getStatusBadgeColor = (
     status: TourStatus,
   ): "success" | "warning" | "error" | "gray" => {
@@ -160,6 +174,7 @@ const ToursList = () => {
     }, 0);
     return colors[Math.abs(hash) % colors.length];
   };
+
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
@@ -216,243 +231,170 @@ const ToursList = () => {
       headerActions={
         <Button
           onClick={handleCreateTour}
-          loading={createTourMutation.isPending}
+          className="flex items-center gap-2"
         >
-          <Icon name="plus-circle" /> Add New Tour
+          <PlusCircle className="h-4 w-4" /> Add New Tour
         </Button>
       }
     >
       <Stack>
         {/* Filters */}
-        <Group>
-          <TextInput
-            placeholder="Search tours..."
-            value={searchTerm}
-            onChange={handleSearchChange}
-            leftIcon={<Icon name="search" />}
-          />
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex-1">
+            <TextInput
+              placeholder="Search tours..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+            />
+          </div>
 
-          <Select
-            value={filterStatus}
-            onChange={handleStatusChange}
-            data={[
-              { value: "all", label: "All Status" },
-              ...TOUR_STATUS_OPTIONS,
-            ]}
-          />
+          <div className="w-full md:w-48">
+            <Select
+              value={filterStatus}
+              onChange={handleStatusChange}
+              data={[
+                { value: "all", label: "All Status" },
+                ...TOUR_STATUS_OPTIONS,
+              ]}
+            />
+          </div>
 
-          <Select
-            value={filterCategory}
-            onChange={handleCategoryChange}
-            data={categoryFilterOptions}
-            searchable
-          />
+          <div className="w-full md:w-48">
+            <Select
+              value={filterCategory}
+              onChange={handleCategoryChange}
+              data={categoryFilterOptions}
+              searchable
+            />
+          </div>
 
-          <Select
-            value={filterFeatured}
-            onChange={handleFeaturedChange}
-            data={[
-              { value: "all", label: "All Tours" },
-              { value: "true", label: "Featured Only" },
-              { value: "false", label: "Non-Featured Only" },
-            ]}
-          />
-        </Group>
+          <div className="w-full md:w-48">
+            <Select
+              value={filterFeatured}
+              onChange={handleFeaturedChange}
+              data={[
+                { value: "all", label: "All Tours" },
+                { value: "true", label: "Featured Only" },
+                { value: "false", label: "Non-Featured Only" },
+              ]}
+            />
+          </div>
+        </div>
 
-        <Table verticalSpacing="sm" horizontalSpacing="md">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Location</th>
-              <th>Price</th>
-              <th style={{ textAlign: "center" }}>Duration</th>
-              <th style={{ textAlign: "center" }}>Category</th>
-              <th style={{ textAlign: "center" }}>Status</th>
-              <th style={{ textAlign: "center" }}>Featured</th>
-              <th style={{ textAlign: "center" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {tours.map((tour) => (
-              <tr key={tour._id}>
-                <td>
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "1rem",
-                      alignItems: "center",
-                    }}
-                  >
-                    {tour.images && tour.images[0] ? (
-                      <div
-                        style={{
-                          width: "64px",
-                          height: "48px",
-                          borderRadius: "6px",
-                          overflow: "hidden",
-                          flexShrink: 0,
-                          border: "1px solid #eee",
-                          position: "relative",
-                        }}
-                      >
-                        <Image
-                          src={tour.images[0]}
-                          alt={tour.title}
-                          width={64}
-                          height={48}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div
-                        style={{
-                          width: "64px",
-                          height: "48px",
-                          borderRadius: "6px",
-                          backgroundColor: "#f8f9fa",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          border: "1px solid #eee",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Icon
-                          name="image"
-                          color="#dee2e6"
-                          size="1rem"
-                        />
-                      </div>
-                    )}
-                    <div
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "2px",
-                      }}
-                    >
-                      <Title order={6} size="h6" weight={700}>
-                        {tour.title}
-                      </Title>
-                      <Text size="xs" color="dimmed">
-                        ID: {tour._id.substring(0, 8)}...
-                      </Text>
-                    </div>
-                  </div>
-                </td>
-                <td style={{ verticalAlign: "middle", padding: "0.75rem" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "0.5rem",
-                    }}
-                  >
-                    <Icon name="geo-alt" color="dimmed" size="0.9rem" />
-                    <Text size="sm">{tour.location}</Text>
-                  </div>
-                </td>
-                <td style={{ verticalAlign: "middle", padding: "0.75rem" }}>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <Text weight={600}>
-                      {formatCurrency(tour.price)}
-                    </Text>
-                    <small
-                      className="text-muted"
-                      style={{ fontSize: "0.75rem" }}
-                    >
-                      {tour.priceType || "Per Person"}
-                    </small>
-                  </div>
-                </td>
-                <td style={{ textAlign: "center" }}>
-                  <Badge variant="light" color="blue" size="sm">
-                    {tour.duration}
-                  </Badge>
-                </td>
-                <td style={{ textAlign: "center" }}>
-                  <Badge
-                    variant="filled"
-                    color={getCategoryBadgeColor(tour.category)}
-                    size="sm"
-                    style={{ textTransform: "uppercase" }}
-                  >
-                    {tour.category}
-                  </Badge>
-                </td>
-                <td style={{ textAlign: "center" }}>
-                  <div
-                    onClick={() => toggleStatus(tour._id, tour.status)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <Badge
-                      variant="filled"
-                      color={getStatusBadgeColor(tour.status)}
-                      size="sm"
-                    >
-                      {tour.status}
-                    </Badge>
-                  </div>
-                </td>
-                <td style={{ textAlign: "center" }}>
-                  <Button
-                    onClick={() => toggleFeatured(tour._id, tour.featured)}
-                    variant="subtle"
-                    size="sm"
-                    style={{ padding: 0, minWidth: "auto", height: "auto" }}
-                  >
-                    {tour.featured ? (
-                      <Icon
-                        name="star-fill"
-                        color="#ffc107"
-                        size="1.2rem"
-                      />
-                    ) : (
-                      <Icon
-                        name="star"
-                        color="#cbd5e0"
-                        size="1.2rem"
-                      />
-                    )}
-                  </Button>
-                </td>
-                <td style={{ textAlign: "center" }}>
-                  <div
-                    className="action-buttons"
-                    style={{
-                      display: "flex",
-                      gap: "0.5rem",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Link
-                      href={`/admin/tours/${tour._id}`}
-                      passHref
-                    >
-                      <Button variant="outline" size="sm" title="Edit">
-                        <Icon name="pencil" />
-                      </Button>
-                    </Link>
-                    <Button
-                      onClick={() => deleteTour(tour._id)}
-                      variant="outline"
-                      color="error"
-                      size="sm"
-                      title="Delete"
-                    >
-                      <Icon name="trash" />
-                    </Button>
-                  </div>
-                </td>
+        <div className="border border-gray-200 rounded-lg overflow-hidden overflow-x-auto bg-white">
+          <Table verticalSpacing="sm" horizontalSpacing="md">
+            <thead>
+              <tr>
+                <th className="text-left p-3">Title</th>
+                <th className="text-left p-3">Location</th>
+                <th className="text-left p-3">Price</th>
+                <th className="text-center p-3">Duration</th>
+                <th className="text-center p-3">Category</th>
+                <th className="text-center p-3">Status</th>
+                <th className="text-center p-3">Featured</th>
+                <th className="text-center p-3">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {tours.map((tour) => (
+                <tr key={tour._id} className="border-t border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="p-3">
+                    <div className="flex gap-4 items-center">
+                      {tour.images && tour.images[0] ? (
+                        <div className="w-16 h-12 rounded-md overflow-hidden shrink-0 border border-gray-100 relative">
+                          <Image
+                            src={tour.images[0]}
+                            alt={tour.title}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-16 h-12 rounded-md bg-gray-50 flex items-center justify-center border border-gray-100 shrink-0">
+                          <ImageIcon className="h-5 w-5 text-gray-300" />
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-0.5">
+                        <Title order={6} size="h6" className="font-bold text-gray-900">
+                          {tour.title}
+                        </Title>
+                        <Text className="text-xs text-gray-400">
+                          ID: {tour._id.substring(0, 8)}...
+                        </Text>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-3 align-middle">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <Text className="text-sm">{tour.location}</Text>
+                    </div>
+                  </td>
+                  <td className="p-3 align-middle">
+                    <div className="flex flex-col">
+                      <Text className="font-semibold text-gray-900">
+                        {formatCurrency(tour.price)}
+                      </Text>
+                      <span className="text-xs text-gray-500">
+                        {tour.priceType}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-3 text-center align-middle">
+                    <span className="inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                      {tour.duration}
+                    </span>
+                  </td>
+                  <td className="p-3 text-center align-middle">
+                    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md border uppercase ${categoryColorMap[getCategoryBadgeColor(tour.category)]}`}>
+                      {tour.category}
+                    </span>
+                  </td>
+                  <td className="p-3 text-center align-middle">
+                    <div
+                      onClick={() => toggleStatus(tour._id, tour.status)}
+                      className="cursor-pointer"
+                    >
+                      <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-md border ${statusColorMap[getStatusBadgeColor(tour.status)]}`}>
+                        {tour.status}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-3 text-center align-middle">
+                    <button
+                      onClick={() => toggleFeatured(tour._id, tour.featured)}
+                      className="p-1 min-w-0 h-auto bg-transparent border-none cursor-pointer"
+                    >
+                      {tour.featured ? (
+                        <Star className="h-5 w-5 fill-amber-400 text-amber-400" />
+                      ) : (
+                        <Star className="h-5 w-5 text-gray-300" />
+                      )}
+                    </button>
+                  </td>
+                  <td className="p-3 text-center align-middle">
+                    <div className="flex gap-2 justify-center">
+                      <Link href={`/admin/tours/${tour._id}`}>
+                        <Button variant="outline" size="sm" className="p-2" title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                      <Button
+                        onClick={() => deleteTour(tour._id)}
+                        variant="outline"
+                        size="sm"
+                        className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        title="Delete"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
 
         {tours.length === 0 && !loading && (
           <div className="no-data">

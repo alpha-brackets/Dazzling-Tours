@@ -16,6 +16,7 @@ import {
   TESTIMONIAL_STATUS_OPTIONS,
   TESTIMONIAL_SOURCE_OPTIONS,
 } from "@/lib/enums/testimonial";
+import Icon from "@/app/Components/Common/Icon";
 import {
   TextInput,
   Textarea,
@@ -24,6 +25,7 @@ import {
   ImageUpload,
   StarRating,
 } from "@/app/Components/Form";
+import { ImageVariant } from "@/lib/constants/imageDimensions";
 
 const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
@@ -135,7 +137,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
           <Button
             color="secondary"
             variant="outline"
-            leftIcon={<i className="bi bi-arrow-left"></i>}
+            leftIcon={<Icon name="arrow-left" />}
             onClick={() => router.back()}
           >
             Back
@@ -144,10 +146,10 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
       >
         <div className="card">
           <div className="card-body text-center py-5">
-            <i
-              className="bi bi-exclamation-triangle text-warning"
+            <Icon
+              name="exclamation-triangle" className="text-warning"
               style={{ fontSize: "3rem" }}
-            ></i>
+            />
             <h3 className="mt-3">Testimonial Not Found</h3>
             <p className="text-muted">
               The testimonial you&apos;re looking for doesn&apos;t exist or has
@@ -155,7 +157,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
             </p>
             <Button
               color="primary"
-              leftIcon={<i className="bi bi-arrow-left"></i>}
+              leftIcon={<Icon name="arrow-left" />}
               onClick={() => router.back()}
             >
               Go Back
@@ -175,7 +177,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
         <Button
           color="secondary"
           variant="outline"
-          leftIcon={<i className="bi bi-arrow-left"></i>}
+          leftIcon={<Icon name="arrow-left" />}
           onClick={() => router.back()}
         >
           Back
@@ -191,7 +193,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-person-circle"></i> Basic Information
+                <Icon name="person-circle" /> Basic Information
               </h3>
               <p className="section-description">
                 Essential details about the person giving the testimonial
@@ -236,7 +238,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-image"></i> Profile Image
+                <Icon name="image" /> Profile Image
               </h3>
               <p className="section-description">
                 Upload a profile image for the testimonial
@@ -251,14 +253,16 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
               }
               maxFiles={1}
               maxSize={5}
+              multiple={false}
               acceptedTypes={["image/jpeg", "image/png", "image/webp"]}
+              variant={ImageVariant.AVATAR}
             />
           </div>
 
           <div className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-chat-quote"></i> Testimonial Content
+                <Icon name="chat-quote" /> Testimonial Content
               </h3>
               <p className="section-description">
                 The testimonial content and rating
@@ -294,7 +298,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-map"></i> Tour Association
+                <Icon name="map" /> Tour Association
               </h3>
               <p className="section-description">
                 Link this testimonial to a specific tour (optional)
@@ -313,7 +317,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="form-section">
             <div className="section-header">
               <h3>
-                <i className="bi bi-gear"></i> Settings
+                <Icon name="gear" /> Settings
               </h3>
               <p className="section-description">
                 Configure testimonial visibility and status
@@ -350,7 +354,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
           <div className="actions-container">
             <Button
               color="secondary"
-              leftIcon={<i className="bi bi-arrow-left"></i>}
+              leftIcon={<Icon name="arrow-left" />}
               onClick={() => router.back()}
             >
               Cancel
@@ -361,7 +365,7 @@ const EditTestimonial = ({ params }: { params: Promise<{ id: string }> }) => {
               loading={updateTestimonialMutation.isPending}
               leftIcon={
                 !updateTestimonialMutation.isPending ? (
-                  <i className="bi bi-check-lg"></i>
+                  <Icon name="check-lg" />
                 ) : undefined
               }
               disabled={updateTestimonialMutation.isPending}

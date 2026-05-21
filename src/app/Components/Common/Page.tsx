@@ -37,7 +37,7 @@ const Page: React.FC<PageProps> = ({
         <div className="header-content">
           <div className="header-text" style={{ minHeight: "36px" }}>
             <h1
-              className="page-title d-flex align-items-center m-0"
+              className="page-title flex items-center m-0"
               style={{ position: "relative", display: "inline-flex" }}
             >
               {title}

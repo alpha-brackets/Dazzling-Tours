@@ -9,15 +9,17 @@ export function cleanDataForMongoDB<T extends Record<string, unknown>>(
 ): Partial<T> {
   const cleanedData = { ...data };
 
-  // Convert empty strings to undefined for optional fields
+  // Convert empty strings to null for optional fields to explicitly unset them in DB
   optionalFields.forEach((field) => {
     const fieldValue = cleanedData[field];
     if (
       fieldValue !== undefined &&
+      fieldValue !== null &&
       typeof fieldValue === "string" &&
       fieldValue.trim() === ""
     ) {
-      (cleanedData as Record<string, unknown>)[field as string] = undefined;
+      // Use null so Mongoose explicitly clears the field instead of ignoring it
+      (cleanedData as Record<string, unknown>)[field as string] = null;
     }
   });
 
@@ -140,11 +142,11 @@ export function generateMetaTitle(
   locationOrOptions?:
     | string
     | {
-        location?: string;
-        brandName?: string;
-        customTitle?: string;
-        maxLength?: number;
-      },
+      location?: string;
+      brandName?: string;
+      customTitle?: string;
+      maxLength?: number;
+    },
   customTitle?: string,
 ): string {
   // Support legacy signature: generateMetaTitle(title, location, customTitle)
@@ -264,16 +266,16 @@ export function generateMetaDescription(
   locationOrOptions?:
     | string
     | {
-        location?: string;
-        price?: number;
-        duration?: string;
-        customDescription?: string;
-        maxLength?: number;
-        locationPrefix?: string;
-        durationPrefix?: string;
-        pricePrefix?: string;
-        priceFormat?: (price: number) => string;
-      },
+      location?: string;
+      price?: number;
+      duration?: string;
+      customDescription?: string;
+      maxLength?: number;
+      locationPrefix?: string;
+      durationPrefix?: string;
+      pricePrefix?: string;
+      priceFormat?: (price: number) => string;
+    },
   price?: number,
   duration?: string,
   customDescription?: string,

@@ -11,6 +11,8 @@ import { Page, Stack, Group, Button } from "@/app/Components/Common";
 import { Select } from "@/app/Components/Form";
 import { ContactStatus, getContactStatuses } from "@/lib/types/enums";
 
+import Icon from "@/app/Components/Common/Icon";
+
 const ContactQueryDetails = ({
   params,
 }: {
@@ -73,7 +75,7 @@ const ContactQueryDetails = ({
       loading={loading}
       headerActions={
         <Button variant="outline" onClick={() => router.back()}>
-          <i className="bi bi-arrow-left"></i> Back
+          <Icon name="arrow-left" /> Back
         </Button>
       }
     >
@@ -112,7 +114,7 @@ const ContactQueryDetails = ({
                   }}
                 >
                   <span style={{ color: "#6c757d", fontSize: "0.875rem" }}>
-                    <i className="bi bi-calendar"></i>{" "}
+                    <Icon name="calendar" />{" "}
                     {new Date(query.createdAt).toLocaleString()}
                   </span>
                   <span
@@ -281,7 +283,7 @@ const ContactQueryDetails = ({
                         href={`/admin/tours/edit/${query.tourId}`}
                         style={{ color: "#1976d2", textDecoration: "none" }}
                       >
-                        View Tour <i className="bi bi-box-arrow-up-right"></i>
+                        View Tour <Icon name="box-arrow-up-right" />
                       </Link>
                     </div>
                   </div>
@@ -443,21 +445,21 @@ const ContactQueryDetails = ({
               href={`mailto:${query.email}?subject=Re: ${query.subject}&body=Dear ${query.name},%0D%0A%0D%0AThank you for contacting Dazzling Tours.%0D%0A%0D%0A`}
               className="btn btn-primary"
             >
-              <i className="bi bi-reply"></i> Reply via Email
+              <Icon name="reply" /> Reply via Email
             </a>
             <Button
               color="success"
               onClick={() => updateStatus(ContactStatus.REPLIED)}
               disabled={query.status === ContactStatus.REPLIED}
             >
-              <i className="bi bi-check-circle"></i> Mark as Replied
+              <Icon name="check-circle" /> Mark as Replied
             </Button>
             <Button
               color="secondary"
               onClick={() => updateStatus(ContactStatus.CLOSED)}
               disabled={query.status === ContactStatus.CLOSED}
             >
-              <i className="bi bi-x-circle"></i> Close Query
+              <Icon name="x-circle" /> Close Query
             </Button>
           </Group>
         </Stack>
@@ -473,14 +475,11 @@ const ContactQueryDetails = ({
             border: "1px solid #e5e7eb",
           }}
         >
-          <i
-            className="bi bi-exclamation-circle"
-            style={{
+          <Icon name="exclamation-circle" style={{
               fontSize: "3rem",
               color: "#6c757d",
               marginBottom: "1rem",
-            }}
-          ></i>
+            }} />
           <p style={{ fontSize: "1.1rem", color: "#6c757d" }}>
             Contact query not found
           </p>

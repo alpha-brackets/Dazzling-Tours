@@ -1,5 +1,8 @@
 "use client";
 import React from "react";
+import { Button as ShadcnButton } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "filled" | "light" | "outline" | "subtle" | "transparent";
@@ -28,76 +31,85 @@ const Button: React.FC<ButtonProps> = React.memo(
     children,
     ...rest
   }) => {
-    const baseClasses = "btn admin-btn";
-
-    const variantClasses = {
-      filled: "", // Bootstrap's default filled style
-      light: "btn-light",
-      outline: "btn-outline",
-      subtle: "btn-link", // Bootstrap's link style for subtle
-      transparent: "btn-link", // Use link style for transparent
+    // Map variant
+    const getVariant = () => {
+      if (color === "error" && variant === "filled") return "destructive";
+      if (variant === "outline") return "outline";
+      if (variant === "subtle" || variant === "transparent") return "ghost";
+      if (variant === "light") return "secondary";
+      return "default";
     };
 
+    // Map size
+    const getSize = () => {
+      if (size === "xs") return "sm"; // Shadcn doesn't have xs, use sm
+      if (size === "sm") return "sm";
+      if (size === "lg") return "lg";
+      if (size === "xl") return "lg"; // Use lg for xl too or handle via custom padding
+      return "default";
+    };
+
+    // Map custom colors and radius via Tailwind
     const colorClasses = {
-      primary: "btn-primary",
-      secondary: "btn-secondary",
-      success: "btn-success",
-      warning: "btn-warning",
-      error: "btn-danger", // Bootstrap uses 'danger' instead of 'error'
-      gray: "btn-secondary", // Use secondary for gray
-    };
-
-    const sizeClasses = {
-      xs: "admin-btn-xs",
-      sm: "admin-btn-sm",
-      md: "admin-btn-md",
-      lg: "admin-btn-lg",
-      xl: "admin-btn-xl",
+      primary: "bg-[var(--theme)] text-white hover:bg-[var(--theme)]/90",
+      secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
+      success: "bg-green-600 text-white hover:bg-green-700",
+      warning: "bg-yellow-500 text-white hover:bg-yellow-600",
+      error: "bg-red-600 text-white hover:bg-red-700",
+      gray: "bg-gray-500 text-white hover:bg-gray-600",
     };
 
     const radiusClasses = {
-      xs: "rounded-0",
-      sm: "rounded-1",
-      md: "rounded-2",
-      lg: "rounded-3",
-      xl: "rounded-4",
-      round: "rounded-pill",
+      xs: "rounded-none",
+      sm: "rounded-sm",
+      md: "rounded-md",
+      lg: "rounded-lg",
+      xl: "rounded-xl",
+      round: "rounded-full",
     };
 
-    const classes = [
-      baseClasses,
-      variant === "outline" ? `btn-outline-${color === "error" ? "danger" : color}` : colorClasses[color],
-      variant !== "outline" && variantClasses[variant],
-      sizeClasses[size],
-      radiusClasses[radius],
-      loading && "disabled",
-      disabled && "disabled",
-      fullWidth && "w-100",
-      className,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
+    const sizeClasses = {
+      xs: "h-7 px-2 text-xs",
+      sm: "h-8 px-3 text-sm",
+      md: "h-10 px-4",
+      lg: "h-11 px-6 text-base",
+      xl: "h-12 px-8 text-lg",
+    };
 
+    const shadcnVariant = getVariant();
+    const shadcnSize = getSize();
+
+    // If using custom color on filled/outline, we might need to override Shadcn defaults
+    const useCustomColor = variant === "filled" && color !== "error";
+    
     return (
-      <button className={classes} disabled={disabled || loading} {...rest}>
+      <ShadcnButton
+        variant={shadcnVariant}
+        size={shadcnSize}
+        disabled={disabled || loading}
+        className={cn(
+          radiusClasses[radius],
+          sizeClasses[size],
+          fullWidth && "w-full",
+          useCustomColor && colorClasses[color],
+          variant === "outline" && color === "primary" && "border-[var(--theme)] text-[var(--theme)] hover:bg-[var(--theme)]/10",
+          className
+        )}
+        {...rest}
+      >
         {loading ? (
           <>
-            <span
-              className="spinner-border spinner-border-sm me-2"
-              role="status"
-              aria-hidden="true"
-            ></span>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             <span>Loading...</span>
           </>
         ) : (
           <>
-            {leftIcon && <span className="me-2">{leftIcon}</span>}
+            {leftIcon && <span className="mr-2">{leftIcon}</span>}
             {children}
-            {rightIcon && <span className="ms-2">{rightIcon}</span>}
+            {rightIcon && <span className="ml-2">{rightIcon}</span>}
           </>
         )}
-      </button>
+      </ShadcnButton>
     );
   },
 );

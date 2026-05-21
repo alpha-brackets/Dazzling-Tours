@@ -1,5 +1,8 @@
 "use client";
 import React from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface LoadingProps {
   variant?: "spinner" | "dots" | "skeleton" | "pulse";
@@ -19,20 +22,20 @@ const Loading: React.FC<LoadingProps> = ({
   className = "",
 }) => {
   const sizeValues = {
-    xs: 16,
-    sm: 20,
-    md: 24,
-    lg: 32,
-    xl: 48,
+    xs: "h-4 w-4",
+    sm: "h-5 w-5",
+    md: "h-6 w-6",
+    lg: "h-8 w-8",
+    xl: "h-12 w-12",
   };
 
   const colorClasses = {
-    primary: "text-primary",
-    secondary: "text-secondary",
-    success: "text-success",
-    warning: "text-warning",
-    error: "text-danger",
-    gray: "text-muted",
+    primary: "text-[var(--theme)]",
+    secondary: "text-gray-500",
+    success: "text-green-600",
+    warning: "text-yellow-500",
+    error: "text-red-600",
+    gray: "text-gray-400",
   };
 
   const textSizeClasses = {
@@ -44,47 +47,23 @@ const Loading: React.FC<LoadingProps> = ({
   };
 
   const renderSpinner = () => (
-    <div
-      className={`spinner-border ${colorClasses[color]}`}
-      role="status"
-      aria-hidden="true"
-      style={{
-        width: sizeValues[size],
-        height: sizeValues[size],
-        borderWidth: size === "xs" || size === "sm" ? "1.5px" : "2.5px",
-      }}
-    >
-      <span className="visually-hidden">Loading...</span>
-    </div>
+    <Loader2 className={cn("animate-spin", sizeValues[size], colorClasses[color])} />
   );
 
   const renderDots = () => (
-    <div
-      className={`loading-dots`}
-      style={{ width: sizeValues[size], height: sizeValues[size] }}
-    >
-      <div className={`dot ${colorClasses[color]}`}></div>
-      <div className={`dot ${colorClasses[color]}`}></div>
-      <div className={`dot ${colorClasses[color]}`}></div>
+    <div className="flex gap-1 items-center justify-center">
+      <div className={cn("rounded-full animate-bounce [animation-delay:-0.3s]", size === "xs" || size === "sm" ? "h-1 w-1" : "h-2 w-2", colorClasses[color])} style={{ backgroundColor: 'currentColor' }}></div>
+      <div className={cn("rounded-full animate-bounce [animation-delay:-0.15s]", size === "xs" || size === "sm" ? "h-1 w-1" : "h-2 w-2", colorClasses[color])} style={{ backgroundColor: 'currentColor' }}></div>
+      <div className={cn("rounded-full animate-bounce", size === "xs" || size === "sm" ? "h-1 w-1" : "h-2 w-2", colorClasses[color])} style={{ backgroundColor: 'currentColor' }}></div>
     </div>
   );
 
   const renderSkeleton = () => (
-    <div
-      className={`skeleton ${colorClasses[color]}`}
-      style={{ width: sizeValues[size], height: sizeValues[size] }}
-    >
-      <div className="skeleton-content"></div>
-    </div>
+    <Skeleton className={cn(sizeValues[size], "rounded-md")} />
   );
 
   const renderPulse = () => (
-    <div
-      className={`pulse ${colorClasses[color]}`}
-      style={{ width: sizeValues[size], height: sizeValues[size] }}
-    >
-      <div className="pulse-content"></div>
-    </div>
+    <div className={cn("animate-pulse rounded-full", sizeValues[size], colorClasses[color])} style={{ backgroundColor: 'currentColor', opacity: 0.5 }}></div>
   );
 
   const renderLoading = () => {
@@ -100,38 +79,19 @@ const Loading: React.FC<LoadingProps> = ({
     }
   };
 
-  const containerClasses = [
-    "loading-container",
-    "d-flex",
-    "flex-column",
-    "align-items-center",
-    "justify-content-center",
-    fullScreen && "loading-fullscreen",
-    className,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const containerClasses = cn(
+    "flex flex-col items-center justify-center",
+    fullScreen && "fixed inset-0 bg-white/80 backdrop-blur-sm z-50",
+    className
+  );
 
   return (
-    <div
-      className={containerClasses}
-      style={{
-        display: !text ? "inline-flex" : "flex",
-        verticalAlign: "middle",
-        height: text ? "auto" : "1em",
-        lineHeight: 1,
-      }}
-    >
-      <div
-        className="d-flex align-items-center justify-content-center"
-        style={{ height: "100%", width: "100%" }}
-      >
+    <div className={containerClasses}>
+      <div className="flex items-center justify-center">
         {renderLoading()}
       </div>
       {text && (
-        <div
-          className={`loading-text ${textSizeClasses[size]} ${colorClasses[color]} mt-2`}
-        >
+        <div className={cn("mt-2 font-medium", textSizeClasses[size], colorClasses[color])}>
           {text}
         </div>
       )}

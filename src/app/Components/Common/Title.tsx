@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { cn } from "@/lib/utils";
 
 export interface TitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
   /** Heading order (1-6), determines which HTML element to render */
@@ -50,54 +51,75 @@ const Title: React.FC<TitleProps> = ({
     component ||
     (`h${order}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div" | "span");
 
-  // Size mapping (if size prop is provided, use it; otherwise derive from order)
-  const sizeMap = {
-    h1: { fontSize: "2rem", lineHeight: "1.2" },
-    h2: { fontSize: "1.75rem", lineHeight: "1.3" },
-    h3: { fontSize: "1.5rem", lineHeight: "1.4" },
-    h4: { fontSize: "1.25rem", lineHeight: "1.4" },
-    h5: { fontSize: "1.125rem", lineHeight: "1.5" },
-    h6: { fontSize: "1rem", lineHeight: "1.5" },
+  const effectiveSize = size || (`h${order}` as "h1" | "h2" | "h3" | "h4" | "h5" | "h6");
+
+  // Size mapping
+  const sizeClasses = {
+    h1: "text-3xl md:text-4xl font-bold", // 2rem
+    h2: "text-2xl md:text-3xl font-bold", // 1.75rem
+    h3: "text-xl md:text-2xl font-bold",   // 1.5rem
+    h4: "text-lg md:text-xl font-bold",    // 1.25rem
+    h5: "text-base md:text-lg font-bold",   // 1.125rem
+    h6: "text-sm md:text-base font-bold",   // 1rem
   };
 
-  const effectiveSize = size || (`h${order}` as keyof typeof sizeMap);
-  const sizeStyles = sizeMap[effectiveSize];
+  // Weight mapping
+  const weightClasses = {
+    100: "font-thin",
+    200: "font-extralight",
+    300: "font-light",
+    400: "font-normal",
+    500: "font-medium",
+    600: "font-semibold",
+    700: "font-bold",
+    800: "font-extrabold",
+    900: "font-black",
+  };
 
   // Color mapping
-  const colorMap = {
-    default: "#2c3e50",
-    dimmed: "#6c757d",
-    primary: "#fd7d02", // Orange theme color
-    secondary: "#6c757d",
-    success: "#28a745",
-    warning: "#ffc107",
-    error: "#dc3545",
+  const colorClasses = {
+    default: "text-[#2c3e50]",
+    dimmed: "text-gray-500",
+    primary: "text-[var(--theme)]",
+    secondary: "text-gray-600",
+    success: "text-green-600",
+    warning: "text-yellow-500",
+    error: "text-red-600",
   };
 
-  const mergedStyle: React.CSSProperties = {
-    margin: 0,
-    fontFamily: '"Manrope", Arial, sans-serif',
-    fontWeight: weight,
-    fontSize: sizeStyles.fontSize,
-    lineHeight: lineHeight || sizeStyles.lineHeight,
-    color: colorMap[color],
-    textAlign: align,
-    textTransform: transform,
-    textDecoration: underline ? "underline" : "none",
-    ...style,
+  // Align mapping
+  const alignClasses = {
+    left: "text-left",
+    center: "text-center",
+    right: "text-right",
+    justify: "text-justify",
   };
 
-  const classes = [`ui-title`, `ui-title-${effectiveSize}`, className]
-    .filter(Boolean)
-    .join(" ")
-    .trim();
+  // Transform mapping
+  const transformClasses = {
+    none: "normal-case",
+    uppercase: "uppercase",
+    lowercase: "lowercase",
+    capitalize: "capitalize",
+  };
 
-  // Use React.createElement to properly handle dynamic component types
   return React.createElement(
     tagName,
     {
-      className: classes,
-      style: mergedStyle,
+      className: cn(
+        "m-0 font-sans",
+        sizeClasses[effectiveSize],
+        weightClasses[weight],
+        colorClasses[color],
+        align && alignClasses[align],
+        transform && transformClasses[transform],
+        underline && "underline",
+        className
+      ),
+      style: {
+        lineHeight: lineHeight,
+        ...style,
+      },
       ...rest,
     },
     children,

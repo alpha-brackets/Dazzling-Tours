@@ -1,9 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import { Badge, Button, Card, Group, Stack } from "../Common";
+import { Badge, Button, Card, ActionIcon } from "../Common";
 import NumberInput from "./NumberInput";
 import TextInput from "./TextInput";
 import Textarea from "./Textarea";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { AlertCircle, CalendarCheck, Plus, X } from "lucide-react";
 
 export interface ItineraryManagerProps {
   label?: string;
@@ -62,110 +65,110 @@ const ItineraryManager: React.FC<ItineraryManagerProps> = ({
     (!maxItems || items.length < maxItems);
 
   return (
-    <div className={`form-group ${className}`}>
+    <div className={cn("flex flex-col gap-1.5 w-full", className)}>
       {label && (
-        <label className="form-label">
+        <Label className="text-sm font-medium text-gray-700 flex items-center gap-1">
           {label}
-          {required && <span className="form-required">*</span>}
-        </label>
+          {required && <span className="text-red-500">*</span>}
+        </Label>
       )}
 
-      {description && <p className="form-description">{description}</p>}
+      {description && <p className="text-xs text-gray-500">{description}</p>}
 
-      <div className="list-manager">
-        <div className="add-item itinerary-form">
-          <Stack>
-            <Group fullWidth style={{ gap: 16 }}>
-              <div style={{ flex: 1 }}>
-                <NumberInput
-                  label="Day"
-                  value={newDay}
-                  onChange={(value) => setNewDay(value)}
-                  placeholder="1"
-                  min={1}
-                />
-              </div>
-              <div style={{ flex: 2, minWidth: 220 }}>
-                <TextInput
-                  label="Day Title / Location"
-                  value={newTitle}
-                  onChange={(value) => setNewTitle(value)}
-                  placeholder="e.g., Skardu, Arrival & City Tour"
-                  style={{ width: "100%" }}
-                />
-              </div>
-            </Group>
-            <Textarea
-              label="Activity Description"
-              value={newDescription}
-              onChange={(value) => setNewDescription(value)}
-              placeholder="e.g., Arrive at the airport, transfer to hotel, city tour including historical sites, lunch at local restaurant, evening free time"
-              rows={4}
-              style={{ width: "100%", minWidth: 320, resize: "vertical" }}
-              maxLength={400}
-              showCharCount
-            />
-          </Stack>
+      <div className="flex flex-col gap-4">
+        {/* Add Item Form */}
+        <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="sm:w-1/4">
+              <NumberInput
+                label="Day"
+                value={newDay}
+                onChange={(value) => setNewDay(value)}
+                placeholder="1"
+                min={1}
+              />
+            </div>
+            <div className="sm:flex-1">
+              <TextInput
+                label="Day Title / Location"
+                value={newTitle}
+                onChange={(value) => setNewTitle(value)}
+                placeholder="e.g., Skardu, Arrival & City Tour"
+              />
+            </div>
+          </div>
+          
+          <Textarea
+            label="Activity Description"
+            value={newDescription}
+            onChange={(value) => setNewDescription(value)}
+            placeholder="e.g., Arrive at the airport, transfer to hotel, city tour including historical sites, lunch at local restaurant, evening free time"
+            rows={4}
+            maxLength={400}
+            showCharCount
+          />
+          
           <Button
             color="primary"
             onClick={handleAdd}
             disabled={!canAdd}
-            leftIcon={<i className="bi bi-plus"></i>}
+            className="self-end"
           >
-            Add
+            <Plus className="h-4 w-4 mr-1" /> Add Day
           </Button>
         </div>
 
-        <Stack spacing={12}>
+        {/* Items List */}
+        <div className="flex flex-col gap-3">
           {items.map((item, index) => (
             <Card key={index} padding="md" variant="bordered">
-              <Group justify="space-between" align="flex-start" fullWidth>
-                <Stack spacing={4} className="form-flex-1">
-                  <Group spacing={12} align="center">
-                    <Badge color="blue" size="sm" radius="xl">
+              <div className="flex justify-between gap-4">
+                <div className="flex flex-col gap-2 flex-1">
+                  <div className="flex items-center gap-3">
+                    <Badge color="primary" size="sm" radius="xl">
                       DAY {item.day}
                     </Badge>
-                    <h4 className="day-title">{item.title}</h4>
-                  </Group>
-                  <p className="day-description">{item.description}</p>
+                    <h4 className="text-base font-semibold text-gray-900">{item.title}</h4>
+                  </div>
+                  <p className="text-sm text-gray-600">{item.description}</p>
                   {maxItems && (
-                    <p className="form-text-xs form-text-gray-400">
+                    <p className="text-xs text-gray-400 mt-1">
                       {index + 1}/{maxItems} days
                     </p>
                   )}
-                </Stack>
-                <Button
+                </div>
+                <ActionIcon
                   color="error"
                   variant="outline"
                   size="sm"
                   onClick={() => onRemove(index)}
-                  className="form-flex-shrink-0"
+                  className="h-8 w-8 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                   title="Remove day"
                 >
-                  <i className="bi bi-x"></i>
-                </Button>
-              </Group>
+                  <X className="h-4 w-4" />
+                </ActionIcon>
+              </div>
             </Card>
           ))}
 
           {items.length === 0 && (
-            <div className="empty-state">
-              <i className="bi bi-calendar-check"></i>
-              <p>No itinerary days added yet</p>
+            <div className="text-center p-6 border-2 border-dashed border-gray-200 rounded-lg text-gray-500 flex flex-col items-center gap-2">
+              <CalendarCheck className="h-8 w-8 text-gray-300" />
+              <p className="text-sm">No itinerary days added yet</p>
             </div>
           )}
-        </Stack>
+        </div>
 
         {maxItems && (
-          <div className="form-text-xs form-text-gray-500 form-mt-1">
+          <div className="text-xs text-gray-500 ml-auto">
             {items.length}/{maxItems} days
           </div>
         )}
       </div>
 
       {error && (
-        <p className="form-error">
-          <i className="bi bi-exclamation-circle form-error-icon"></i>
+        <p className="text-sm text-red-500 flex items-center gap-1 mt-0.5">
+          <AlertCircle className="h-3.5 w-3.5" />
           {error}
         </p>
       )}

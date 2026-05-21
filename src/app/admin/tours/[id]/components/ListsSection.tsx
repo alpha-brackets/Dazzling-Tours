@@ -2,6 +2,7 @@ import React from "react";
 import { ListManager } from "@/app/Components/Form";
 import { useForm } from "@/lib/hooks";
 import { UpdateTourData } from "@/lib/types/tour";
+import { Star, CheckCircle, XCircle } from "lucide-react";
 
 interface ListsSectionProps {
   form: ReturnType<typeof useForm<UpdateTourData>>;
@@ -10,16 +11,13 @@ interface ListsSectionProps {
 export const ListsSection: React.FC<ListsSectionProps> = ({ form }) => {
   return (
     <>
-      <div className="form-section">
-        <div className="section-header">
-          <h3 style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <i
-              className="bi bi-star"
-              style={{ color: "#fd7d02", fontSize: "1.2rem" }}
-            />
+      <div className="form-section bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+        <div className="section-header mb-4">
+          <h3 className="flex items-center gap-3 font-semibold text-gray-900 text-lg">
+            <Star className="h-5 w-5 text-[#fd7d02]" />
             Highlights
           </h3>
-          <p style={{ marginTop: "0.5rem", color: "#6c757d" }}>
+          <p className="mt-1 text-sm text-gray-500">
             Add key features and attractions that make this tour special
           </p>
         </div>
@@ -29,7 +27,7 @@ export const ListsSection: React.FC<ListsSectionProps> = ({ form }) => {
           placeholder="e.g., Visit ancient temples, Scenic mountain views, Local cultural experience"
           addButtonText="Add Highlight"
           emptyStateText="No highlights added yet"
-          emptyStateIcon={<i className="bi bi-star"></i>}
+          emptyStateIcon={<Star className="h-5 w-5" />}
           items={form.values.highlights || []}
           onAdd={(item) =>
             form.setFieldValue("highlights", [
@@ -50,16 +48,13 @@ export const ListsSection: React.FC<ListsSectionProps> = ({ form }) => {
         />
       </div>
 
-      <div className="form-section">
-        <div className="section-header">
-          <h3 style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <i
-              className="bi bi-check-circle"
-              style={{ color: "#fd7d02", fontSize: "1.2rem" }}
-            />
+      <div className="form-section bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+        <div className="section-header mb-4">
+          <h3 className="flex items-center gap-3 font-semibold text-gray-900 text-lg">
+            <CheckCircle className="h-5 w-5 text-[#fd7d02]" />
             Includes
           </h3>
-          <p style={{ marginTop: "0.5rem", color: "#6c757d" }}>
+          <p className="mt-1 text-sm text-gray-500">
             List what&apos;s included in the tour price (meals, transportation,
             accommodation, etc.)
           </p>
@@ -70,7 +65,7 @@ export const ListsSection: React.FC<ListsSectionProps> = ({ form }) => {
           placeholder="e.g., All meals included, Professional guide, Hotel accommodation, Airport transfers"
           addButtonText="Add Include"
           emptyStateText="No includes added yet"
-          emptyStateIcon={<i className="bi bi-check-circle"></i>}
+          emptyStateIcon={<CheckCircle className="h-5 w-5" />}
           items={form.values.includes || []}
           onAdd={(item) =>
             form.setFieldValue("includes", [
@@ -91,16 +86,13 @@ export const ListsSection: React.FC<ListsSectionProps> = ({ form }) => {
         />
       </div>
 
-      <div className="form-section">
-        <div className="section-header">
-          <h3 style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <i
-              className="bi bi-x-circle"
-              style={{ color: "#fd7d02", fontSize: "1.2rem" }}
-            />
+      <div className="form-section bg-white p-6 rounded-lg border border-gray-200 shadow-sm mb-6">
+        <div className="section-header mb-4">
+          <h3 className="flex items-center gap-3 font-semibold text-gray-900 text-lg">
+            <XCircle className="h-5 w-5 text-[#fd7d02]" />
             Excludes
           </h3>
-          <p style={{ marginTop: "0.5rem", color: "#6c757d" }}>
+          <p className="mt-1 text-sm text-gray-500">
             List what&apos;s NOT included in the tour price (optional
             activities, personal expenses, etc.)
           </p>
@@ -111,7 +103,7 @@ export const ListsSection: React.FC<ListsSectionProps> = ({ form }) => {
           placeholder="e.g., International flights, Travel insurance, Personal expenses, Optional activities"
           addButtonText="Add Exclude"
           emptyStateText="No excludes added yet"
-          emptyStateIcon={<i className="bi bi-x-circle"></i>}
+          emptyStateIcon={<XCircle className="h-5 w-5" />}
           items={form.values.excludes || []}
           onAdd={(item) =>
             form.setFieldValue("excludes", [

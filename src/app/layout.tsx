@@ -1,32 +1,28 @@
-import { Manrope, Work_Sans, Kalam } from "next/font/google";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "bootstrap-icons/font/bootstrap-icons.css";
-import "slick-carousel/slick/slick.css";
-import "./assets/main.css";
+import { Inter, Outfit, Caveat } from "next/font/google";
 import "./globals.css";
 import ConditionalLayout from "./Components/Common/ConditionalLayout";
 import { QueryProvider } from "./Components/Common/QueryProvider";
 import { NotificationProvider } from "@/lib/contexts/NotificationContext";
 import { ImageKitProvider } from "./Components/Common/ImageKitProvider";
 
-const manrope = Manrope({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--body-color-font",
   display: "swap",
 });
 
-const work_sans = Work_Sans({
+const outfit = Outfit({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  variable: "--body-color-font",
+  variable: "--heading-font",
   display: "swap",
 });
 
-const kalam = Kalam({
+const caveat = Caveat({
   subsets: ["latin"],
   weight: ["400", "700"],
-  variable: "--heading-font",
+  variable: "--title-font",
   display: "swap",
 });
 
@@ -61,7 +57,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Dazzling Tours" />
       </head>
       <body
-        className={`${manrope.variable} ${work_sans.variable} ${kalam.variable}`}
+        className={`${inter.variable} ${outfit.variable} ${caveat.variable}`}
         suppressHydrationWarning
       >
         <ImageKitProvider>

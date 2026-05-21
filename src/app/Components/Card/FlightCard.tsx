@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
+import Icon from "@/app/Components/Common/Icon";
+
 interface FlightCardProps {
   img: string;
   name: string;
@@ -28,7 +30,7 @@ const FlightCard = ({
         <div className="featured-post">
           <ul className="feature-list">
             <li>
-              <i className="bi bi-send"></i>
+              <Icon name="send" />
               {name}
             </li>
           </ul>
@@ -48,15 +50,15 @@ const FlightCard = ({
         </div>
         <div className="featured-rating">
           <div className="star">
-            <i className="bi bi-star-fill"></i>
-            <i className="bi bi-star-fill"></i>
-            <i className="bi bi-star-fill"></i>
-            <i className="bi bi-star-fill"></i>
-            <i className="bi bi-star-fill"></i>
+            <Icon name="star-fill" />
+            <Icon name="star-fill" />
+            <Icon name="star-fill" />
+            <Icon name="star-fill" />
+            <Icon name="star-fill" />
             <h6>{review}</h6>
           </div>
-          <Link href="/tour/tour-details" className="theme-btn">
-            Book Now<i className="bi bi-arrow-right"></i>
+          <Link href="/tour/tour-details" className="relative overflow-hidden bg-primary text-white hover:text-white rounded-full font-bold uppercase transition-all duration-300 px-6 py-2">
+            Book Now<Icon name="arrow-right" className="ml-2 inline-block" />
           </Link>
         </div>
       </div>

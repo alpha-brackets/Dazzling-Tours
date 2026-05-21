@@ -1,5 +1,8 @@
 "use client";
 import React, { forwardRef, useEffect, useState } from "react";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { AlertCircle, Check, Minus } from "lucide-react";
 
 export interface CheckboxProps extends Omit<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -32,7 +35,7 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       indeterminate = false,
       children,
       // Form integration props
-      checked: formChecked,
+      checked: formChecked = false,
       onChange: formOnChange,
       onBlur: formOnBlur,
       onFocus: formOnFocus,
@@ -44,103 +47,127 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       error,
     );
 
+    const internalRef = React.useRef<HTMLInputElement>(null);
+
+    // Merge internal ref with forwarded ref
+    const setRefs = React.useCallback(
+      (element: HTMLInputElement | null) => {
+        internalRef.current = element;
+        if (typeof ref === "function") {
+          ref(element);
+        } else if (ref) {
+          ref.current = element;
+        }
+      },
+      [ref]
+    );
+
     // Update internal error when external error changes
     useEffect(() => {
       setInternalError(error);
     }, [error]);
 
-    const sizeClasses = {
-      xs: "form-checkbox-xs",
-      sm: "form-checkbox-sm",
-      md: "form-checkbox-md",
-      lg: "form-checkbox-lg",
-    };
-
-    const labelSizeClasses = {
-      xs: "form-text-xs",
-      sm: "form-text-sm",
-      md: "form-text-sm",
-      lg: "form-text-base",
-    };
-
-    React.useEffect(() => {
-      if (ref && "current" in ref && ref.current) {
-        ref.current.indeterminate = indeterminate;
-      }
-    }, [indeterminate, ref]);
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const checked = e.target.checked;
-
-      // Call form onChange if provided (for form integration)
       if (formOnChange) {
         formOnChange(checked);
       }
     };
 
-    const handleBlur = () => {
-      // Call form onBlur if provided (for form integration)
-      if (formOnBlur) {
-        formOnBlur();
-      }
+    const sizeClasses = {
+      xs: "size-3.5",
+      sm: "size-4",
+      md: "size-5",
+      lg: "size-6",
     };
 
-    const handleFocus = () => {
-      // Call form onFocus if provided (for form integration)
-      if (formOnFocus) {
-        formOnFocus();
-      }
+    const labelSizeClasses = {
+      xs: "text-xs",
+      sm: "text-sm",
+      md: "text-sm",
+      lg: "text-base",
+    };
+
+    const iconSizeClasses = {
+      xs: "h-2.5 w-2.5",
+      sm: "h-3 w-3",
+      md: "h-3.5 w-3.5",
+      lg: "h-4 w-4",
     };
 
     return (
-      <div className="form-group">
-        <div className="form-flex form-items-start form-gap-3">
-          <div className="form-relative form-flex-shrink-0 form-mt-05">
+      <div className="flex flex-col gap-1.5 w-full">
+        <div className="flex items-start gap-3">
+          <div className="relative flex-shrink-0 mt-0.5">
             <input
-              ref={ref}
+              ref={setRefs}
               type="checkbox"
-              className={`
-                ${sizeClasses[size]}
-                form-checkbox-base
-                ${internalError ? "form-input-error" : ""}
-                ${className}
-              `.trim()}
+              className={cn(
+                "peer sr-only",
+                className
+              )}
               disabled={disabled}
-              checked={formChecked !== undefined ? formChecked : false}
+              checked={formChecked}
               onChange={handleChange}
-              onBlur={handleBlur}
-              onFocus={handleFocus}
+              onBlur={formOnBlur}
+              onFocus={formOnFocus}
               {...props}
             />
 
-            {/* Custom checkmark */}
-            <div className="form-absolute form-inset-0 form-flex form-items-center form-justify-center form-pointer-events-none">
-              <i className="bi bi-check form-text-white form-text-xs form-opacity-0 form-transition-opacity"></i>
+            {/* Custom Checkbox visual */}
+            <div
+              className={cn(
+                "flex items-center justify-center rounded-[4px] border border-gray-300 bg-white transition-colors cursor-pointer",
+                sizeClasses[size],
+                "peer-focus-visible:ring-3 peer-focus-visible:ring-[var(--theme)]/20 peer-focus-visible:border-[var(--theme)]",
+                "peer-checked:bg-[var(--theme)] peer-checked:border-[var(--theme)] peer-checked:text-white",
+                indeterminate && "bg-[var(--theme)] border-[var(--theme)] text-white",
+                disabled && "opacity-50 cursor-not-allowed bg-gray-50 peer-checked:bg-gray-400 peer-checked:border-gray-400",
+                internalError && "border-red-500"
+              )}
+              onClick={() => {
+                if (!disabled && internalRef.current) {
+                  internalRef.current.click();
+                }
+              }}
+            >
+              {indeterminate ? (
+                <Minus className={cn("stroke-[3px]", iconSizeClasses[size])} />
+              ) : (
+                <Check className={cn("hidden peer-checked:block stroke-[3px]", iconSizeClasses[size])} />
+              )}
             </div>
           </div>
 
-          <div className="form-flex-1">
+          <div className="flex-1">
             {label && (
-              <label
-                className={`form-label form-cursor-pointer ${
-                  labelSizeClasses[size]
-                } ${disabled ? "form-text-gray-500" : ""}`}
+              <Label
+                className={cn(
+                  "font-medium cursor-pointer text-gray-700",
+                  labelSizeClasses[size],
+                  disabled && "text-gray-400 cursor-not-allowed"
+                )}
+                onClick={() => {
+                  if (!disabled && internalRef.current) {
+                    internalRef.current.click();
+                  }
+                }}
               >
                 {label}
-              </label>
+              </Label>
             )}
 
             {description && (
-              <p className="form-description form-mt-1">{description}</p>
+              <p className="text-xs text-gray-500 mt-0.5">{description}</p>
             )}
 
-            {children && <div className="form-mt-1">{children}</div>}
+            {children && <div className="mt-1">{children}</div>}
           </div>
         </div>
 
         {internalError && (
-          <p className="form-error form-mt-2">
-            <i className="bi bi-exclamation-circle form-error-icon"></i>
+          <p className="text-sm text-red-500 flex items-center gap-1 mt-0.5">
+            <AlertCircle className="h-3.5 w-3.5" />
             {internalError}
           </p>
         )}
