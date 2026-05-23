@@ -23,7 +23,6 @@ export interface Tour {
   itinerary: ItineraryItem[];
   includes: string[];
   excludes: string[];
-  difficulty: string;
   groupSize: number;
   rating: number;
   reviews: number;
@@ -49,7 +48,6 @@ export interface CreateTourData {
   itinerary?: ItineraryItem[];
   includes?: string[];
   excludes?: string[];
-  difficulty?: string;
   groupSize?: number;
   rating?: number;
   reviews?: number;
@@ -75,18 +73,6 @@ export interface TourLocation {
 export interface TourLocationsResponse {
   success: boolean;
   data: TourLocation[];
-  total: number;
-}
-
-export interface TourDifficultyData {
-  value: string;
-  label: string;
-  count: number;
-}
-
-export interface TourDifficultiesResponse {
-  success: boolean;
-  data: TourDifficultyData[];
   total: number;
 }
 

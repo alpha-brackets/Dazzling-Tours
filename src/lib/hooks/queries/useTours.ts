@@ -6,8 +6,6 @@ import {
   ToursResponse,
   TourResponse,
   TourLocationsResponse,
-  TourDifficultiesResponse,
-  TourActivitiesResponse,
   TourCategoriesResponse,
 } from "@/lib/types/tour";
 
@@ -27,7 +25,6 @@ export const useGetTours = (params?: {
   featured?: boolean;
   category?: string;
   location?: string;
-  difficulty?: string;
   highlights?: string;
   search?: string;
   page?: number;
@@ -172,40 +169,6 @@ export const useGetTourLocations = (status?: string) => {
 
       const response = await api.get<TourLocationsResponse>(
         `/tours/locations?${params.toString()}`,
-      );
-      return response.data;
-    },
-  });
-};
-
-export const useGetTourDifficulties = (status?: string) => {
-  return useQuery<TourDifficultiesResponse>({
-    queryKey: [...tourKeys.all, "difficulties", status || "all"],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (status) {
-        params.append("status", status);
-      }
-
-      const response = await api.get<TourDifficultiesResponse>(
-        `/tours/difficulties?${params.toString()}`,
-      );
-      return response.data;
-    },
-  });
-};
-
-export const useGetTourActivities = (status?: string) => {
-  return useQuery<TourActivitiesResponse>({
-    queryKey: [...tourKeys.all, "activities", status || "all"],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (status) {
-        params.append("status", status);
-      }
-
-      const response = await api.get<TourActivitiesResponse>(
-        `/tours/activities?${params.toString()}`,
       );
       return response.data;
     },

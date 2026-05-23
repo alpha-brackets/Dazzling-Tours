@@ -26,9 +26,9 @@ const BreadCrumb = ({ Title, bgImg }: BreadCrumbProps) => {
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70 z-0"></div>
       <div className="container mx-auto px-4 relative z-10">
         <div className="flex flex-col items-center justify-center text-center mt-12">
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 drop-shadow-lg tracking-tight">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-6 drop-shadow-lg tracking-tight">
             {Title}
-          </h2>
+          </h1>
           <Breadcrumb className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-full border border-white/20">
             <BreadcrumbList className="text-white/90 sm:gap-3 text-sm md:text-base font-medium">
               <BreadcrumbItem>

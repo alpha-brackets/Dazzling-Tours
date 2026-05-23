@@ -3,11 +3,12 @@ import React from "react";
 import type { Metadata } from "next";
 import BreadCrumb from "../../Components/Common/BreadCrumb";
 import Tour from "../../Components/Tour/Tour";
+import CustomTourSection from "@/app/Components/CustomTourSection/CustomTourSection";
 
 // SEO Metadata for Tours Page
 export const metadata: Metadata = {
-  title: "Tours | Dazzling Tours - Explore the nature",
-  description: "Explore the nature",
+  title: "Tours & Travel Packages | Dazzling Tours - Explore Pakistan",
+  description: "Explore the natural beauty of Pakistan with Dazzling Tours. Choose from our curated travel packages, family tours, group adventures, and customized trips to Hunza, Skardu, Swat, and Naran.",
   keywords: [
     "tours",
     "travel packages",
@@ -19,10 +20,13 @@ export const metadata: Metadata = {
     "travel agency tours",
     "Dazzling Tours",
     "customized tours",
+    "Pakistan travel packages",
+    "Hunza tour",
+    "Skardu tour",
   ],
   openGraph: {
-    title: "Tours | Dazzling Tours - Explore the nature",
-    description: "Explore the nature",
+    title: "Tours & Travel Packages | Dazzling Tours - Explore Pakistan",
+    description: "Explore the natural beauty of Pakistan with Dazzling Tours. Choose from our curated travel packages, family tours, and customized trips.",
     type: "website",
     images: [
       {
@@ -35,8 +39,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tours | Dazzling Tours - Explore the nature",
-    description: "Explore the nature",
+    title: "Tours & Travel Packages | Dazzling Tours - Explore Pakistan",
+    description: "Explore the natural beauty of Pakistan with Dazzling Tours. Choose from our curated travel packages, family tours, and customized trips.",
     images: [`${IMAGEKIT_URL_ENDPOINT}/assets/img/tours/tourspage.png`],
   },
   alternates: {
@@ -103,6 +107,7 @@ const ToursPage = () => {
       />
       <BreadCrumb bgImg={`${IMAGEKIT_URL_ENDPOINT}/assets/img/tours/tourspage.png`} Title="Tours" />
       <Tour />
+      <CustomTourSection />
     </>
   );
 };

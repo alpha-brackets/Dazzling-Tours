@@ -7,12 +7,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   useGetTours,
   useGetTourLocations,
-  useGetTourDifficulties,
-  useGetTourActivities,
   useGetTourCategories,
 } from "@/lib/hooks";
 import { TourStatus } from "@/lib/enums";
-import { TourDifficulty } from "@/lib/enums/tour";
 import { StarRating, Checkbox } from "@/app/Components/Form";
 import { formatCurrency } from "@/lib/utils/currencyConverter";
 import PaginationComponent from "@/app/Components/Common/PaginationComponent";
@@ -23,16 +20,10 @@ import { ArrowRight, Clock, Heart, Inbox, MapPin, Search, SlidersHorizontal, Use
 interface FilterPanelProps {
   categories: { name: string; count: number }[];
   locations: { name: string; count: number }[];
-  activities: { name: string; count: number }[];
-  difficulties: { value: string; label: string; count: number }[];
   selectedCategories: string[];
   selectedLocations: string[];
-  selectedActivities: string[];
-  selectedDifficulties: TourDifficulty[];
   onCategoryChange: (name: string, checked: boolean) => void;
   onLocationChange: (name: string, checked: boolean) => void;
-  onActivityChange: (name: string, checked: boolean) => void;
-  onDifficultyChange: (diff: TourDifficulty, checked: boolean) => void;
 }
 
 const FilterSection = ({ title, children }: { title: string; children: React.ReactNode }) => (
@@ -48,9 +39,9 @@ const FilterSection = ({ title, children }: { title: string; children: React.Rea
 );
 
 const FilterPanel: React.FC<FilterPanelProps> = ({
-  categories, locations, activities, difficulties,
-  selectedCategories, selectedLocations, selectedActivities, selectedDifficulties,
-  onCategoryChange, onLocationChange, onActivityChange, onDifficultyChange,
+  categories, locations,
+  selectedCategories, selectedLocations,
+  onCategoryChange, onLocationChange,
 }) => (
   <div className="flex flex-col gap-6">
     {/* Categories */}
@@ -86,40 +77,6 @@ const FilterPanel: React.FC<FilterPanelProps> = ({
         )) : <p className="text-gray-400 text-sm italic">No destinations available</p>}
       </div>
     </FilterSection>
-
-    {/* Activities */}
-    <FilterSection title="Activities">
-      <div className="flex flex-col gap-3.5">
-        {activities.length > 0 ? activities.map((act) => (
-          <div key={act.name} className="flex justify-between items-center group">
-            <Checkbox
-              id={`act-${act.name}`}
-              label={act.name}
-              checked={selectedActivities.includes(act.name)}
-              onChange={(checked) => onActivityChange(act.name, checked)}
-            />
-            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full transition-colors group-hover:bg-[#EF7C00]/10 group-hover:text-[#EF7C00] min-w-[28px] text-center">{act.count}</span>
-          </div>
-        )) : <p className="text-gray-400 text-sm italic">No activities available</p>}
-      </div>
-    </FilterSection>
-
-    {/* Difficulty */}
-    <FilterSection title="Tour Difficulty">
-      <div className="flex flex-col gap-3.5">
-        {difficulties.length > 0 ? difficulties.map((diff) => (
-          <div key={diff.value} className="flex justify-between items-center group">
-            <Checkbox
-              id={`diff-${diff.value}`}
-              label={diff.label}
-              checked={selectedDifficulties.includes(diff.value as TourDifficulty)}
-              onChange={(checked) => onDifficultyChange(diff.value as TourDifficulty, checked)}
-            />
-            <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full transition-colors group-hover:bg-[#EF7C00]/10 group-hover:text-[#EF7C00] min-w-[28px] text-center">{diff.count}</span>
-          </div>
-        )) : <p className="text-gray-400 text-sm italic">No difficulty levels available</p>}
-      </div>
-    </FilterSection>
   </div>
 );
 
@@ -132,16 +89,12 @@ const Tour = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedActivities, setSelectedActivities] = useState<string[]>([]);
-  const [selectedDifficulties, setSelectedDifficulties] = useState<TourDifficulty[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Computed active filter count for badge
   const activeFilterCount =
     selectedLocations.length +
     selectedCategories.length +
-    selectedActivities.length +
-    selectedDifficulties.length +
     (searchTerm ? 1 : 0);
 
   // Data fetching
@@ -149,18 +102,12 @@ const Tour = () => {
   const locations = locationsData?.data || [];
   const { data: categoriesData } = useGetTourCategories(TourStatus.ACTIVE);
   const categories = categoriesData?.data || [];
-  const { data: difficultiesData } = useGetTourDifficulties(TourStatus.ACTIVE);
-  const difficulties = difficultiesData?.data || [];
-  const { data: activitiesData } = useGetTourActivities(TourStatus.ACTIVE);
-  const activities = activitiesData?.data || [];
 
   const { data: toursData, isLoading: loading, error } = useGetTours({
     status: TourStatus.ACTIVE,
     search: searchTerm || undefined,
     location: selectedLocations.length > 0 ? selectedLocations.join(",") : undefined,
     category: selectedCategories.length > 0 ? selectedCategories.join(",") : undefined,
-    highlights: selectedActivities.length > 0 ? selectedActivities.join(",") : undefined,
-    difficulty: selectedDifficulties.length > 0 ? selectedDifficulties.join(",") : undefined,
     page: currentPage,
     limit: pageLimit,
   });
@@ -221,32 +168,20 @@ const Tour = () => {
     setSelectedCategories((prev) => checked ? [...prev, name] : prev.filter((n) => n !== name));
     setCurrentPage(1);
   };
-  const handleActivityChange = (name: string, checked: boolean) => {
-    setSelectedActivities((prev) => checked ? [...prev, name] : prev.filter((n) => n !== name));
-    setCurrentPage(1);
-  };
-  const handleDifficultyChange = (diff: TourDifficulty, checked: boolean) => {
-    setSelectedDifficulties((prev) => checked ? [...prev, diff] : prev.filter((d) => d !== diff));
-    setCurrentPage(1);
-  };
 
   const handleClearAllFilters = () => {
     setSelectedLocations([]);
     setSelectedCategories([]);
-    setSelectedActivities([]);
-    setSelectedDifficulties([]);
     setSearchQuery("");
     setSearchTerm("");
     setCurrentPage(1);
   };
 
   const filterPanelProps: FilterPanelProps = {
-    categories, locations, activities, difficulties,
-    selectedCategories, selectedLocations, selectedActivities, selectedDifficulties,
+    categories, locations,
+    selectedCategories, selectedLocations,
     onCategoryChange: handleCategoryChange,
     onLocationChange: handleLocationChange,
-    onActivityChange: handleActivityChange,
-    onDifficultyChange: handleDifficultyChange,
   };
 
   if (error) {
@@ -332,16 +267,6 @@ const Tour = () => {
             {selectedLocations.map((l) => (
               <span key={l} className="flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full">
                 {l}<button onClick={() => handleLocationChange(l, false)}><X className="h-3 w-3" /></button>
-              </span>
-            ))}
-            {selectedActivities.map((a) => (
-              <span key={a} className="flex items-center gap-1.5 bg-purple-50 border border-purple-200 text-purple-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-                {a}<button onClick={() => handleActivityChange(a, false)}><X className="h-3 w-3" /></button>
-              </span>
-            ))}
-            {selectedDifficulties.map((d) => (
-              <span key={d} className="flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-full">
-                {d}<button onClick={() => handleDifficultyChange(d, false)}><X className="h-3 w-3" /></button>
               </span>
             ))}
             <button onClick={handleClearAllFilters}

@@ -193,12 +193,6 @@ export const tourSchema = z.object({
     .optional()
     .default([]),
 
-  difficulty: z
-    .enum(["Easy", "Medium", "Hard"], {
-      message: "Difficulty must be Easy, Medium, or Hard",
-    })
-    .default("Easy"),
-
   groupSize: z
     .number()
     .min(1, "Group size must be at least 1")

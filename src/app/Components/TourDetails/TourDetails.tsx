@@ -13,10 +13,10 @@ import {
   useForm,
 } from "@/lib/hooks";
 import { TestimonialStatus } from "@/lib/enums";
-import { ContactGroupType } from "@/lib/types/enums";
+import { ContactGroupType, getContactGroupTypes } from "@/lib/types/enums";
 import { Accordion } from "@/app/Components/Common";
 import Icon from "@/app/Components/Common/Icon";
-import { TextInput, Textarea } from "@/app/Components/Form";
+import { TextInput, Textarea, Select } from "@/app/Components/Form";
 import { ErrorResponse } from "@/lib/types";
 
 interface TourDetailsProps {
@@ -51,6 +51,7 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
   const [mainApi, setMainApi] = useState<CarouselApi>();
   const [thumbApi, setThumbApi] = useState<CarouselApi>();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isCustomizing, setIsCustomizing] = useState(false);
 
   useEffect(() => {
     if (!mainApi || !thumbApi) return;
@@ -145,16 +146,17 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
           tourId: tour._id,
           startDate: values.travelDate,
           participants: Number(values.participants),
-          groupType: values.groupType,
+          groupType: isCustomizing ? values.groupType : ContactGroupType.INDIVIDUAL,
           numberOfDays: Number(values.numberOfDays),
-          numberOfRooms: Number(values.numberOfRooms),
-          departureCity: values.departureCity,
-          placesToVisit: values.placesToVisit,
+          numberOfRooms: isCustomizing ? Number(values.numberOfRooms) : 1,
+          departureCity: isCustomizing ? values.departureCity : "",
+          placesToVisit: isCustomizing ? values.placesToVisit : "",
         },
         {
           onSuccess: () => {
             showSuccess("Your enquiry has been sent successfully!");
             bookingForm.reset();
+            setIsCustomizing(false);
           },
           onError: (error: ErrorResponse) => {
             showError(
@@ -249,7 +251,6 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     <TourInfoBox icon="map-pin" label="Location" value={tour.location || "N/A"} />
                     {tour.duration && <TourInfoBox icon="clock" label="Duration" value={tour.duration} />}
-                    {tour.difficulty && <TourInfoBox icon="activity" label="Difficulty" value={tour.difficulty} />}
                     {typeof tour.groupSize === "number" && <TourInfoBox icon="users" label="Group Size" value={`${tour.groupSize} People`} />}
                     {typeof tour.price === "number" && <TourInfoBox icon="tag" label="Price" value={`PKR ${tour.price} / ${tour.priceType}`} />}
                     {tour.rating > 0 && <TourInfoBox icon="star" label="Rating" value={`${tour.rating.toFixed(1)} (${tour.reviews} reviews)`} />}
@@ -392,11 +393,11 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
             </div>
 
             <div className="lg:col-span-4 sticky top-24">
-              <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden mb-8 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
-                <div className="bg-[#EF7C00] p-6 text-center">
+              <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden mb-8 transition-all hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col max-h-[calc(100vh-125px)]">
+                <div className="bg-[#EF7C00] p-6 text-center shrink-0">
                   <h4 className="text-white font-bold text-2xl m-0 tracking-wide uppercase">Book This Tour</h4>
                 </div>
-                <div className="p-6 md:p-8">
+                <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar">
                   <form onSubmit={bookingForm.handleSubmit()} className="flex flex-col gap-4">
                     <div className="relative">
                       <Icon name="user" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
@@ -430,6 +431,53 @@ const TourDetails = ({ tour }: TourDetailsProps) => {
                           <button type="button" className="px-4 text-gray-500 hover:text-[#EF7C00]" onClick={() => bookingForm.setFieldValue("numberOfDays", Math.max(1, (Number(bookingForm.values.numberOfDays) || 0) - 1))}><Icon name="minus" size={16} /></button>
                           <input type="number" className="w-full bg-transparent text-center font-bold outline-none border-0" value={bookingForm.values.numberOfDays} readOnly />
                           <button type="button" className="px-4 text-gray-500 hover:text-[#EF7C00]" onClick={() => bookingForm.setFieldValue("numberOfDays", (Number(bookingForm.values.numberOfDays) || 0) + 1)}><Icon name="plus" size={16} /></button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2 select-none">
+                      <input
+                        type="checkbox"
+                        id="isCustomizing"
+                        className="h-4 w-4 rounded border-gray-300 text-[#EF7C00] focus:ring-[#EF7C00] accent-[#EF7C00] cursor-pointer"
+                        checked={isCustomizing}
+                        onChange={(e) => setIsCustomizing(e.target.checked)}
+                      />
+                      <label htmlFor="isCustomizing" className="text-gray-700 text-sm font-semibold cursor-pointer">
+                        Customize this tour
+                      </label>
+                    </div>
+
+                    {/* Expandable Customization Fields */}
+                    <div className={`transition-all duration-300 overflow-hidden flex flex-col gap-4 p-1 -mx-1 ${isCustomizing ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0 pointer-events-none"}`}>
+                      <div className="relative">
+                        <Icon name="map-pin" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <input type="text" className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7C00] focus:border-transparent outline-none transition-all" value={bookingForm.values.departureCity} onChange={(e) => bookingForm.setFieldValue("departureCity", e.target.value)} placeholder="Departure City" />
+                      </div>
+
+                      <div className="relative">
+                        <Icon name="geo" className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <input type="text" className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#EF7C00] focus:border-transparent outline-none transition-all" value={bookingForm.values.placesToVisit} onChange={(e) => bookingForm.setFieldValue("placesToVisit", e.target.value)} placeholder="Places to Visit (e.g. Naran, Hunza)" />
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                        <div>
+                          <Select
+                            label="Group Type"
+                            placeholder="Select Group Type"
+                            value={bookingForm.values.groupType}
+                            onChange={(val) => bookingForm.setFieldValue("groupType", val as ContactGroupType)}
+                            data={getContactGroupTypes()}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-2 block ml-1">Rooms Needed</label>
+                        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl h-12">
+                          <button type="button" className="px-4 text-gray-500 hover:text-[#EF7C00]" onClick={() => bookingForm.setFieldValue("numberOfRooms", Math.max(1, (Number(bookingForm.values.numberOfRooms) || 0) - 1))}><Icon name="minus" size={16} /></button>
+                          <input type="number" className="w-full bg-transparent text-center font-bold outline-none border-0" value={bookingForm.values.numberOfRooms} readOnly />
+                          <button type="button" className="px-4 text-gray-500 hover:text-[#EF7C00]" onClick={() => bookingForm.setFieldValue("numberOfRooms", (Number(bookingForm.values.numberOfRooms) || 0) + 1)}><Icon name="plus" size={16} /></button>
                         </div>
                       </div>
                     </div>

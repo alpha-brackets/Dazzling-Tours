@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { UserRole } from "@/lib/enums/roles";
-import { TourStatus, TourDifficulty, TourPriceType } from "@/lib/enums/tour";
+import { TourStatus, TourPriceType } from "@/lib/enums/tour";
 import { TestimonialStatus, TestimonialSource } from "@/lib/enums/testimonial";
 import { ContactStatus, ContactGroupType } from "@/lib/types/enums";
 import { BlogStatus } from "@/lib/enums/blog";
@@ -25,7 +25,6 @@ export interface ITour extends Document {
   }[];
   includes: string[];
   excludes: string[];
-  difficulty: TourDifficulty;
   groupSize: number;
   rating: number;
   reviews: number;
@@ -61,11 +60,6 @@ const TourSchema = new Schema<ITour>(
     ],
     includes: [{ type: String }],
     excludes: [{ type: String }],
-    difficulty: {
-      type: String,
-      enum: TourDifficulty,
-      default: TourDifficulty.EASY,
-    },
     groupSize: { type: Number, default: 10 },
     rating: { type: Number, default: 0, min: 0, max: 5 },
     reviews: { type: Number, default: 0 },

@@ -6,7 +6,7 @@ import { Section, Container } from "@/app/Components/Common";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions | Dazzling Tours - Explore the nature",
-  description: "Explore the nature",
+  description: "Review the Terms and Conditions of Dazzling Tours. Details booking options, cancellation policy, payments, and liability terms for all tour packages.",
   alternates: {
     canonical: "/terms-and-conditions",
   },

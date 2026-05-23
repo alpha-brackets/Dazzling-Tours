@@ -6,7 +6,7 @@ import { Section, Container } from "@/app/Components/Common";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Dazzling Tours - Explore the nature",
-  description: "Explore the nature",
+  description: "Read the Privacy Policy of Dazzling Tours. Learn how we collect, store, protect, and use user information to provide safe and secure travel services.",
   alternates: {
     canonical: "/privacy-policy",
   },

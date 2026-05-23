@@ -12,18 +12,6 @@ export const TOUR_STATUS_OPTIONS = [
   { value: TourStatus.ARCHIVED, label: "Archived" },
 ] as { value: TourStatus; label: string }[];
 
-export enum TourDifficulty {
-  EASY = "Easy",
-  MEDIUM = "Medium",
-  HARD = "Hard",
-}
-
-export const TOUR_DIFFICULTY_OPTIONS = [
-  { value: TourDifficulty.EASY, label: "Easy" },
-  { value: TourDifficulty.MEDIUM, label: "Medium" },
-  { value: TourDifficulty.HARD, label: "Hard" },
-] as { value: TourDifficulty; label: string }[];
-
 export enum TourPriceType {
   PER_PERSON = "Per Person",
   COUPLE = "Couple (2 Persons)",

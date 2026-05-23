@@ -10,7 +10,7 @@ import {
   useGetCategories,
   useDebounceValue,
 } from "@/lib/hooks";
-import { TourStatus, TourDifficulty, TourPriceType } from "@/lib/enums";
+import { TourStatus, TourPriceType } from "@/lib/enums";
 import {
   Checkbox,
   ItineraryManager,
@@ -71,7 +71,6 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
       itinerary: [],
       includes: [],
       excludes: [],
-      difficulty: TourDifficulty.EASY,
       groupSize: 10,
       featured: false,
       status: TourStatus.DRAFT,
@@ -129,7 +128,6 @@ const ManageTour = ({ params }: { params: Promise<{ id: string }> }) => {
           itinerary: tour.itinerary || [],
           includes: tour.includes || [],
           excludes: tour.excludes || [],
-          difficulty: tour.difficulty,
           groupSize: tour.groupSize || 10,
           featured: tour.featured || false,
           status: tour.status,

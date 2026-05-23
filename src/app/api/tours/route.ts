@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const status = searchParams.get("status");
     const location = searchParams.get("location");
-    const difficulty = searchParams.get("difficulty");
     const highlights = searchParams.get("highlights");
 
     const query: MongoQuery = {};
@@ -52,18 +51,6 @@ export async function GET(request: NextRequest) {
         query.location = locationArray[0];
       } else {
         (query as Record<string, unknown>).location = { $in: locationArray };
-      }
-    }
-
-    // Handle difficulty filter (can be comma-separated for multiple difficulties)
-    if (difficulty) {
-      const difficultyArray = difficulty.split(",").map((diff) => diff.trim());
-      if (difficultyArray.length === 1) {
-        query.difficulty = difficultyArray[0];
-      } else {
-        (query as Record<string, unknown>).difficulty = {
-          $in: difficultyArray,
-        };
       }
     }
 

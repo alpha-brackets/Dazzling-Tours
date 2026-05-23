@@ -9,7 +9,7 @@ import Choose from "@/app/Components/Choose/Choose";
 // SEO Metadata
 export const metadata: Metadata = {
   title: "About Us | Dazzling Tours - Explore the nature",
-  description: "Explore the nature",
+  description: "Learn more about Dazzling Tours, your trusted travel partner in Pakistan. We specialize in curating custom family tour packages, trekking adventures, and sightseeing guides.",
   keywords: [
     "about us",
     "travel agency",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "About Us | Dazzling Tours - Explore the nature",
-    description: "Explore the nature",
+    description: "Learn more about Dazzling Tours, your trusted travel partner in Pakistan. We specialize in curating custom family tour packages, trekking adventures, and sightseeing guides.",
     type: "website",
     images: [
       {
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "About Us | Dazzling Tours - Explore the nature",
-    description: "Explore the nature",
+    description: "Learn more about Dazzling Tours, your trusted travel partner in Pakistan. We specialize in curating custom family tour packages, trekking adventures, and sightseeing guides.",
     images: [`${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about1.webp`],
   },
   alternates: {
@@ -56,23 +56,20 @@ export const metadata: Metadata = {
 
 const AboutPage = () => {
   // Structured Data (JSON-LD) for SEO
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXTAUTH_URL || "http://dazzlingtours.pk";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://dazzlingtours.pk";
 
-  const organizationSchema = {
+  const aboutPageSchema = {
     "@context": "https://schema.org",
-    "@type": "TravelAgency",
-    name: "Dazzling Tours",
-    description: "Explore the nature",
-    url: baseUrl,
-    logo: `${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`,
-    image: `${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about1.webp`,
-    sameAs: [
-      // TODO: Add social media links if available
-    ],
-    contactPoint: {
-      "@type": "ContactPoint",
-      contactType: "Customer Service",
-    },
+    "@type": "AboutPage",
+    "name": "About Us | Dazzling Tours",
+    "description": "Learn more about Dazzling Tours, your trusted travel partner in Pakistan. We specialize in curating custom family tour packages, trekking adventures, and sightseeing guides.",
+    "url": `${baseUrl}/about-us`,
+    "mainEntity": {
+      "@type": "TravelAgency",
+      "name": "Dazzling Tours",
+      "url": baseUrl,
+      "logo": `${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`
+    }
   };
 
   return (
@@ -80,9 +77,9 @@ const AboutPage = () => {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema),
+          __html: JSON.stringify(aboutPageSchema),
         }}
-        id="org-schema-about"
+        id="about-page-schema"
       />
       <BreadCrumb
         bgImg={`${IMAGEKIT_URL_ENDPOINT}/assets/img/breadcrumb/aboutpage.png`}

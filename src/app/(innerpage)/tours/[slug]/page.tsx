@@ -142,8 +142,81 @@ const TourDetailsPage = async ({
     notFound();
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://dazzlingtours.pk";
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: baseUrl,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Tours",
+        item: `${baseUrl}/tours`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: tour.title,
+        item: `${baseUrl}/tours/${tour.seo?.slug || tour._id}`,
+      },
+    ],
+  };
+
+  const tripSchema = {
+    "@context": "https://schema.org",
+    "@type": "TouristTrip",
+    name: tour.title,
+    description: tour.shortDescription || tour.description || "",
+    image: tour.images || [],
+    touristType: "Tourist",
+    duration: tour.duration || "",
+    itinerary: tour.itinerary?.map((day: { day: number; title: string; description: string }) => ({
+      "@type": "HowToStep",
+      name: `Day ${day.day}: ${day.title}`,
+      text: day.description,
+    })) || [],
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "PKR",
+      price: tour.price || 0,
+      priceType: tour.priceType || "Per Person",
+      url: `${baseUrl}/tours/${tour.seo?.slug || tour._id}`,
+      availability: "https://schema.org/InStock",
+    },
+    ...(tour.reviews > 0 ? {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: tour.rating,
+        reviewCount: tour.reviews,
+        bestRating: 5,
+        worstRating: 1,
+      }
+    } : {}),
+  };
+
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
+        }}
+        id="tour-breadcrumb-schema"
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(tripSchema),
+        }}
+        id="tour-trip-schema"
+      />
       <BreadCrumb bgImg={tour.images?.[0]} Title={tour.title} />
       <TourDetails tour={tour} />
     </div>

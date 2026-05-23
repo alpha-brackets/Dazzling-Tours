@@ -3,7 +3,6 @@ import { TextInput, NumberInput, Select } from "@/app/Components/Form";
 import {
   TourStatus,
   TOUR_STATUS_OPTIONS,
-  TOUR_DIFFICULTY_OPTIONS,
   TourPriceType,
   TOUR_PRICE_TYPE_OPTIONS,
 } from "@/lib/enums";
@@ -97,12 +96,6 @@ export const BasicInfoSection: React.FC<BasicInfoSectionProps> = ({
           {...form.getFieldProps("groupSize")}
           min={1}
           max={50}
-        />
-
-        <Select
-          label="Difficulty Level"
-          {...form.getFieldProps("difficulty")}
-          data={TOUR_DIFFICULTY_OPTIONS}
         />
 
         <Select
