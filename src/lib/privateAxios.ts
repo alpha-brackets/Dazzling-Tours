@@ -44,11 +44,20 @@ privateAxios.interceptors.response.use(
     // Handle common error cases
     if (error.response) {
       const { status, data } = error.response;
+      const requestUrl: string = error.config?.url || "";
+      const isAuthEndpoint =
+        requestUrl.includes("/auth/login") ||
+        requestUrl.includes("/auth/forgot-password") ||
+        requestUrl.includes("/auth/reset-password") ||
+        requestUrl.includes("/auth/verify-otp");
 
       switch (status) {
         case 401:
-          // Unauthorized - token might be expired or invalid
-          if (typeof window !== "undefined") {
+          // Unauthorized - token might be expired or invalid.
+          // Skip the redirect for auth endpoints themselves (e.g. a failed
+          // login attempt), since that's a normal error to show inline,
+          // not an expired session.
+          if (typeof window !== "undefined" && !isAuthEndpoint) {
             localStorage.removeItem("admin_token");
             // Optionally redirect to login page
             window.location.href = "/admin/login";

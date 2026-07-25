@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 import connectDB from "@/lib/mongodb";
-import { Tour, Blog } from "@/models";
+import { Tour, Blog, ITour, IBlog } from "@/models";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://dazzlingtours.pk";
@@ -29,8 +29,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Fetch active tours
     const activeTours = await Tour.find({ status: "Active" }).select("_id seo.slug updatedAt").lean();
-    tourRoutes = (activeTours as unknown as { _id: { toString(): string }; seo?: { slug?: string }; updatedAt?: Date }[]).map((tour) => {
-      const slug = tour.seo?.slug || tour._id.toString();
+    tourRoutes = (activeTours as unknown as ITour[]).map((tour) => {
+      const slug = tour.seo?.slug || tour.id?.toString();
       return {
         url: `${baseUrl}/tours/${slug}`,
         lastModified: tour.updatedAt ? new Date(tour.updatedAt) : new Date(),
@@ -41,8 +41,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     // Fetch active blogs
     const activeBlogs = await Blog.find({ status: "Active" }).select("_id seo.slug updatedAt").lean();
-    blogRoutes = (activeBlogs as unknown as { _id: { toString(): string }; seo?: { slug?: string }; updatedAt?: Date }[]).map((blog) => {
-      const slug = blog.seo?.slug || blog._id.toString();
+    blogRoutes = (activeBlogs as unknown as IBlog[]).map((blog) => {
+      const slug = blog.seo?.slug || blog.id?.toString();
       return {
         url: `${baseUrl}/blogs/${slug}`,
         lastModified: blog.updatedAt ? new Date(blog.updatedAt) : new Date(),
