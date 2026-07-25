@@ -206,7 +206,7 @@ const ToursList = () => {
     try {
       const result = await createTourMutation.mutateAsync({
         status: TourStatus.DRAFT,
-        title: "New Tour Draft",
+        title: `New Tour Draft ${Date.now()}`,
         description: "Draft Description",
         shortDescription: "Draft Short Description",
         price: 0,

@@ -173,7 +173,7 @@ const BlogsList = () => {
   const handleCreateBlog = async () => {
     try {
       const result = await createBlogMutation.mutateAsync({
-        title: "New Blog Draft",
+        title: `New Blog Draft ${Date.now()}`,
         excerpt: "Draft excerpt. Write a brief overview here.",
         content: "<p>Start writing your blog content here...</p>",
         category: UNCATEGORIZED_CATEGORY_NAME,
