@@ -1,8 +1,8 @@
 "use client";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useAuth, useNotification, useAdminSeed, useForm } from "@/lib/hooks";
+import { useAuth, useNotification, useForm } from "@/lib/hooks";
 import { LoginCard, CardHeader } from "./components/LoginComponents";
 import { IconLock } from "@/app/Components/Common/icons";
 import { TextInput } from "@/app/Components/Form";
@@ -12,7 +12,6 @@ import { validationRules } from "./config/theme";
 const LoginPage = () => {
   const { login, isAuthenticated } = useAuth();
   const { showSuccess, showError } = useNotification();
-  const { mutate: seedAdmin } = useAdminSeed();
   const router = useRouter();
 
   const { isSubmitting, getFieldProps, handleSubmit } = useForm({
@@ -48,11 +47,6 @@ const LoginPage = () => {
       }
     },
   });
-
-  // Run seeder on first mount
-  useEffect(() => {
-    seedAdmin();
-  }, [seedAdmin]);
 
   // Redirect if already authenticated
   useEffect(() => {

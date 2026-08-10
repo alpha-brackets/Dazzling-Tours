@@ -77,9 +77,10 @@ const ChangePasswordPage = () => {
         // Clear form
         form.reset();
 
-        // Redirect after delay
-        setTimeout(() => {
-          logout();
+        // Revoke this session too, then send the user back to sign in with the
+        // new password. Other devices were already revoked server-side.
+        setTimeout(async () => {
+          await logout();
           router.push("/admin/login");
         }, 300);
       } else {

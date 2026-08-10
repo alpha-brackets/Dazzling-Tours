@@ -8,6 +8,7 @@ import {
   useGetTours,
   useGetTourLocations,
   useGetTourCategories,
+  useTourFavorites,
 } from "@/lib/hooks";
 import { TourStatus } from "@/lib/enums";
 import { StarRating, Checkbox } from "@/app/Components/Form";
@@ -86,7 +87,8 @@ const Tour = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [favorites, setFavorites] = useState<string[]>([]);
+  // Backed by localStorage through useSyncExternalStore — see useTourFavorites.
+  const { toggleFavorite: toggleFavoriteId, isFavorite } = useTourFavorites();
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -121,15 +123,6 @@ const Tour = () => {
     return () => { document.body.style.overflow = ""; };
   }, [isFilterOpen]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("tourFavorites");
-      if (stored) {
-        try { setFavorites(JSON.parse(stored)); } catch { /* ignore */ }
-      }
-    }
-  }, []);
-
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const trimmed = searchQuery.trim();
@@ -151,14 +144,8 @@ const Tour = () => {
   const toggleFavorite = (tourId: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const newFavorites = favorites.includes(tourId)
-      ? favorites.filter((id) => id !== tourId)
-      : [...favorites, tourId];
-    setFavorites(newFavorites);
-    localStorage.setItem("tourFavorites", JSON.stringify(newFavorites));
+    toggleFavoriteId(tourId);
   };
-
-  const isFavorite = (tourId: string) => favorites.includes(tourId);
 
   const handleLocationChange = (name: string, checked: boolean) => {
     setSelectedLocations((prev) => checked ? [...prev, name] : prev.filter((n) => n !== name));

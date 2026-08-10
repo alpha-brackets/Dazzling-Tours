@@ -16,16 +16,8 @@ export const useAuthGuard = () => {
   };
 };
 
-// Hook for protected routes
-export const useRequireAuth = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (!isLoading && !isAuthenticated) {
-    // Redirect to login page
-    if (typeof window !== "undefined") {
-      window.location.href = "/admin/login";
-    }
-  }
-
-  return { isAuthenticated, isLoading };
-};
+// Route protection lives in the ProtectedRoute component in
+// src/app/admin/layout.tsx, which redirects from a useEffect via
+// useRouter().push(). A previous useRequireAuth hook here navigated during the
+// render phase, which React does not allow — it was unused and has been removed
+// rather than duplicated.

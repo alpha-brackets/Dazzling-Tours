@@ -101,6 +101,7 @@ const Blog3 = () => {
                       src={blog.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`}
                       alt={blog.title}
                       fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
                       className="object-cover transition-transform duration-500 hover:scale-105"
                     />
                   </div>

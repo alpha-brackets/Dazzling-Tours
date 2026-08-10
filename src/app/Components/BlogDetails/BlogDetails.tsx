@@ -2,8 +2,9 @@
 import { getOptimizedImage, IMAGEKIT_URL_ENDPOINT } from "@/lib/utils/imageUtils";
 import { AppImage } from "@/app/Components/Common";
 import { ImageVariant } from "@/lib/constants/imageDimensions";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   useGetCommentsByBlog,
   useCreateComment,
@@ -47,12 +48,16 @@ const BlogDetails = ({ slug }: { slug: string }) => {
   const createCommentMutation = useCreateComment();
   const { showSuccess, showError } = useNotification();
 
-  const [shareUrl, setShareUrl] = useState("");
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setShareUrl(window.location.href);
-    }
-  }, []);
+  // Built from the canonical site URL and the current path rather than read
+  // from window in an effect. That version rendered empty share links on the
+  // first pass and only filled them in afterwards; this resolves identically on
+  // the server and the client, so the links are correct immediately.
+  // Using the canonical origin also means a share never leaks a preview or
+  // staging hostname.
+  const pathname = usePathname();
+  const shareUrl = encodeURIComponent(
+    `${(process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/$/, "")}${pathname}`,
+  );
 
   const encodedTitle = encodeURIComponent(blog?.title || "Dazzling Tours");
 

@@ -20,8 +20,8 @@ const Footer = () => {
               <Image
                 src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`}
                 alt="Dazzling Tours"
-                width={220}
-                height={75}
+                width={80}
+                height={64}
                 className="h-16 w-auto object-contain brightness-0 invert"
                 priority
               />

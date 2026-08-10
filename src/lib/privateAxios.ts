@@ -1,9 +1,4 @@
-import axios, {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 // Create axios instance with default configuration
 const privateAxios: AxiosInstance = axios.create({
@@ -12,28 +7,12 @@ const privateAxios: AxiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  // The session lives in an httpOnly cookie that JavaScript cannot read, so
+  // the browser attaches it automatically and there is no Authorization
+  // header to set. withCredentials keeps the cookie flowing if the API is ever
+  // moved to a different origin.
+  withCredentials: true,
 });
-
-// Request interceptor to add authentication token
-privateAxios.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    // Get token from localStorage
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("admin_token")
-        : null;
-
-    // Add Authorization header if token exists
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  },
-);
 
 // Response interceptor to handle common errors
 privateAxios.interceptors.response.use(
@@ -45,22 +24,59 @@ privateAxios.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response;
       const requestUrl: string = error.config?.url || "";
+
+      // Endpoints where a 401 is an expected answer rather than a dead session,
+      // so it must be shown inline instead of triggering a redirect.
+      //
+      // /auth/me is the important one: AuthProvider calls it on every mount to
+      // ask "am I signed in?", and 401 is simply "no". Redirecting on that
+      // answer while already on the login page reloads the page, which mounts
+      // AuthProvider again — an infinite reload loop.
       const isAuthEndpoint =
+        requestUrl.includes("/auth/me") ||
         requestUrl.includes("/auth/login") ||
+        requestUrl.includes("/auth/logout") ||
         requestUrl.includes("/auth/forgot-password") ||
         requestUrl.includes("/auth/reset-password") ||
+        requestUrl.includes("/auth/send-otp") ||
         requestUrl.includes("/auth/verify-otp");
+
+      // Second guard: never redirect to login from a page that is already
+      // unauthenticated. Without this, a 401 from any other request on these
+      // pages would cause the same reload loop.
+      const publicAdminRoutes = [
+        "/admin/login",
+        "/admin/forgot-password",
+        "/admin/reset-password",
+      ];
+      const onPublicAdminRoute =
+        typeof window !== "undefined" &&
+        publicAdminRoutes.some((route) =>
+          window.location.pathname.startsWith(route),
+        );
 
       switch (status) {
         case 401:
-          // Unauthorized - token might be expired or invalid.
+          // Unauthorized - the session was revoked or expired.
           // Skip the redirect for auth endpoints themselves (e.g. a failed
           // login attempt), since that's a normal error to show inline,
           // not an expired session.
-          if (typeof window !== "undefined" && !isAuthEndpoint) {
-            localStorage.removeItem("admin_token");
-            // Optionally redirect to login page
-            window.location.href = "/admin/login";
+          // Nothing to clear locally: the session cookie is httpOnly and the
+          // server clears it.
+          //
+          // A full-page navigation is deliberate here rather than
+          // useRouter().push(): this module is not a React component, and a
+          // hard reload discards any stale in-memory state left over from the
+          // dead session. The destination is built as an absolute URL against
+          // the current origin so it is never treated as a relative path.
+          if (
+            typeof window !== "undefined" &&
+            !isAuthEndpoint &&
+            !onPublicAdminRoute
+          ) {
+            window.location.assign(
+              new URL("/admin/login", window.location.origin).toString(),
+            );
           }
           break;
         case 403:

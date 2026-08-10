@@ -350,7 +350,6 @@ export interface IUser extends Document {
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
-  changedPasswordAfter(JWTTimestamp: number): boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -440,19 +439,9 @@ UserSchema.methods.comparePassword = async function (
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Instance method to check if password changed after JWT was issued
-UserSchema.methods.changedPasswordAfter = function (
-  JWTTimestamp: number,
-): boolean {
-  if (this.passwordChangedAt) {
-    const changedTimestamp = parseInt(
-      (this.passwordChangedAt.getTime() / 1000).toString(),
-      10,
-    );
-    return JWTTimestamp < changedTimestamp;
-  }
-  return false;
-};
+// passwordChangedAt is kept as an audit field. It is no longer used to
+// invalidate credentials: password changes revoke session rows directly, which
+// takes effect immediately instead of relying on a token's issued-at claim.
 
 // Static method to find user by email
 UserSchema.statics.findByEmail = function (email: string) {
@@ -577,3 +566,63 @@ const CategorySchema = new Schema<ICategory>(
 export const Category: mongoose.Model<ICategory> =
   mongoose.models.Category ||
   mongoose.model<ICategory>("Category", CategorySchema);
+
+// Session Model
+// Server-side admin sessions. The raw session token is never stored — only its
+// SHA-256 hash — so a database dump cannot be replayed as a live session.
+// Deleting a document revokes the session immediately, which a stateless JWT
+// cannot do.
+export interface ISession extends Document {
+  tokenHash: string;
+  user: mongoose.Types.ObjectId;
+  expiresAt: Date;
+  userAgent?: string;
+  ip?: string;
+  lastUsedAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const SessionSchema = new Schema<ISession>(
+  {
+    tokenHash: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true,
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+    expiresAt: {
+      type: Date,
+      required: true,
+    },
+    userAgent: {
+      type: String,
+    },
+    ip: {
+      type: String,
+    },
+    lastUsedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// MongoDB removes expired sessions on its own — no cron or timer needed.
+// Note: the TTL monitor runs about once a minute, so a document can outlive
+// expiresAt briefly. Session lookups also filter on expiresAt, so an expired
+// session is never accepted regardless.
+SessionSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
+export const Session: mongoose.Model<ISession> =
+  mongoose.models.Session ||
+  mongoose.model<ISession>("Session", SessionSchema);

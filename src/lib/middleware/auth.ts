@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { User, IUser } from "@/models";
-import { verifyToken, getTokenFromRequest } from "@/lib/auth";
+import connectDB from "@/lib/mongodb";
+import {
+  findSessionByToken,
+  getTokenFromRequest,
+  touchSession,
+} from "@/lib/auth";
 import { UserRole } from "@/lib/enums/roles";
 
 export interface AuthenticatedUser {
@@ -30,7 +34,8 @@ export async function authenticateUser(request: NextRequest): Promise<{
   statusCode?: number;
 }> {
   try {
-    // Get token from request
+    // Checked before connecting: an unauthenticated request should be rejected
+    // without touching the database.
     const token = getTokenFromRequest(request);
     if (!token) {
       return {
@@ -40,27 +45,22 @@ export async function authenticateUser(request: NextRequest): Promise<{
       };
     }
 
-    // Verify JWT token
-    const decoded = verifyToken(token);
-    if (!decoded) {
+    await connectDB();
+
+    // A session exists only while it is valid: logout deletes the row and
+    // expiry is filtered on lookup, so there is no separate revocation check.
+    const found = await findSessionByToken(token);
+    if (!found) {
       return {
         success: false,
-        error: "Invalid or expired token",
+        error: "Invalid or expired session",
         statusCode: 401,
       };
     }
 
-    // Find user in database
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return {
-        success: false,
-        error: "User not found",
-        statusCode: 404,
-      };
-    }
+    const { session, user } = found;
 
-    // Check if user is active
+    // Deactivating an account takes effect on the next request.
     if (!user.isActive) {
       return {
         success: false,
@@ -69,26 +69,19 @@ export async function authenticateUser(request: NextRequest): Promise<{
       };
     }
 
-    // Check if password was changed after token was issued
-    if ((user as unknown as IUser).changedPasswordAfter(decoded.iat || 0)) {
-      return {
-        success: false,
-        error: "Password was changed. Please login again.",
-        statusCode: 401,
-      };
-    }
+    // Slide the expiry forward so an active admin is not logged out mid-session.
+    await touchSession(session);
 
-    const typedUser = user as unknown as IUser;
     return {
       success: true,
       user: {
-        _id: String(typedUser._id),
-        email: typedUser.email,
-        firstName: typedUser.firstName,
-        lastName: typedUser.lastName,
-        role: typedUser.role,
-        isEmailVerified: typedUser.isEmailVerified,
-        lastLogin: typedUser.lastLogin,
+        _id: String(user._id),
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        isEmailVerified: user.isEmailVerified,
+        lastLogin: user.lastLogin,
       },
       token,
     };

@@ -3,7 +3,8 @@ import connectDB from "@/lib/mongodb";
 import { Tour, Blog, ITour, IBlog } from "@/models";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://dazzlingtours.pk";
+  const baseUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://dazzlingtours.pk";
 
   // Static routes
   const staticRoutes = [
@@ -21,14 +22,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: route === "" ? 1.0 : 0.8,
   }));
 
-  let tourRoutes: { url: string; lastModified: Date; changeFrequency: "weekly"; priority: number }[] = [];
-  let blogRoutes: { url: string; lastModified: Date; changeFrequency: "weekly"; priority: number }[] = [];
+  let tourRoutes: {
+    url: string;
+    lastModified: Date;
+    changeFrequency: "weekly";
+    priority: number;
+  }[] = [];
+  let blogRoutes: {
+    url: string;
+    lastModified: Date;
+    changeFrequency: "weekly";
+    priority: number;
+  }[] = [];
 
   try {
     await connectDB();
 
     // Fetch active tours
-    const activeTours = await Tour.find({ status: "Active" }).select("_id seo.slug updatedAt").lean();
+    const activeTours = await Tour.find({ status: "Active" })
+      .select("_id seo.slug updatedAt")
+      .lean();
     tourRoutes = (activeTours as unknown as ITour[]).map((tour) => {
       const slug = tour.seo?.slug || tour.id?.toString();
       return {
@@ -40,7 +53,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
 
     // Fetch active blogs
-    const activeBlogs = await Blog.find({ status: "Active" }).select("_id seo.slug updatedAt").lean();
+    const activeBlogs = await Blog.find({ status: "Active" })
+      .select("_id seo.slug updatedAt")
+      .lean();
     blogRoutes = (activeBlogs as unknown as IBlog[]).map((blog) => {
       const slug = blog.seo?.slug || blog.id?.toString();
       return {

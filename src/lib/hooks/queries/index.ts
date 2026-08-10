@@ -5,5 +5,4 @@ export * from "./useComments";
 export * from "./useContact";
 export * from "./useDashboard";
 export * from "./useCategories";
-export * from "./useAdminSeed";
 export * from "./useUpload";

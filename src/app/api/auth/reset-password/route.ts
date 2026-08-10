@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { User, OTP } from "@/models";
 import { z } from "zod";
+import { revokeUserSessions } from "@/lib/auth";
 
 const resetPasswordSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -66,10 +67,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update password
+    // Update password. The pre-save hook hashes it and stamps passwordChangedAt.
     user.password = newPassword;
-    user.passwordChangedAt = new Date();
     await user.save();
+
+    // A reset means the old password was lost or compromised, so every existing
+    // session is revoked — no exception for the caller, who is not signed in.
+    await revokeUserSessions(String(user._id));
 
     // Mark OTP as used
     await otpRecord.markAsUsed();

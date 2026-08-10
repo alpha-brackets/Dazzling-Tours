@@ -89,6 +89,7 @@ const Choose = () => {
                 src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/choose/Choose1.webp`}
                 alt="Beautiful tour landscape in Pakistan"
                 fill
+                sizes="(min-width: 1024px) 42vw, 100vw"
                 priority
                 className="object-cover"
               />

@@ -37,13 +37,17 @@ export default function Header1() {
       >
         <Container fluid>
           <div className="flex items-center justify-between px-4 lg:px-8">
-            {/* Logo */}
+            {/* Logo — the source file is 4546x3654 (aspect 1.244), so
+                width/height carry that ratio rather than an invented one.
+                With `w-auto` the browser derives the width from the real
+                ratio, so a mismatched pair reserves the wrong space and
+                shifts the layout as the logo loads. */}
             <div className="flex-shrink-0">
               <Link href="/">
                 <Image
                   src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`}
                   alt="Dazzling Tours"
-                  width={110}
+                  width={50}
                   height={40}
                   className="h-10 w-auto object-contain brightness-0 invert"
                   priority
@@ -106,8 +110,8 @@ export default function Header1() {
               <Image
                 src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`}
                 alt="Dazzling Tours"
-                width={100}
-                height={36}
+                width={40}
+                height={32}
                 className="h-8 w-auto object-contain"
               />
             </Link>

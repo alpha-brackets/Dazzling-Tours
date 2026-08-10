@@ -103,6 +103,12 @@ const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
   }, [blog, resolvedParams.id]);
 
   // Set author to logged-in user's name if not already set (e.g., for new drafts)
+  //
+  // Depends on `blog` rather than on initializedRef.current: a ref read in a
+  // dependency array is read during render, and because mutating a ref does not
+  // re-render, it only ever re-triggered this effect by accident. `blog`
+  // becoming defined is the same moment the ref flips, and it is a real value
+  // React can compare.
   useEffect(() => {
     if (user && !form.values.author && initializedRef.current) {
       const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
@@ -111,7 +117,7 @@ const EditBlog = ({ params }: { params: Promise<{ id: string }> }) => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, initializedRef.current]);
+  }, [user, blog, form.values.author]);
 
   // Debounced Auto-Save
   const debouncedValues = useDebounceValue(form.values, 5000);

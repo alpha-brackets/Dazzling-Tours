@@ -306,6 +306,7 @@ const ToursList = () => {
                             src={tour.images[0]}
                             alt={tour.title}
                             fill
+                            sizes="64px"
                             className="object-cover"
                           />
                         </div>

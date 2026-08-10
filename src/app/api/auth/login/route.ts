@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { User } from "@/models";
-import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { handleApiError } from "@/lib/utils/apiErrorHandler";
+import {
+  createSession,
+  createSessionCookie,
+  getRequestMeta,
+} from "@/lib/auth";
 
 const loginSchema = z.object({
   email: z.email("Invalid email format"),
@@ -47,32 +51,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create a token immediately as requested
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        role: user.role,
-      },
-      process.env.JWT_SECRET || "fallback-secret",
-      { expiresIn: "7d" },
+    // Issue a server-side session. Signing in from another browser simply adds
+    // another session row — it never disturbs existing ones.
+    const { token, expiresAt } = await createSession(
+      String(user._id),
+      getRequestMeta(request),
     );
 
     // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    return NextResponse.json({
-      token,
-      user: {
-        _id: user._id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        role: user.role,
-        isEmailVerified: user.isEmailVerified,
+    // The token goes back only as an httpOnly cookie, so page scripts cannot
+    // read it and an XSS bug cannot exfiltrate the admin session.
+    return NextResponse.json(
+      {
+        success: true,
+        user: {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          isEmailVerified: user.isEmailVerified,
+        },
       },
-    });
+      {
+        headers: { "Set-Cookie": createSessionCookie(token, expiresAt) },
+      },
+    );
   } catch (error) {
     return handleApiError(error, "Login error");
   }

@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { User, OTP } from "@/models";
-import jwt from "jsonwebtoken";
 import { z } from "zod";
+import {
+  createSession,
+  createSessionCookie,
+  getRequestMeta,
+} from "@/lib/auth";
 
 const verifyOTPSchema = z.object({
   email: z.string().email("Invalid email format"),
@@ -64,36 +68,35 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Generate JWT token
-      const token = jwt.sign(
-        {
-          userId: user._id,
-          email: user.email,
-          role: user.role,
-        },
-        process.env.JWT_SECRET || "fallback-secret",
-        { expiresIn: "7d" },
+      // Issue a server-side session, same as the password login path.
+      const { token, expiresAt } = await createSession(
+        String(user._id),
+        getRequestMeta(request),
       );
 
       // Update last login
       user.lastLogin = new Date();
       await user.save();
 
-      return NextResponse.json({
-        success: true,
-        message: "Login successful",
-        data: {
-          token,
-          user: {
-            _id: user._id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            role: user.role,
-            isEmailVerified: user.isEmailVerified,
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Login successful",
+          data: {
+            user: {
+              _id: user._id,
+              email: user.email,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              role: user.role,
+              isEmailVerified: user.isEmailVerified,
+            },
           },
         },
-      });
+        {
+          headers: { "Set-Cookie": createSessionCookie(token, expiresAt) },
+        },
+      );
     }
 
     // For other OTP types, just verify

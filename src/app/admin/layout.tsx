@@ -67,7 +67,12 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loading variant="spinner" size="xl" color="primary" text="Loading panel..." />
+        <Loading
+          variant="spinner"
+          size="xl"
+          color="primary"
+          text="Loading panel..."
+        />
       </div>
     );
   }
@@ -115,6 +120,7 @@ const SidebarContent: React.FC<{
             src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_White.png`}
             alt="Dazzling Tours"
             fill
+            sizes="40px"
             className="cursor-pointer object-contain"
             onClick={() => {
               router.push("/");
@@ -140,10 +146,11 @@ const SidebarContent: React.FC<{
                 <Link
                   href={item.href}
                   onClick={onItemClick}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${active
-                    ? "bg-[var(--theme)] text-white font-semibold shadow-md shadow-[var(--theme)]/20"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                    }`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                    active
+                      ? "bg-[var(--theme)] text-white font-semibold shadow-md shadow-[var(--theme)]/20"
+                      : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                  }`}
                 >
                   <IconComponent
                     className={`h-5 w-5 shrink-0 transition-colors ${active ? "text-white" : "text-slate-400 group-hover:text-white"}`}
@@ -215,9 +222,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </Sheet>
 
         {/* Main Content Area */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 w-full">
-          {children}
-        </main>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 w-full">{children}</main>
       </div>
     </div>
   );
@@ -230,8 +235,10 @@ const HeaderBar: React.FC<{ onMenuToggle: () => void }> = ({
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const handleLogout = () => {
-    logout();
+  // Await the revocation before navigating: logout now deletes the session
+  // server-side, and redirecting first could abort that request.
+  const handleLogout = async () => {
+    await logout();
     router.push("/admin/login");
   };
 

@@ -7,6 +7,7 @@ import Link from "next/link";
 import React, { useState, useEffect, Suspense, useCallback } from "react";
 import { useGetBlogs, useGetBlogCategories, useGetBlogTags } from "@/lib/hooks";
 import { BlogStatus } from "@/lib/enums/blog";
+import type { Blog, BlogCategory } from "@/lib/types/blog";
 import PaginationComponent from "@/app/Components/Common/PaginationComponent";
 import { Loading, Section, Container, Grid } from "@/app/Components/Common";
 import { Checkbox } from "@/app/Components/Form";
@@ -26,6 +27,128 @@ const FilterSection = ({ title, children }: { title: string; children: React.Rea
   </div>
 );
 
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return {
+    day: date.getDate(),
+    month: date.toLocaleDateString("en-US", { month: "short" }),
+    full: date.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }),
+  };
+};
+
+// ─── Sidebar filter panels ────────────────────────────────────────────────────
+// Each is rendered twice (desktop sidebar + mobile drawer). They live at module
+// scope and take props: a component created during render is a new type on every
+// render, so React would throw away the panel's DOM — and any focus or scroll
+// position inside it — instead of updating in place.
+
+const CategoriesPanel = ({
+  categories,
+  selectedCategories,
+  onCategoryChange,
+}: {
+  categories: BlogCategory[];
+  selectedCategories: string[];
+  onCategoryChange: (name: string, checked: boolean) => void;
+}) => (
+  <FilterSection title="Categories">
+    <div className="flex flex-col gap-3.5">
+      {categories.length > 0 ? (
+        categories.map((cat, idx) => {
+          const isChecked = selectedCategories.some(
+            (c) => c.trim().toLowerCase() === cat.name.trim().toLowerCase(),
+          );
+          const catId = `cat-${idx}-${cat.name.replace(/\s+/g, "-")}`;
+          return (
+            <div key={cat.name} className="flex justify-between items-center group">
+              <Checkbox
+                id={catId}
+                label={cat.name}
+                checked={isChecked}
+                onChange={(checked) => onCategoryChange(cat.name, checked)}
+              />
+              <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full transition-colors group-hover:bg-[#EF7C00]/10 group-hover:text-[#EF7C00] min-w-[28px] text-center">{cat.count}</span>
+            </div>
+          );
+        })
+      ) : (
+        <p className="text-gray-400 text-sm italic">No categories available</p>
+      )}
+    </div>
+  </FilterSection>
+);
+
+const RecentPostsPanel = ({ recentBlogs }: { recentBlogs: Blog[] }) => (
+  <FilterSection title="Recent Posts">
+    <div className="flex flex-col gap-4">
+      {recentBlogs.length > 0 ? (
+        recentBlogs.map((recent) => (
+          <div className="flex gap-3 items-center" key={recent._id}>
+            <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
+              <AppImage
+                variant={ImageVariant.THUMBNAIL}
+                src={recent.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`}
+                alt={recent.title}
+              />
+            </div>
+            <div className="flex flex-col gap-1 min-w-0">
+              <span className="text-xs text-amber-500 font-semibold flex items-center gap-1">
+                <Calendar className="h-3 w-3" />
+                {formatDate(recent.publishedAt || recent.createdAt).full}
+              </span>
+              <h6 className="text-sm font-bold text-gray-900 line-clamp-2">
+                <Link
+                  href={`/blogs/${recent.seo?.slug || recent._id}`}
+                  className="hover:text-[var(--theme)] transition-colors"
+                >
+                  {recent.title}
+                </Link>
+              </h6>
+            </div>
+          </div>
+        ))
+      ) : (
+        <p className="text-gray-500 text-sm">No recent posts</p>
+      )}
+    </div>
+  </FilterSection>
+);
+
+const TagsPanel = ({
+  tags,
+  selectedTags,
+  onTagChange,
+}: {
+  tags: string[];
+  selectedTags: string[];
+  onTagChange: (tag: string, checked: boolean) => void;
+}) => (
+  <FilterSection title="Tags">
+    <div className="flex flex-wrap gap-2">
+      {tags.length > 0 ? (
+        tags.map((tag, idx) => {
+          const isChecked = selectedTags.some(
+            (t) => t.trim().toLowerCase() === tag.trim().toLowerCase(),
+          );
+          const tagId = `tag-${idx}-${tag.replace(/\s+/g, "-")}`;
+          return (
+            <div key={tag}>
+              <Checkbox
+                id={tagId}
+                label={tag}
+                checked={isChecked}
+                onChange={(checked) => onTagChange(tag, checked)}
+              />
+            </div>
+          );
+        })
+      ) : (
+        <p className="text-gray-500 text-sm">No tags available</p>
+      )}
+    </div>
+  </FilterSection>
+);
+
 // ─── Main Blog listing content ────────────────────────────────────────────────
 const Blog2Content = () => {
   const searchParams = useSearchParams();
@@ -38,15 +161,29 @@ const Blog2Content = () => {
   const urlPage = searchParams.get("page");
 
   const pageLimit = 6;
-  const [searchQuery, setSearchQuery] = useState(urlSearch || "");
-  const [searchTerm, setSearchTerm] = useState(urlSearch || "");
-  const [currentPage, setCurrentPage] = useState(urlPage ? parseInt(urlPage) : 1);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(
-    urlCategory ? urlCategory.split(",") : [],
-  );
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    urlTags ? urlTags.split(",") : [],
-  );
+
+  // The URL is the single source of truth for applied filters. These were
+  // previously mirrored into useState and re-synced by an effect, which meant
+  // two sources of truth that could disagree, plus an extra render pass on
+  // every navigation. Deriving them removes both problems.
+  const searchTerm = urlSearch || "";
+  const selectedCategories = urlCategory ? urlCategory.split(",") : [];
+  const selectedTags = urlTags ? urlTags.split(",") : [];
+  const currentPage = urlPage ? parseInt(urlPage) : 1;
+
+  // The search box is different: it holds text the user is still typing, which
+  // is not applied until submit, so it needs its own state. It must still
+  // follow the URL when that changes underneath it (back/forward, Clear all).
+  // Adjusting it during render is React's documented pattern for this and
+  // avoids a synchronising effect.
+  const [searchQuery, setSearchQuery] = useState(searchTerm);
+  const [lastAppliedSearch, setLastAppliedSearch] = useState(searchTerm);
+
+  if (lastAppliedSearch !== searchTerm) {
+    setLastAppliedSearch(searchTerm);
+    setSearchQuery(searchTerm);
+  }
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   // Active filter count for badge
@@ -72,14 +209,6 @@ const Blog2Content = () => {
     },
     [searchParams, pathname, router],
   );
-
-  useEffect(() => {
-    setSearchTerm(urlSearch || "");
-    setSearchQuery(urlSearch || "");
-    setSelectedCategories(urlCategory ? urlCategory.split(",") : []);
-    setSelectedTags(urlTags ? urlTags.split(",") : []);
-    setCurrentPage(urlPage ? parseInt(urlPage) : 1);
-  }, [urlCategory, urlSearch, urlTags, urlPage]);
 
   // Prevent body scroll when drawer is open
   useEffect(() => {
@@ -112,156 +241,45 @@ const Blog2Content = () => {
   const blogs = blogsData?.data || [];
   const pagination = blogsData?.pagination;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedCategories, selectedTags]);
+  // Resetting to page 1 when a filter changes needs no effect: updateUrl
+  // already drops the "page" param unless the caller sets it explicitly, and
+  // currentPage is derived from that param.
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const query = searchQuery.trim();
-    setSearchTerm(query);
-    updateUrl({ search: query });
+    updateUrl({ search: searchQuery.trim() });
   };
 
   const handleClearSearch = useCallback(() => {
-    setSearchQuery("");
-    setSearchTerm("");
     updateUrl({ search: null });
   }, [updateUrl]);
 
   const handleClearAll = () => {
-    setSearchQuery("");
-    setSearchTerm("");
-    setSelectedCategories([]);
-    setSelectedTags([]);
     router.push(pathname, { scroll: false });
   };
 
+  // Derived from the current URL rather than a setState updater. The previous
+  // version called updateUrl() inside the updater, which is a side effect in a
+  // function React may invoke more than once — under StrictMode that meant a
+  // duplicate navigation.
   const handleCategoryChange = (categoryName: string, checked: boolean) => {
-    setSelectedCategories((prev) => {
-      const newCats = checked
-        ? [...prev, categoryName]
-        : prev.filter((c) => c !== categoryName);
-      updateUrl({ category: newCats.length > 0 ? newCats.join(",") : null });
-      return newCats;
-    });
+    const newCats = checked
+      ? [...selectedCategories, categoryName]
+      : selectedCategories.filter((c) => c !== categoryName);
+    updateUrl({ category: newCats.length > 0 ? newCats.join(",") : null });
   };
 
   const handleTagChange = (tagName: string, checked: boolean) => {
-    setSelectedTags((prev) => {
-      const newTags = checked
-        ? [...prev, tagName]
-        : prev.filter((t) => t !== tagName);
-      updateUrl({ tags: newTags.length > 0 ? newTags.join(",") : null });
-      return newTags;
-    });
+    const newTags = checked
+      ? [...selectedTags, tagName]
+      : selectedTags.filter((t) => t !== tagName);
+    updateUrl({ tags: newTags.length > 0 ? newTags.join(",") : null });
   };
 
   const handlePageChange = (page: number) => {
     updateUrl({ page: page.toString() });
     window.scrollTo({ top: 400, behavior: "smooth" });
   };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      day: date.getDate(),
-      month: date.toLocaleDateString("en-US", { month: "short" }),
-      full: date.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }),
-    };
-  };
-
-  // ── Sidebar Filter Panels ──────────────────────────────────────────────────
-  const CategoriesPanel = () => (
-    <FilterSection title="Categories">
-      <div className="flex flex-col gap-3.5">
-        {categories.length > 0 ? (
-          categories.map((cat, idx) => {
-            const isChecked = selectedCategories.some(
-              (c) => c.trim().toLowerCase() === cat.name.trim().toLowerCase(),
-            );
-            const catId = `cat-${idx}-${cat.name.replace(/\s+/g, "-")}`;
-            return (
-              <div key={cat.name} className="flex justify-between items-center group">
-                <Checkbox
-                  id={catId}
-                  label={cat.name}
-                  checked={isChecked}
-                  onChange={(checked) => handleCategoryChange(cat.name, checked)}
-                />
-                <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full transition-colors group-hover:bg-[#EF7C00]/10 group-hover:text-[#EF7C00] min-w-[28px] text-center">{cat.count}</span>
-              </div>
-            );
-          })
-        ) : (
-          <p className="text-gray-400 text-sm italic">No categories available</p>
-        )}
-      </div>
-    </FilterSection>
-  );
-
-  const RecentPostsPanel = () => (
-    <FilterSection title="Recent Posts">
-      <div className="flex flex-col gap-4">
-        {recentBlogs.length > 0 ? (
-          recentBlogs.map((recent) => (
-            <div className="flex gap-3 items-center" key={recent._id}>
-              <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-100">
-                <AppImage
-                  variant={ImageVariant.THUMBNAIL}
-                  src={recent.featuredImage || `${IMAGEKIT_URL_ENDPOINT}/assets/img/blogs/BlogsPage.webp`}
-                  alt={recent.title}
-                />
-              </div>
-              <div className="flex flex-col gap-1 min-w-0">
-                <span className="text-xs text-amber-500 font-semibold flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {formatDate(recent.publishedAt || recent.createdAt).full}
-                </span>
-                <h6 className="text-sm font-bold text-gray-900 line-clamp-2">
-                  <Link
-                    href={`/blogs/${recent.seo?.slug || recent._id}`}
-                    className="hover:text-[var(--theme)] transition-colors"
-                  >
-                    {recent.title}
-                  </Link>
-                </h6>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-gray-500 text-sm">No recent posts</p>
-        )}
-      </div>
-    </FilterSection>
-  );
-
-  const TagsPanel = () => (
-    <FilterSection title="Tags">
-      <div className="flex flex-wrap gap-2">
-        {tags.length > 0 ? (
-          tags.map((tag, idx) => {
-            const isChecked = selectedTags.some(
-              (t) => t.trim().toLowerCase() === tag.trim().toLowerCase(),
-            );
-            const tagId = `tag-${idx}-${tag.replace(/\s+/g, "-")}`;
-            return (
-              <div key={tag}>
-                <Checkbox
-                  id={tagId}
-                  label={tag}
-                  checked={isChecked}
-                  onChange={(checked) => handleTagChange(tag, checked)}
-                />
-              </div>
-            );
-          })
-        ) : (
-          <p className="text-gray-500 text-sm">No tags available</p>
-        )}
-      </div>
-    </FilterSection>
-  );
 
   if (error) {
     return (
@@ -486,9 +504,17 @@ const Blog2Content = () => {
                   </form>
                 </FilterSection>
 
-                <CategoriesPanel />
-                <RecentPostsPanel />
-                <TagsPanel />
+                <CategoriesPanel
+                  categories={categories}
+                  selectedCategories={selectedCategories}
+                  onCategoryChange={handleCategoryChange}
+                />
+                <RecentPostsPanel recentBlogs={recentBlogs} />
+                <TagsPanel
+                  tags={tags}
+                  selectedTags={selectedTags}
+                  onTagChange={handleTagChange}
+                />
               </div>
             </div>
           </Grid>
@@ -545,9 +571,17 @@ const Blog2Content = () => {
 
         {/* Drawer scrollable content */}
         <div className="overflow-y-auto flex-1 px-5 py-5 flex flex-col gap-5">
-          <CategoriesPanel />
-          <RecentPostsPanel />
-          <TagsPanel />
+          <CategoriesPanel
+            categories={categories}
+            selectedCategories={selectedCategories}
+            onCategoryChange={handleCategoryChange}
+          />
+          <RecentPostsPanel recentBlogs={recentBlogs} />
+          <TagsPanel
+            tags={tags}
+            selectedTags={selectedTags}
+            onTagChange={handleTagChange}
+          />
         </div>
 
         {/* Drawer footer */}

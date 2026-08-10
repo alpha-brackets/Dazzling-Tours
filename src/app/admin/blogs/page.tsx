@@ -373,6 +373,7 @@ const BlogsList = () => {
                             src={blog.featuredImage}
                             alt={blog.title}
                             fill
+                            sizes="64px"
                             className="object-cover"
                           />
                         </div>

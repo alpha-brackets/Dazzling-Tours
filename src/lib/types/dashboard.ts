@@ -17,10 +17,6 @@ export interface DashboardStats {
     total: number;
     sent: number;
   };
-  newsletters: {
-    total: number;
-    active: number;
-  };
   testimonials: {
     total: number;
     published: number;

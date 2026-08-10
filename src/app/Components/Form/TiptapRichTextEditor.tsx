@@ -56,6 +56,45 @@ export interface TiptapRichTextEditorProps {
   rows?: number;
 }
 
+interface MenuButtonProps {
+  onClick: () => void;
+  isActive?: boolean;
+  children: React.ReactNode;
+  title: string;
+  disabled?: boolean;
+}
+
+/**
+ * A single toolbar button.
+ *
+ * Declared at module scope rather than inside TiptapRichTextEditor: a component
+ * defined during render is a brand-new type on every render, so React unmounts
+ * and remounts the whole toolbar instead of updating it. It closes over nothing
+ * from the parent, so hoisting is behaviour-preserving.
+ */
+const MenuButton = ({
+  onClick,
+  isActive = false,
+  children,
+  title,
+  disabled = false,
+}: MenuButtonProps) => (
+  <Button
+    type="button"
+    onClick={onClick}
+    variant={isActive ? "default" : "outline"}
+    size="sm"
+    className={cn(
+      "h-8 w-8 p-0",
+      isActive && "bg-[#EF7C00] hover:bg-[#d96e00] border-[#EF7C00]",
+    )}
+    title={title}
+    disabled={disabled}
+  >
+    {children}
+  </Button>
+);
+
 const TiptapRichTextEditor: React.FC<TiptapRichTextEditorProps> = ({
   label,
   description,
@@ -177,32 +216,6 @@ const TiptapRichTextEditor: React.FC<TiptapRichTextEditorProps> = ({
     );
   }
 
-  const MenuButton = ({
-    onClick,
-    isActive = false,
-    children,
-    title,
-    disabled = false,
-  }: {
-    onClick: () => void;
-    isActive?: boolean;
-    children: React.ReactNode;
-    title: string;
-    disabled?: boolean;
-  }) => (
-    <Button
-      type="button"
-      onClick={onClick}
-      variant={isActive ? "default" : "outline"}
-      size="sm"
-      className={cn("h-8 w-8 p-0", isActive && "bg-[#EF7C00] hover:bg-[#d96e00] border-[#EF7C00]")}
-      title={title}
-      disabled={disabled}
-    >
-      {children}
-    </Button>
-  );
-
   return (
     <div className={cn("flex flex-col gap-1.5 w-full", className)}>
       {label && (
@@ -216,7 +229,6 @@ const TiptapRichTextEditor: React.FC<TiptapRichTextEditorProps> = ({
       {/* Toolbar */}
       <div className="border border-gray-200 border-b-0 rounded-t-lg p-2 bg-gray-50">
         <div className="flex flex-wrap gap-1.5">
-
           {/* Undo / Redo */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
             <MenuButton
@@ -237,111 +249,221 @@ const TiptapRichTextEditor: React.FC<TiptapRichTextEditorProps> = ({
 
           {/* Text Formatting */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
-            <MenuButton onClick={() => editor.chain().focus().toggleBold().run()} isActive={editor.isActive("bold")} title="Bold">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              isActive={editor.isActive("bold")}
+              title="Bold"
+            >
               <Bold className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleItalic().run()} isActive={editor.isActive("italic")} title="Italic">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              isActive={editor.isActive("italic")}
+              title="Italic"
+            >
               <Italic className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleUnderline().run()} isActive={editor.isActive("underline")} title="Underline">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              isActive={editor.isActive("underline")}
+              title="Underline"
+            >
               <UnderlineIcon className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleStrike().run()} isActive={editor.isActive("strike")} title="Strikethrough">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              isActive={editor.isActive("strike")}
+              title="Strikethrough"
+            >
               <Strikethrough className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleHighlight().run()} isActive={editor.isActive("highlight")} title="Highlight">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleHighlight().run()}
+              isActive={editor.isActive("highlight")}
+              title="Highlight"
+            >
               <Highlighter className="h-4 w-4" />
             </MenuButton>
           </div>
 
           {/* Headings */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
-            <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} isActive={editor.isActive("heading", { level: 1 })} title="Heading 1">
+            <MenuButton
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 1 }).run()
+              }
+              isActive={editor.isActive("heading", { level: 1 })}
+              title="Heading 1"
+            >
               <Heading1 className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} isActive={editor.isActive("heading", { level: 2 })} title="Heading 2">
+            <MenuButton
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 2 }).run()
+              }
+              isActive={editor.isActive("heading", { level: 2 })}
+              title="Heading 2"
+            >
               <Heading2 className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} isActive={editor.isActive("heading", { level: 3 })} title="Heading 3">
+            <MenuButton
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 3 }).run()
+              }
+              isActive={editor.isActive("heading", { level: 3 })}
+              title="Heading 3"
+            >
               <Heading3 className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} isActive={editor.isActive("heading", { level: 4 })} title="Heading 4">
+            <MenuButton
+              onClick={() =>
+                editor.chain().focus().toggleHeading({ level: 4 }).run()
+              }
+              isActive={editor.isActive("heading", { level: 4 })}
+              title="Heading 4"
+            >
               <Heading4 className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().setParagraph().run()} isActive={editor.isActive("paragraph")} title="Paragraph">
+            <MenuButton
+              onClick={() => editor.chain().focus().setParagraph().run()}
+              isActive={editor.isActive("paragraph")}
+              title="Paragraph"
+            >
               <span className="font-bold text-xs">P</span>
             </MenuButton>
           </div>
 
           {/* Lists */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
-            <MenuButton onClick={() => editor.chain().focus().toggleBulletList().run()} isActive={editor.isActive("bulletList")} title="Bullet List">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              isActive={editor.isActive("bulletList")}
+              title="Bullet List"
+            >
               <List className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleOrderedList().run()} isActive={editor.isActive("orderedList")} title="Numbered List">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              isActive={editor.isActive("orderedList")}
+              title="Numbered List"
+            >
               <ListOrdered className="h-4 w-4" />
             </MenuButton>
           </div>
 
           {/* Alignment */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
-            <MenuButton onClick={() => editor.chain().focus().setTextAlign("left").run()} isActive={editor.isActive({ textAlign: "left" })} title="Align Left">
+            <MenuButton
+              onClick={() => editor.chain().focus().setTextAlign("left").run()}
+              isActive={editor.isActive({ textAlign: "left" })}
+              title="Align Left"
+            >
               <AlignLeft className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().setTextAlign("center").run()} isActive={editor.isActive({ textAlign: "center" })} title="Align Center">
+            <MenuButton
+              onClick={() =>
+                editor.chain().focus().setTextAlign("center").run()
+              }
+              isActive={editor.isActive({ textAlign: "center" })}
+              title="Align Center"
+            >
               <AlignCenter className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().setTextAlign("right").run()} isActive={editor.isActive({ textAlign: "right" })} title="Align Right">
+            <MenuButton
+              onClick={() => editor.chain().focus().setTextAlign("right").run()}
+              isActive={editor.isActive({ textAlign: "right" })}
+              title="Align Right"
+            >
               <AlignRight className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().setTextAlign("justify").run()} isActive={editor.isActive({ textAlign: "justify" })} title="Justify">
+            <MenuButton
+              onClick={() =>
+                editor.chain().focus().setTextAlign("justify").run()
+              }
+              isActive={editor.isActive({ textAlign: "justify" })}
+              title="Justify"
+            >
               <AlignJustify className="h-4 w-4" />
             </MenuButton>
           </div>
 
           {/* Code */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
-            <MenuButton onClick={() => editor.chain().focus().toggleCode().run()} isActive={editor.isActive("code")} title="Inline Code">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleCode().run()}
+              isActive={editor.isActive("code")}
+              title="Inline Code"
+            >
               <Code className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} isActive={editor.isActive("codeBlock")} title="Code Block">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+              isActive={editor.isActive("codeBlock")}
+              title="Code Block"
+            >
               <Code2 className="h-4 w-4" />
             </MenuButton>
           </div>
 
           {/* Super / Sub script */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
-            <MenuButton onClick={() => editor.chain().focus().toggleSuperscript().run()} isActive={editor.isActive("superscript")} title="Superscript">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleSuperscript().run()}
+              isActive={editor.isActive("superscript")}
+              title="Superscript"
+            >
               <SuperscriptIcon className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().toggleSubscript().run()} isActive={editor.isActive("subscript")} title="Subscript">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleSubscript().run()}
+              isActive={editor.isActive("subscript")}
+              title="Subscript"
+            >
               <SubscriptIcon className="h-4 w-4" />
             </MenuButton>
           </div>
 
           {/* Link */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
-            <MenuButton onClick={openLinkDialog} isActive={editor.isActive("link")} title="Insert / Edit Link">
+            <MenuButton
+              onClick={openLinkDialog}
+              isActive={editor.isActive("link")}
+              title="Insert / Edit Link"
+            >
               <Link2 className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().unsetLink().run()} title="Remove Link" disabled={!editor.isActive("link")}>
+            <MenuButton
+              onClick={() => editor.chain().focus().unsetLink().run()}
+              title="Remove Link"
+              disabled={!editor.isActive("link")}
+            >
               <Link2Off className="h-4 w-4" />
             </MenuButton>
           </div>
 
           {/* Image */}
           <div className="flex gap-1 border-r border-gray-200 pr-2">
-            <MenuButton onClick={() => setImageDialogOpen(true)} title="Insert Image">
+            <MenuButton
+              onClick={() => setImageDialogOpen(true)}
+              title="Insert Image"
+            >
               <FileImage className="h-4 w-4" />
             </MenuButton>
           </div>
 
           {/* Block Elements */}
           <div className="flex gap-1">
-            <MenuButton onClick={() => editor.chain().focus().toggleBlockquote().run()} isActive={editor.isActive("blockquote")} title="Quote">
+            <MenuButton
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              isActive={editor.isActive("blockquote")}
+              title="Quote"
+            >
               <Quote className="h-4 w-4" />
             </MenuButton>
-            <MenuButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Horizontal Rule">
+            <MenuButton
+              onClick={() => editor.chain().focus().setHorizontalRule().run()}
+              title="Horizontal Rule"
+            >
               <Minus className="h-4 w-4" />
             </MenuButton>
           </div>
@@ -357,12 +479,27 @@ const TiptapRichTextEditor: React.FC<TiptapRichTextEditorProps> = ({
             type="url"
             value={linkUrl}
             onChange={(e) => setLinkUrl(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") applyLink(); if (e.key === "Escape") setLinkDialogOpen(false); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyLink();
+              if (e.key === "Escape") setLinkDialogOpen(false);
+            }}
             placeholder="https://example.com"
             className="flex-1 text-sm border-none outline-none bg-transparent"
           />
-          <button type="button" onClick={applyLink} className="text-xs font-semibold text-[#EF7C00] hover:underline">Apply</button>
-          <button type="button" onClick={() => setLinkDialogOpen(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+          <button
+            type="button"
+            onClick={applyLink}
+            className="text-xs font-semibold text-[#EF7C00] hover:underline"
+          >
+            Apply
+          </button>
+          <button
+            type="button"
+            onClick={() => setLinkDialogOpen(false)}
+            className="text-xs text-gray-400 hover:text-gray-600"
+          >
+            Cancel
+          </button>
         </div>
       )}
 
@@ -375,12 +512,27 @@ const TiptapRichTextEditor: React.FC<TiptapRichTextEditorProps> = ({
             type="url"
             value={imageUrl}
             onChange={(e) => setImageUrl(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") applyImage(); if (e.key === "Escape") setImageDialogOpen(false); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") applyImage();
+              if (e.key === "Escape") setImageDialogOpen(false);
+            }}
             placeholder="https://example.com/image.jpg"
             className="flex-1 text-sm border-none outline-none bg-transparent"
           />
-          <button type="button" onClick={applyImage} className="text-xs font-semibold text-[#EF7C00] hover:underline">Insert</button>
-          <button type="button" onClick={() => setImageDialogOpen(false)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+          <button
+            type="button"
+            onClick={applyImage}
+            className="text-xs font-semibold text-[#EF7C00] hover:underline"
+          >
+            Insert
+          </button>
+          <button
+            type="button"
+            onClick={() => setImageDialogOpen(false)}
+            className="text-xs text-gray-400 hover:text-gray-600"
+          >
+            Cancel
+          </button>
         </div>
       )}
 
@@ -390,7 +542,7 @@ const TiptapRichTextEditor: React.FC<TiptapRichTextEditorProps> = ({
           "border border-gray-200 rounded-b-lg bg-white",
           isOverLimit
             ? "border-red-500"
-            : "focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500"
+            : "focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500",
         )}
       >
         <EditorContent editor={editor} />
@@ -399,12 +551,19 @@ const TiptapRichTextEditor: React.FC<TiptapRichTextEditorProps> = ({
       {/* Character Count */}
       {showCharCount && (
         <div className="flex justify-between mt-1 text-xs">
-          <span className={cn("text-gray-500", isOverLimit && "text-red-500 font-medium")}>
+          <span
+            className={cn(
+              "text-gray-500",
+              isOverLimit && "text-red-500 font-medium",
+            )}
+          >
             {getCharCount()}
             {maxLength && ` / ${maxLength} characters`}
           </span>
           {isOverLimit && (
-            <span className="text-red-500 font-medium">Character limit exceeded</span>
+            <span className="text-red-500 font-medium">
+              Character limit exceeded
+            </span>
           )}
         </div>
       )}

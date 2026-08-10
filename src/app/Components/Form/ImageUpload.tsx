@@ -291,6 +291,7 @@ const ImageUpload: React.FC<ImageUploadProps> = React.memo(
                   src={url}
                   alt={`Preview ${index + 1}`}
                   fill
+                  sizes="96px"
                   className="object-cover"
                 />
                 {!disabled && (

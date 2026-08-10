@@ -1,60 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import { User, IUser } from "@/models";
-import jwt from "jsonwebtoken";
 import { z } from "zod";
+import { withAuth } from "@/lib/middleware/auth";
+import { revokeUserSessions } from "@/lib/auth";
 
 const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, "Current password is required"),
   newPassword: z.string().min(6, "New password must be at least 6 characters"),
 });
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request, context) => {
   try {
     await connectDB();
-
-    // Get token from Authorization header
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return NextResponse.json(
-        { success: false, message: "Authorization token required" },
-        { status: 401 },
-      );
-    }
-
-    const token = authHeader.substring(7);
-
-    // Verify JWT token
-    let decoded: { userId: string; email: string; role: string; iat?: number };
-    try {
-      decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "fallback-secret",
-      ) as { userId: string; email: string; role: string; iat?: number };
-    } catch {
-      return NextResponse.json(
-        { success: false, message: "Invalid or expired token" },
-        { status: 401 },
-      );
-    }
 
     const body = await request.json();
     const { currentPassword, newPassword } = changePasswordSchema.parse(body);
 
-    // Find user
-    const user = await User.findById(decoded.userId);
+    const user = await User.findById(context.user._id);
     if (!user) {
       return NextResponse.json(
         { success: false, message: "User not found" },
         { status: 404 },
-      );
-    }
-
-    // Check if user is active
-    if (!user.isActive) {
-      return NextResponse.json(
-        { success: false, message: "Account is deactivated" },
-        { status: 401 },
       );
     }
 
@@ -83,14 +50,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Update password
+    // Update password. The pre-save hook hashes it.
     user.password = newPassword;
-    user.passwordChangedAt = new Date();
     await user.save();
+
+    // Changing a password should boot every other device, in case one of them
+    // is an attacker. The caller's own session survives, so they stay logged in.
+    const revoked = await revokeUserSessions(
+      String(user._id),
+      context.token,
+    );
 
     return NextResponse.json({
       success: true,
-      message: "Password changed successfully",
+      message:
+        revoked > 0
+          ? `Password changed successfully. ${revoked} other session(s) signed out.`
+          : "Password changed successfully.",
     });
   } catch (error) {
     console.error("Change password error:", error);
@@ -107,4 +83,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

@@ -10,6 +10,31 @@ export interface AppImageProps extends Omit<ImageProps, "fill" | "width" | "heig
   children?: React.ReactNode;
 }
 
+/**
+ * Default `sizes` per variant.
+ *
+ * next/image needs `sizes` alongside `fill` to build a useful srcset. Without
+ * it the browser assumes the image is 100vw and downloads a full-viewport file
+ * even for a 64px thumbnail. These are sensible defaults for how each variant
+ * is laid out; any caller with a different layout can pass its own `sizes`.
+ */
+const getVariantSizes = (variant: ImageVariant) => {
+  switch (variant) {
+    case ImageVariant.HERO:
+      // Spans the viewport.
+      return "100vw";
+    case ImageVariant.CARD:
+      // Grid cards: roughly a third on desktop, half on tablet, full on mobile.
+      return "(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw";
+    case ImageVariant.THUMBNAIL:
+      return "96px";
+    case ImageVariant.AVATAR:
+      return "64px";
+    default:
+      return "(min-width: 768px) 50vw, 100vw";
+  }
+};
+
 const getVariantClasses = (variant: ImageVariant) => {
   switch (variant) {
     case ImageVariant.HERO:
@@ -31,6 +56,7 @@ export const AppImage: React.FC<AppImageProps> = ({
   imageClassName,
   children,
   alt,
+  sizes,
   ...props
 }) => {
   return (
@@ -43,6 +69,7 @@ export const AppImage: React.FC<AppImageProps> = ({
     >
       <Image
         fill
+        sizes={sizes ?? getVariantSizes(variant)}
         className={cn("object-cover", imageClassName)}
         alt={alt || "Image"}
         {...props}

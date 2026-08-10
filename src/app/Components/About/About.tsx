@@ -20,11 +20,17 @@ const About = () => {
           <div className="flex justify-center items-center w-full px-8 md:px-12 py-8">
             <div className="relative w-full max-w-[400px] aspect-square">
               {/* Main Image */}
+              {/* sizes tells the browser the rendered width before layout, so
+                  it can pick the right srcset entry. Without it next/image
+                  assumes 100vw and downloads a full-viewport image for a box
+                  that is never wider than 400px. This one fills its column up
+                  to the max-w-[400px] cap, minus the px-8 padding. */}
               <Image
                 src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about1.webp`}
                 alt="Dazzling Tours team creating memorable travel experiences"
                 fill
                 priority
+                sizes="(max-width: 480px) calc(100vw - 4rem), 400px"
                 className="rounded-3xl object-cover shadow-lg"
               />
               
@@ -34,6 +40,7 @@ const About = () => {
                   src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about2.webp`}
                   alt="Travel experts planning personalized tours"
                   fill
+                  sizes="(min-width: 768px) 176px, 144px"
                   className="rounded-2xl object-cover border-[6px] border-white shadow-[0_10px_35px_rgba(0,0,0,0.18)] rotate-2 hover:rotate-0 transition-all duration-300"
                 />
               </div>
@@ -44,6 +51,7 @@ const About = () => {
                   src={`${IMAGEKIT_URL_ENDPOINT}/assets/img/about/about3.webp`}
                   alt="Beautiful destinations and travel adventures"
                   fill
+                  sizes="(min-width: 768px) 208px, 176px"
                   className="rounded-2xl object-cover border-[6px] border-white shadow-[0_10px_35px_rgba(0,0,0,0.18)] -rotate-6 hover:rotate-0 transition-all duration-300"
                 />
               </div>

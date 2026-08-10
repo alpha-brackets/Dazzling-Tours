@@ -46,7 +46,8 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Dazzling Tours",
-    description: "Discover the most beautiful places in Pakistan with Dazzling Tours.",
+    description:
+      "Discover the most beautiful places in Pakistan with Dazzling Tours.",
     url: baseUrl,
     potentialAction: {
       "@type": "SearchAction",
@@ -62,14 +63,15 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "TravelAgency",
     name: "Dazzling Tours",
-    description: "Premium travel agency offering customized tour packages, guided family trips, and transport services across Pakistan.",
+    description:
+      "Premium travel agency offering customized tour packages, guided family trips, and transport services across Pakistan.",
     url: baseUrl,
     logo: `${IMAGEKIT_URL_ENDPOINT}/assets/img/logo-dazzling/Logo_Black.png`,
     image: `${IMAGEKIT_URL_ENDPOINT}/assets/img/hero/hero2.webp`,
     sameAs: [
       "https://www.facebook.com/dazzlingtourscompany/",
       "https://www.instagram.com/dazzlingtoursofficial/",
-      "https://www.tiktok.com/@dazzlingtours"
+      "https://www.tiktok.com/@dazzlingtours",
     ],
     contactPoint: {
       "@type": "ContactPoint",

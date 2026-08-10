@@ -15,7 +15,24 @@ export function useForm<T extends object>({
   onValidationError,
   persistKey,
 }: UseFormOptions<T>): UseFormReturn<T> {
-  const [values, setValuesState] = useState<T>(initialValues);
+  // A persisted draft is read in the initialiser rather than restored by an
+  // effect, so the first render already shows the draft — no second render, and
+  // no window where the user sees empty fields that then fill in.
+  // persistKey therefore only makes sense for client-rendered forms; on the
+  // server there is no localStorage and initialValues are used.
+  const [values, setValuesState] = useState<T>(() => {
+    if (!persistKey || typeof window === "undefined") {
+      return initialValues;
+    }
+
+    try {
+      const saved = localStorage.getItem(persistKey);
+      return saved ? { ...initialValues, ...JSON.parse(saved) } : initialValues;
+    } catch (e) {
+      console.error("Failed to load form draft:", e);
+      return initialValues;
+    }
+  });
   const [errors, setErrorsState] = useState<Partial<Record<keyof T, string>>>(
     {},
   );
@@ -36,40 +53,38 @@ export function useForm<T extends object>({
   const validateOnChangeRef = useRef(validateOnChange);
   const validateOnBlurRef = useRef(validateOnBlur);
 
-  // Keep refs updated on every render
-  valuesRef.current = values;
-  errorsRef.current = errors;
-  validateRef.current = validate;
-  onSubmitRef.current = onSubmit;
-  onValidationErrorRef.current = onValidationError;
-  validateOnChangeRef.current = validateOnChange;
-  validateOnBlurRef.current = validateOnBlur;
-
-  // Load from localStorage on mount
+  // These mirrors exist so the callbacks below can read the latest values
+  // without listing them as dependencies. They are written after the render
+  // commits, not during it: mutating a ref while rendering makes render impure,
+  // which breaks under concurrent rendering (a render can be started and thrown
+  // away, leaving the ref describing a tree that was never shown).
+  //
+  // Writing them post-commit is safe here because every reader is an event
+  // handler or an async submit path, and those only run after the commit.
   useEffect(() => {
-    if (persistKey && typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem(persistKey);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setValuesState((prev) => ({ ...prev, ...parsed }));
-        }
-      } catch (e) {
-        console.error("Failed to load form draft:", e);
-      }
+    valuesRef.current = values;
+    errorsRef.current = errors;
+    validateRef.current = validate;
+    onSubmitRef.current = onSubmit;
+    onValidationErrorRef.current = onValidationError;
+    validateOnChangeRef.current = validateOnChange;
+    validateOnBlurRef.current = validateOnBlur;
+  });
+
+  // Persist the draft whenever values change. The first render is skipped so an
+  // untouched form does not immediately overwrite a stored draft with its
+  // initial values.
+  useEffect(() => {
+    if (!persistKey || typeof window === "undefined") {
+      return;
     }
-    // Mark as initialized in the next tick to ensure we don't save initialValues over the loaded data
-    const timer = setTimeout(() => {
+
+    if (!isInitialized.current) {
       isInitialized.current = true;
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [persistKey]);
-
-  // Save to localStorage on change
-  useEffect(() => {
-    if (persistKey && isInitialized.current && typeof window !== "undefined") {
-      localStorage.setItem(persistKey, JSON.stringify(values));
+      return;
     }
+
+    localStorage.setItem(persistKey, JSON.stringify(values));
   }, [values, persistKey]);
 
   // Calculate derived state

@@ -4,6 +4,7 @@ import React, {
   useContext,
   useState,
   useEffect,
+  useCallback,
   ReactNode,
 } from "react";
 import { UserRole } from "@/lib/enums/roles";
@@ -19,9 +20,15 @@ interface User {
   lastLogin?: string;
 }
 
+/**
+ * The session token is deliberately absent from this context.
+ *
+ * It lives in an httpOnly cookie the browser attaches automatically, so
+ * JavaScript never holds it and an XSS bug cannot read it. "Are we signed in?"
+ * is answered by whether /auth/me succeeds, not by inspecting a stored token.
+ */
 interface AuthContextType {
   user: User | null;
-  token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (
@@ -35,7 +42,6 @@ interface AuthContextType {
   ) => Promise<{
     success: boolean;
     message: string;
-    token?: string;
     user?: User;
   }>;
   forgotPassword: (
@@ -50,7 +56,7 @@ interface AuthContextType {
     currentPassword: string,
     newPassword: string,
   ) => Promise<{ success: boolean; message: string }>;
-  logout: () => void;
+  logout: (allDevices?: boolean) => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
@@ -70,72 +76,62 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const isAuthenticated = !!user && !!token;
+  const isAuthenticated = !!user;
 
-  // Initialize auth state from localStorage
-  useEffect(() => {
-    const initializeAuth = async () => {
-      try {
-        const storedToken = localStorage.getItem("admin_token");
-        if (storedToken) {
-          setToken(storedToken);
-          await fetchUserProfile(storedToken);
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-        localStorage.removeItem("admin_token");
-        setToken(null);
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, []);
-
-  const fetchUserProfile = async (authToken: string) => {
+  /**
+   * Asks the server who we are. The cookie rides along automatically; a 401
+   * simply means no valid session.
+   */
+  const fetchUserProfile = useCallback(async (): Promise<User | null> => {
     try {
-      // Set the token in localStorage so privateAxios can use it
-      localStorage.setItem("admin_token", authToken);
-
       const response = await api.get<{
         success: boolean;
         data: { user: User };
-        message?: string;
       }>("/auth/me");
-      const data = response.data;
 
-      if (data.success) {
-        setUser(data.data.user);
-      } else {
-        throw new Error(data.message);
+      if (response.data.success) {
+        setUser(response.data.data.user);
+        return response.data.data.user;
       }
-    } catch (error) {
-      console.error("Fetch user profile error:", error);
-      throw error;
+
+      setUser(null);
+      return null;
+    } catch {
+      // 401 on load is the normal "not signed in" case, not an error worth
+      // reporting. privateAxios handles redirecting protected pages.
+      setUser(null);
+      return null;
     }
-  };
+  }, []);
+
+  // Restore the session on mount by validating the cookie server-side.
+  useEffect(() => {
+    const initializeAuth = async () => {
+      await fetchUserProfile();
+      setIsLoading(false);
+    };
+
+    initializeAuth();
+  }, [fetchUserProfile]);
+
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.post<{ token?: string; user?: User }>(
+      const response = await api.post<{ success: boolean; user?: User }>(
         "/auth/login",
         { email, password },
       );
-      const data = response.data;
-      if (data?.token && data?.user) {
-        setToken(data.token);
-        setUser(data.user);
-        localStorage.setItem("admin_token", data.token);
+
+      // The server set the session cookie on this response; we only receive
+      // the user object.
+      if (response.data?.user) {
+        setUser(response.data.user);
         return { success: true, message: "Login successful" };
       }
 
       return { success: false, message: "Unexpected response from server" };
     } catch (error: unknown) {
-      console.error("Login error:", error);
       const err = error as { response?: { data?: { message?: string } } };
       return {
         success: false,
@@ -149,51 +145,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await api.post<{
         success: boolean;
         message?: string;
-        data?: { token?: string; user?: User };
-      }>("/auth/verify-otp", {
-        email,
-        otp,
-        type,
-      });
+        data?: { user?: User };
+      }>("/auth/verify-otp", { email, otp, type });
       const data = response.data;
 
-      if (data.success && data.data?.token) {
-        const { token: authToken, user: userData } = data.data;
-        setToken(authToken);
-        setUser(userData || null);
-        localStorage.setItem("admin_token", authToken);
+      // A login_verification OTP sets the session cookie and returns the user.
+      if (data.success && data.data?.user) {
+        setUser(data.data.user);
       }
 
       return {
         success: data.success,
         message: data.message || "Operation successful",
-        token: data.data?.token,
         user: data.data?.user,
       };
-    } catch (error) {
-      console.error("OTP verification error:", error);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       return {
         success: false,
-        message: "OTP verification failed. Please try again.",
+        message:
+          err.response?.data?.message ||
+          "OTP verification failed. Please try again.",
       };
     }
   };
 
   const forgotPassword = async (email: string) => {
     try {
-      console.log("Forgot password request is being sent");
       const response = await api.post<{ success: boolean; message: string }>(
         "/auth/forgot-password",
         { email },
       );
-      const data = response.data;
-      console.log("Forgot password response:", data);
-      return data;
-    } catch (error) {
-      console.error("Forgot password error:", error);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       return {
         success: false,
-        message: "Failed to send reset email. Please try again.",
+        message:
+          err.response?.data?.message ||
+          "Failed to send reset email. Please try again.",
       };
     }
   };
@@ -206,19 +196,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await api.post<{ success: boolean; message: string }>(
         "/auth/reset-password",
-        {
-          email,
-          otp,
-          newPassword,
-        },
+        { email, otp, newPassword },
       );
-      const data = response.data;
-      return data;
-    } catch (error) {
-      console.error("Reset password error:", error);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       return {
         success: false,
-        message: "Password reset failed. Please try again.",
+        message:
+          err.response?.data?.message ||
+          "Password reset failed. Please try again.",
       };
     }
   };
@@ -230,43 +217,42 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await api.post<{ success: boolean; message: string }>(
         "/auth/change-password",
-        {
-          currentPassword,
-          newPassword,
-        },
+        { currentPassword, newPassword },
       );
-
-      const data = response.data;
-      return data;
-    } catch (error) {
-      console.error("Change password error:", error);
+      return response.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       return {
         success: false,
-        message: "Password change failed. Please try again.",
+        message:
+          err.response?.data?.message ||
+          "Password change failed. Please try again.",
       };
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem("admin_token");
+  /**
+   * Revokes the session server-side, so the token is dead rather than merely
+   * forgotten. Pass true to sign out every device.
+   */
+  const logout = async (allDevices = false) => {
+    try {
+      await api.post("/auth/logout", { allDevices });
+    } catch (error) {
+      // Even if the call fails, drop local state — the cookie is expired
+      // server-side on success and the session is unusable either way.
+      console.error("Logout error:", error);
+    } finally {
+      setUser(null);
+    }
   };
 
   const refreshUser = async () => {
-    if (token) {
-      try {
-        await fetchUserProfile(token);
-      } catch (error) {
-        console.error("Refresh user error:", error);
-        logout();
-      }
-    }
+    await fetchUserProfile();
   };
 
   const value: AuthContextType = {
     user,
-    token,
     isLoading,
     isAuthenticated,
     login,
